@@ -3676,16 +3676,43 @@ if (tg) {
 
 <script>
   const supabase = window.supabase.createClient(
-    "https://jhrnpceeujbqhttgfqvz.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impocm5wY2VldWpicWh0dGdmcXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNDc2NTQsImV4cCI6MjA5ODkyMzY1NH0.rhcFnUpkCe46rMTloVxDE37RMG5xDliws6BP_fV91tE"
+    "****",
+    "*****"
   );
 
   async function loadEvents() {
-    const tg = window.Telegram.WebApp;
-    const user = tg?.initDataUnsafe?.user;
+  const tg = window.Telegram?.WebApp;
+  const user = tg?.initDataUnsafe?.user;
 
-if (!user) {
-  console.log("Нет Telegram пользователя");
+  if (!user) {
+    document.body.innerHTML = "❌ Открой через Telegram Mini App";
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.log(error);
+    document.body.innerHTML = "Ошибка загрузки";
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    document.body.innerHTML = "Событий нет";
+    return;
+  }
+
+  document.body.innerHTML = data
+    .map(e => `
+      <div style="padding:10px;margin:10px;border:1px solid #ccc;border-radius:10px;">
+        <b>${e.title}</b><br>
+        ${e.date} ${e.start_time || ""}
+      </div>
+    `)
+    .join("");
 }
 
     const { data, error } = await supabase
