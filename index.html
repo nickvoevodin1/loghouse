@@ -3661,5 +3661,42 @@
     // Start the app only after every const/function above is defined.
     init();
   </script>
+  
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script>
+    const tg = window.Telegram?.WebApp;
+
+if (tg) {
+  tg.expand();
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const supabase = window.supabase.createClient(
+    "https://jhrnpceeujbqhttgfqvz.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impocm5wY2VldWpicWh0dGdmcXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNDc2NTQsImV4cCI6MjA5ODkyMzY1NH0.rhcFnUpkCe46rMTloVxDE37RMG5xDliws6BP_fV91tE"
+  );
+
+  async function loadEvents() {
+    const tg = window.Telegram.WebApp;
+    const user = tg?.initDataUnsafe?.user;
+
+if (!user) {
+  console.log("Нет Telegram пользователя");
+}
+
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .eq("user_id", user.id);
+
+    console.log(data, error);
+  }
+
+  loadEvents(); // запускаем функцию
+</script>
 </body>
 </html>
