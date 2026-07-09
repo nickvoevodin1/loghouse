@@ -289,7 +289,7 @@
     .main { grid-row: 2; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
     .calendar-shell { flex: 1; overflow: hidden; background: var(--surface); position: relative; }
 
-    .week-view, .day-view { height: 100%; overflow: auto; position: relative; }
+    .grid-view { height: 100%; overflow-y: auto; overflow-x: hidden; position: relative; }
 
     .cal-header {
       position: sticky; top: 0; z-index: 9;
@@ -297,11 +297,16 @@
       border-bottom: 1px solid var(--line);
       backdrop-filter: blur(12px);
     }
-    .hrow { display: grid; }
-    .week-header .hrow { grid-template-columns: 56px repeat(7, minmax(108px, 1fr)); }
-    .day-header .hrow { grid-template-columns: 56px 1fr; }
+    .hdr-row { display: flex; }
+    .grid-body { display: flex; position: relative; }
+
+    /* окно просмотра + «плёнка» из 3 экранов дней */
+    .days-viewport { flex: 1; overflow: hidden; position: relative; min-width: 0; }
+    .days-track { display: grid; will-change: transform; }
+    .grid-body .days-viewport { touch-action: pan-y; }
 
     .corner {
+      width: 56px; flex: 0 0 56px;
       min-height: 66px; border-right: 1px solid var(--line);
       display: grid; place-items: end center; padding-bottom: 9px;
       color: var(--muted-2); font-size: 11px; font-weight: 600;
@@ -324,6 +329,7 @@
 
     .allday-row { border-top: 1px solid var(--line-soft); min-height: 30px; }
     .allday-label {
+      width: 56px; flex: 0 0 56px;
       border-right: 1px solid var(--line);
       display: grid; place-items: center; text-align: center;
       color: var(--muted-2); font-size: 9px; font-weight: 700;
@@ -340,11 +346,10 @@
       text-align: left; width: 100%; color: #fff;
     }
 
-    .grid { display: grid; position: relative; }
-    .week-grid { grid-template-columns: 56px repeat(7, minmax(108px, 1fr)); }
-    .day-grid { grid-template-columns: 56px minmax(240px, 1fr); }
-
-    .time-col { border-right: 1px solid var(--line); background: var(--surface); z-index: 2; }
+    .time-col {
+      width: 56px; flex: 0 0 56px;
+      border-right: 1px solid var(--line); background: var(--surface); z-index: 2;
+    }
     .time-label {
       height: var(--hour-height); position: relative;
       color: var(--muted-2); font-size: 11px; font-weight: 500;
@@ -364,7 +369,7 @@
     .hour-cell { height: var(--hour-height); position: relative; }
     @media (hover: hover) { .hour-cell:hover { background: var(--accent-soft); } }
 
-    .now-line { position: absolute; left: 56px; right: 0; height: 2px; background: var(--danger); z-index: 8; pointer-events: none; }
+    .now-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--danger); z-index: 8; pointer-events: none; }
     .now-line::before { content: ""; position: absolute; left: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--danger); }
 
     /* ---- blocks: background band / event / task ---- */
@@ -657,17 +662,24 @@
       }
       .mv-create:active { transform: scale(.93); }
 
-      .week-view, .day-view, .month-view { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
+      .grid-view, .month-view { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
 
-      .week-header .hrow { grid-template-columns: 44px repeat(7, 19vw); }
-      .week-grid { grid-template-columns: 44px repeat(7, 19vw); }
-      .day-header .hrow { grid-template-columns: 44px 1fr; }
-      .day-grid { grid-template-columns: 44px 1fr; }
-      .corner, .time-col, .allday-label { width: 44px; }
-      .now-line { left: 44px; }
-      .day-title { min-height: 60px; padding: 8px 4px 6px; }
-      .day-title .date { width: 30px; height: 30px; font-size: 15px; }
-      .corner { min-height: 60px; }
+      .corner, .time-col, .allday-label { width: 40px; flex-basis: 40px; }
+      .day-title { min-height: 58px; padding: 7px 2px 5px; }
+      .day-title .dow { font-size: 10px; }
+      .day-title .date { width: 28px; height: 28px; font-size: 14px; border-radius: 9px; }
+      .corner { min-height: 58px; font-size: 9px; }
+      .time-label { font-size: 10px; padding-right: 5px; }
+
+      /* узкие колонки недели: без наползающего текста */
+      .block { left: 2px; right: 2px; border-radius: 9px; }
+      .event { padding: 4px 5px; }
+      .band { left: 1px; right: 1px; padding: 4px 5px; }
+      .task { padding: 4px 5px; gap: 4px; }
+      .block .b-title { font-size: 11px; }
+      .block .b-time { font-size: 9.5px; }
+      .task-check { width: 15px; height: 15px; border-radius: 5px; }
+      .allday-chip { font-size: 10px; padding: 2px 5px; }
 
       .month-grid { grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(62px, 1fr); }
       .month-cell { min-height: 62px; padding: 5px 3px; text-align: center; }
@@ -689,8 +701,8 @@
     @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
     @media (max-width: 380px) {
-      .week-header .hrow { grid-template-columns: 42px repeat(7, 22vw); }
-      .week-grid { grid-template-columns: 42px repeat(7, 22vw); }
+      .corner, .time-col, .allday-label { width: 36px; flex-basis: 36px; }
+      .block .b-time { display: none; }   /* совсем узко — оставляем только название */
     }
     @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -909,6 +921,7 @@
       visibleCats: new Set(categories.map(c=>c.id)),
       search: "",
       editingId: null,
+      anchor: null,
       events: loadEvents()
     };
 
@@ -986,7 +999,7 @@
         sw.addEventListener("click", e=>{
           const b=e.target.closest("button[data-view]"); if(!b) return;
           if(state.view===b.dataset.view){ goToday(); return; }
-          state.view=b.dataset.view; saveView(); syncViewButtons(); renderAll();
+          state.view=b.dataset.view; state.anchor=null; saveView(); syncViewButtons(); renderAll();
         });
       });
 
@@ -1021,27 +1034,44 @@
       bindSwipe();
     }
 
+    // свайп для месяца/списка (у сетки день/неделя — свой, следящий за пальцем)
     function bindSwipe(){
       let x0=null,y0=null,t0=0;
       els.shell.addEventListener("touchstart", e=>{
+        if(state.view==="day"||state.view==="week"){ x0=null; return; }
         if(e.target.closest(".block, .agenda-item, .month-event")){ x0=null; return; }
         const t=e.changedTouches[0]; x0=t.clientX; y0=t.clientY; t0=Date.now();
       }, {passive:true});
       els.shell.addEventListener("touchend", e=>{
         if(x0===null) return; const t=e.changedTouches[0];
         const dx=t.clientX-x0, dy=t.clientY-y0, dt=Date.now()-t0; x0=null;
-        if(dt>600) return;
-        if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.8) navigate(dx<0?1:-1);
+        if(dt>700) return;
+        if(Math.abs(dx)>55 && Math.abs(dx)>Math.abs(dy)*1.6) navigate(dx<0?1:-1);
       }, {passive:true});
     }
 
-    function goToday(){ state.selectedDate=new Date(); state.miniDate=new Date(); renderAll(); }
+    function goToday(){ state.selectedDate=new Date(); state.miniDate=new Date(); state.anchor=null; renderAll(); }
     function syncViewButtons(){ [...els.viewSwitch.children, ...els.viewSwitchMobile.children].forEach(b=>{ if(b.dataset.view) b.classList.toggle("active", b.dataset.view===state.view); }); }
     function navigate(step){
-      if(state.view==="day") state.selectedDate=addDays(state.selectedDate,step);
-      else if(state.view==="week"||state.view==="agenda") state.selectedDate=addDays(state.selectedDate,step*7);
+      if((state.view==="day"||state.view==="week") && gridState){
+        shiftDays(step * gridState.per);   // плавно, той же анимацией, что и свайп
+        return;
+      }
+      if(state.view==="agenda") state.selectedDate=addDays(state.selectedDate,step*7);
       else state.selectedDate=new Date(state.selectedDate.getFullYear(),state.selectedDate.getMonth()+step,1);
-      state.miniDate=new Date(state.selectedDate); renderAll();
+      state.miniDate=new Date(state.selectedDate);
+      if(state.view==="month") animateViewSlide(step);
+      renderAll();
+    }
+
+    function animateViewSlide(step){
+      requestAnimationFrame(()=>{
+        const el = els.shell.firstElementChild; if(!el) return;
+        el.animate(
+          [{ transform:`translateX(${step>0?24:-24}px)`, opacity:.35 }, { transform:"none", opacity:1 }],
+          { duration:220, easing:"cubic-bezier(.22,.61,.36,1)" }
+        );
+      });
     }
     function roundNow(){ const n=new Date(); let m=Math.ceil((n.getHours()*60+n.getMinutes())/15)*15; if(m<START_HOUR*60) m=START_HOUR*60; if(m>22*60) m=10*60; return minToTime(m); }
 
@@ -1050,7 +1080,7 @@
     function renderTitle(){
       const d=state.selectedDate;
       if(state.view==="day") els.rangeTitle.textContent=`${d.getDate()} ${MONTHS_GEN[d.getMonth()]} ${d.getFullYear()}`;
-      else if(state.view==="week"){ const s=startOfWeek(d), e=addDays(s,6); const sm=s.getMonth()===e.getMonth(); els.rangeTitle.textContent=`${sm?s.getDate():s.getDate()+" "+MONTHS_GEN[s.getMonth()]} — ${e.getDate()} ${MONTHS_GEN[e.getMonth()]}`; }
+      else if(state.view==="week"){ const s=gridAnchor("week"), e=addDays(s,6); const sm=s.getMonth()===e.getMonth(); els.rangeTitle.textContent=`${sm?s.getDate():s.getDate()+" "+MONTHS_GEN[s.getMonth()]} — ${e.getDate()} ${MONTHS_GEN[e.getMonth()]}`; }
       else if(state.view==="agenda") els.rangeTitle.textContent="Ближайшее";
       else els.rangeTitle.textContent=`${cap(MONTHS[d.getMonth()])} ${d.getFullYear()}`;
     }
@@ -1084,46 +1114,166 @@
     }
 
     /* ---------- time grid ---------- */
+    // Сетка = «плёнка» из 3 окон (пред/тек/след). Свайп двигает её за пальцем,
+    // на отпускании — прилипает к ближайшему дню. Окно всегда PER дней.
     function renderGrid(view){
-      const isWeek = view==="week";
-      const days = isWeek ? Array.from({length:7},(_,i)=>addDays(startOfWeek(state.selectedDate),i)) : [state.selectedDate];
+      const per = view==="week" ? 7 : 1;
+      const total = per*3;
+      const anchor = gridAnchor(view);        // первый день видимого окна
+      const first = addDays(anchor, -per);    // начало плёнки
+      const days = Array.from({length:total},(_,i)=>addDays(first,i));
       const vis = visible();
 
-      const dow = `<div class="hrow dow-row"><div class="corner">GMT</div>${days.map(d=>`
+      const titles = days.map(d=>`
         <div class="day-title ${sameDay(d,new Date())?"today":""}" data-date="${iso(d)}">
           <div class="dow">${DOW[(d.getDay()+6)%7]}</div><div class="date">${d.getDate()}</div>
-        </div>`).join("")}</div>`;
+        </div>`).join("");
 
-      const allday = `<div class="hrow allday-row"><div class="allday-label">весь<br>день</div>${days.map(d=>{
+      const alldays = days.map(d=>{
         const a=vis.filter(ev=>ev.date===iso(d)&&ev.allDay);
         return `<div class="allday-cell">${a.map(ev=>{const c=getCat(ev.cat);return `<button type="button" class="allday-chip ${c.light?"light-text":""}" data-id="${ev.id}" style="background:${c.color}">${esc(ev.title)}</button>`;}).join("")}</div>`;
-      }).join("")}</div>`;
-
-      const header = `<div class="cal-header ${isWeek?"week-header":"day-header"}">${dow}${allday}</div>`;
-      const timeCol = `<div class="time-col">${Array.from({length:HOURS},(_,i)=>`<div class="time-label">${pad(START_HOUR+i)}:00</div>`).join("")}</div>`;
+      }).join("");
 
       const cols = days.map(d=>{
-        const dayIso=iso(d);
-        const dayEvents = vis.filter(ev=>ev.date===dayIso && !ev.allDay);
-        const bands = dayEvents.filter(ev=>ev.kind==="background");
-        const blocks = dayEvents.filter(ev=>ev.kind==="event");
-        const tasks  = dayEvents.filter(ev=>ev.kind==="task");
+        const ds=iso(d);
+        const de = vis.filter(ev=>ev.date===ds && !ev.allDay);
         const cls = ["day-col", [0,6].includes(d.getDay())?"weekend":"", sameDay(d,new Date())?"today-bg":""].filter(Boolean).join(" ");
-        return `<div class="${cls}" data-date="${dayIso}">
-          ${Array.from({length:HOURS},(_,i)=>`<div class="hour-cell" data-date="${dayIso}" data-hour="${START_HOUR+i}"></div>`).join("")}
-          ${bands.map(bandMarkup).join("")}
-          ${layout(blocks).map(eventMarkup).join("")}
-          ${layout(tasks).map(taskMarkup).join("")}
+        return `<div class="${cls}" data-date="${ds}">
+          ${Array.from({length:HOURS},(_,i)=>`<div class="hour-cell" data-date="${ds}" data-hour="${START_HOUR+i}"></div>`).join("")}
+          ${de.filter(e=>e.kind==="background").map(bandMarkup).join("")}
+          ${layout(de.filter(e=>e.kind==="event")).map(eventMarkup).join("")}
+          ${layout(de.filter(e=>e.kind==="task")).map(taskMarkup).join("")}
         </div>`;
       }).join("");
 
-      els.shell.innerHTML = `<div class="${isWeek?"week-view":"day-view"}" id="scrollArea">${header}<div class="grid ${isWeek?"week-grid":"day-grid"}">${timeCol}${cols}</div></div>`;
+      const timeCol = `<div class="time-col">${Array.from({length:HOURS},(_,i)=>`<div class="time-label">${pad(START_HOUR+i)}:00</div>`).join("")}</div>`;
 
-      const sa=$("scrollArea"); sa.scrollTop=Math.max(0,(Math.min(new Date().getHours(),13)-START_HOUR)*HOUR_HEIGHT);
-      addNowLine(days);
+      els.shell.innerHTML = `
+        <div class="grid-view" id="scrollArea">
+          <div class="cal-header">
+            <div class="hdr-row">
+              <div class="corner">GMT</div>
+              <div class="days-viewport"><div class="days-track" id="hdrTrack">${titles}</div></div>
+            </div>
+            <div class="hdr-row allday-row">
+              <div class="allday-label">весь<br>день</div>
+              <div class="days-viewport"><div class="days-track" id="adTrack">${alldays}</div></div>
+            </div>
+          </div>
+          <div class="grid-body">
+            ${timeCol}
+            <div class="days-viewport" id="bodyViewport"><div class="days-track" id="bodyTrack">${cols}</div></div>
+          </div>
+        </div>`;
+
+      const vp = $("bodyViewport");
+      const colW = vp.clientWidth / per;
+      gridState = { view, per, total, anchor, colW, offset: -per*colW };
+      applyTrackLayout();
+
+      const sa=$("scrollArea");
+      sa.scrollTop = Math.max(0,(Math.min(new Date().getHours(),13)-START_HOUR)*HOUR_HEIGHT);
+
+      addNowLine();
       bindGrid();
       bindBlocks();
       bindDayTitles();
+      bindGridSwipe();
+    }
+
+    let gridState = null;
+
+    // Якорь = первый день видимого окна. Он «плавающий»: после свайпа окно может
+    // начинаться с любого дня (вс–пн), а не обязательно с понедельника.
+    function gridAnchor(view){
+      if(state.anchor) return new Date(state.anchor);
+      return resetAnchor(view);
+    }
+    function resetAnchor(view){
+      const d = view==="week" ? startOfWeek(state.selectedDate)
+                              : new Date(state.selectedDate.getFullYear(),state.selectedDate.getMonth(),state.selectedDate.getDate());
+      state.anchor = d;
+      return new Date(d);
+    }
+
+    function tracks(){ return [$("hdrTrack"), $("adTrack"), $("bodyTrack")].filter(Boolean); }
+
+    function applyTrackLayout(){
+      if(!gridState) return;
+      const {total, colW, offset} = gridState;
+      tracks().forEach(t=>{
+        t.style.gridTemplateColumns = `repeat(${total}, ${colW}px)`;
+        t.style.width = (total*colW)+"px";
+        t.style.transform = `translate3d(${offset}px,0,0)`;
+      });
+    }
+
+    function setTrackOffset(px, animate){
+      if(!gridState) return;
+      gridState.offset = px;
+      tracks().forEach(t=>{
+        t.style.transition = animate ? "transform .28s cubic-bezier(.22,.61,.36,1)" : "none";
+        t.style.transform = `translate3d(${px}px,0,0)`;
+      });
+    }
+
+    // сдвиг окна на N дней с плавной анимацией и последующей перерисовкой
+    function shiftDays(n){
+      if(!gridState || !n){ if(gridState) setTrackOffset(-gridState.per*gridState.colW, true); return; }
+      const {per, colW} = gridState;
+      const target = -(per + n)*colW;
+      setTrackOffset(target, true);
+      const t = $("bodyTrack");
+      const done = ()=>{
+        t.removeEventListener("transitionend", done);
+        state.anchor = addDays(gridAnchor(gridState.view), n);
+        state.selectedDate = new Date(state.anchor);
+        state.miniDate = new Date(state.anchor);
+        renderTitle(); renderMini(); renderUpcoming();
+        renderGrid(gridState.view);
+      };
+      t.addEventListener("transitionend", done, { once:true });
+      setTimeout(()=>{ if(document.contains(t)) done(); }, 340); // страховка
+    }
+
+    function bindGridSwipe(){
+      const vp = $("bodyViewport"); if(!vp) return;
+      let sx=0, sy=0, active=false, decided=false, horiz=false, base=0;
+
+      vp.addEventListener("touchstart", e=>{
+        if(e.target.closest(".block")) return;      // не мешаем перетаскиванию блоков
+        const t=e.touches[0]; sx=t.clientX; sy=t.clientY;
+        active=true; decided=false; horiz=false; base=gridState.offset;
+        tracks().forEach(tr=>tr.style.transition="none");
+      }, {passive:true});
+
+      vp.addEventListener("touchmove", e=>{
+        if(!active) return;
+        const t=e.touches[0], dx=t.clientX-sx, dy=t.clientY-sy;
+        if(!decided){
+          if(Math.abs(dx)<6 && Math.abs(dy)<6) return;
+          horiz = Math.abs(dx) > Math.abs(dy);
+          decided = true;
+          if(!horiz){ active=false; return; }   // это вертикальный скролл — отдаём странице
+        }
+        if(horiz){
+          e.preventDefault();                   // блокируем вертикальный скролл во время свайпа
+          setTrackOffset(base+dx, false);
+        }
+      }, {passive:false});
+
+      const end = ()=>{
+        if(!active || !horiz){ active=false; return; }
+        active=false;
+        const {per, colW, offset} = gridState;
+        const moved = offset + per*colW;                  // сдвиг относительно исходного окна
+        let n = Math.round(-moved/colW);                  // на сколько дней уехали
+        const maxStep = per;                              // не дальше одного окна за жест
+        n = Math.max(-maxStep, Math.min(maxStep, n));
+        shiftDays(n);
+      };
+      vp.addEventListener("touchend", end, {passive:true});
+      vp.addEventListener("touchcancel", end, {passive:true});
     }
 
     // cluster-based column layout: одиночное событие занимает всю ширину (фикс «квадратиков»)
@@ -1180,7 +1330,8 @@
     function taskMarkup(ev){
       const c=getCat(ev.cat); const {top,h,pos}=geom(ev);
       // задачи сдвигаем правее, чтобы «сидели поверх» событий, но текст не сжимался в столбик
-      const posT = ev._total>1 ? pos : "left:auto;right:6px;width:min(72%,190px);";
+      // задача «поверх» события: справа, но всегда внутри колонки
+      const posT = ev._total>1 ? pos : "left:26%;right:2px;width:auto;";
       return `<div class="block task ${ev.done?"done":""} ${c.light?"light-text":""}" data-id="${ev.id}" data-move="1" style="top:${top}px;height:${h}px;background:${c.color};${posT}">
         <button type="button" class="task-check" data-check="1" aria-label="Готово"><svg viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <div style="min-width:0;flex:1"><div class="b-title">${esc(ev.title)}</div><div class="b-time">${timeText(ev)}</div></div>
@@ -1188,18 +1339,18 @@
       </div>`;
     }
 
-    function addNowLine(days){
-      const idx=days.findIndex(d=>sameDay(d,new Date())); if(idx===-1) return;
+    function addNowLine(){
       const n=new Date(), m=n.getHours()*60+n.getMinutes();
       if(m<START_HOUR*60||m>END_HOUR*60) return;
-      const grid=els.shell.querySelector(".grid"); if(!grid) return;
+      const col=els.shell.querySelector(`.day-col[data-date="${iso(n)}"]`); if(!col) return;
+      col.querySelectorAll(".now-line").forEach(x=>x.remove());
       const line=document.createElement("div"); line.className="now-line";
-      line.style.top=`${(m-START_HOUR*60)/60*HOUR_HEIGHT}px`; grid.appendChild(line);
+      line.style.top=`${(m-START_HOUR*60)/60*HOUR_HEIGHT}px`; col.appendChild(line);
     }
 
     function bindDayTitles(){
       els.shell.querySelectorAll(".day-title[data-date]").forEach(t=>t.addEventListener("click", ()=>{
-        state.selectedDate=parseDate(t.dataset.date); state.miniDate=new Date(state.selectedDate);
+        state.selectedDate=parseDate(t.dataset.date); state.miniDate=new Date(state.selectedDate); state.anchor=null;
         state.view="day"; saveView(); syncViewButtons(); renderAll();
       }));
       els.shell.querySelectorAll(".allday-chip[data-id]").forEach(el=>el.addEventListener("click", ()=>{
@@ -1326,7 +1477,7 @@
         }).join("")}
       </div></div>`;
       els.shell.querySelectorAll("[data-cd]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation();
-        if(isMobile()){ state.selectedDate=parseDate(b.dataset.cd); state.miniDate=new Date(state.selectedDate); state.view="day"; saveView(); syncViewButtons(); renderAll(); }
+        if(isMobile()){ state.selectedDate=parseDate(b.dataset.cd); state.miniDate=new Date(state.selectedDate); state.anchor=null; state.view="day"; saveView(); syncViewButtons(); renderAll(); }
         else openModal({ date:b.dataset.cd, start:"10:00", end:"11:00" });
       }));
       els.shell.querySelectorAll(".month-event[data-id]").forEach(el=>el.addEventListener("click", e=>{ e.stopPropagation(); const ev=state.events.find(x=>x.id===el.dataset.id); if(ev) openModal(ev); }));
@@ -1341,7 +1492,7 @@
       els.upcoming.innerHTML=evs.map(ev=>{ const c=getCat(ev.cat); const time=ev.allDay?"весь день":timeText(ev);
         return `<button type="button" class="upcoming-card" data-id="${ev.id}" style="border-left-color:${c.color}"><div class="upcoming-time">${humanDate(parseDate(ev.date))} · ${time}</div><div class="upcoming-title">${esc(ev.title)}</div></button>`;
       }).join("");
-      els.upcoming.querySelectorAll("[data-id]").forEach(b=>b.addEventListener("click", ()=>{ const ev=state.events.find(x=>x.id===b.dataset.id); if(ev){ state.selectedDate=parseDate(ev.date); state.miniDate=parseDate(ev.date); if(isMobile()) closeDrawer(); renderAll(); openModal(ev); } }));
+      els.upcoming.querySelectorAll("[data-id]").forEach(b=>b.addEventListener("click", ()=>{ const ev=state.events.find(x=>x.id===b.dataset.id); if(ev){ state.selectedDate=parseDate(ev.date); state.miniDate=parseDate(ev.date); state.anchor=null; if(isMobile()) closeDrawer(); renderAll(); openModal(ev); } }));
     }
     function humanDate(d){ if(sameDay(d,new Date())) return "Сегодня"; if(sameDay(d,addDays(new Date(),1))) return "Завтра"; return `${d.getDate()} ${MONTHS_GEN[d.getMonth()]}`; }
 
@@ -1356,7 +1507,7 @@
         ...days.map(d=>{ const c=["mini-day", d.getMonth()!==m?"outside":"", sameDay(d,new Date())?"today":"", sameDay(d,state.selectedDate)?"selected":"", dates.has(iso(d))?"has-events":""].filter(Boolean).join(" ");
           return `<button class="${c}" data-date="${iso(d)}">${d.getDate()}</button>`; })].join("");
       els.miniGrid.querySelectorAll(".mini-day").forEach(b=>b.addEventListener("click", ()=>{
-        state.selectedDate=parseDate(b.dataset.date); state.miniDate=new Date(state.selectedDate);
+        state.selectedDate=parseDate(b.dataset.date); state.miniDate=new Date(state.selectedDate); state.anchor=null;
         if(state.view==="month"||state.view==="agenda") state.view="day";
         saveView(); syncViewButtons(); if(isMobile()) closeDrawer(); renderAll();
       }));
@@ -1402,7 +1553,7 @@
       if(!payload.title){ toast("Добавьте название"); return; }
       if(state.editingId){ state.events=state.events.map(x=>x.id===state.editingId?{...x,...payload}:x); toast("Сохранено"); }
       else { state.events.push({ id:uid(), ...payload }); toast("Создано"); }
-      saveEvents(); state.selectedDate=parseDate(payload.date); state.miniDate=parseDate(payload.date); closeModal(); renderAll();
+      saveEvents(); state.selectedDate=parseDate(payload.date); state.miniDate=parseDate(payload.date); state.anchor=null; closeModal(); renderAll();
     }
 
     /* ---------- storage ---------- */
@@ -1415,7 +1566,8 @@
     function hexA(hex, a){ const h=hex.replace("#",""); const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return `rgba(${r},${g},${b},${a})`; }
     function toast(msg){ els.toast.textContent=msg; els.toast.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>els.toast.classList.remove("show"),2000); }
 
-    setInterval(()=>{ if(state.view==="week"||state.view==="day"){ const days=state.view==="week"?Array.from({length:7},(_,i)=>addDays(startOfWeek(state.selectedDate),i)):[state.selectedDate]; els.shell.querySelectorAll(".now-line").forEach(n=>n.remove()); addNowLine(days); } }, 60000);
+    setInterval(()=>{ if(state.view==="week"||state.view==="day"){ els.shell.querySelectorAll(".now-line").forEach(n=>n.remove()); addNowLine(); } }, 60000);
+    window.addEventListener("resize", ()=>{ if(gridState && (state.view==="week"||state.view==="day")) renderGrid(state.view); });
 
     init();
   </script>
