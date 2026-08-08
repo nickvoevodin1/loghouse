@@ -9,51 +9,51 @@
   <title>AI Calendar MVP</title>
   <style>
     :root {
-      --bg: #ffffff;
+      --bg: #f3f4f7;
       --surface: #ffffff;
-      --surface-2: #f1f3f4;
-      --surface-3: #f8f9fa;
-      --line: #dadce0;
-      --line-soft: #e8eaed;
-      --text: #3c4043;
-      --muted: #70757a;
-      --muted-2: #9aa0a6;
-      --accent: #5b5fc7;
-      --accent-dark: #4b4fb0;
+      --surface-2: #eef0f5;
+      --surface-3: #f7f8fb;
+      --line: #dde0ea;
+      --line-soft: #e8eaf2;
+      --text: #18192a;
+      --muted: #5f6480;
+      --muted-2: #9295a8;
+      --accent: #7c6df2;
+      --accent-dark: #6a5be0;
       --accent-text: #fff;
-      --blue: #1a73e8;
-      --red: #d93025;
-      --shadow: 0 1px 2px rgba(60,64,67,0.18), 0 2px 6px rgba(60,64,67,0.10);
-      --radius: 6px;
+      --blue: #3b82f6;
+      --red: #ef4444;
+      --shadow: 0 1px 4px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+      --radius: 8px;
       --hour-height: 48px;
       --sidebar: 256px;
       --topbar: 56px;
       --mini-cell: 30px;
       --safe-top: env(safe-area-inset-top, 0px);
-      --hover: #f1f3f4;
-      --weekend-bg: #ffffff;
-      --today-bg: #f4f5fb;
-      font-family: "Google Sans", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      --hover: #eeedff;
+      --weekend-bg: #f6f5ff;
+      --today-bg: #eeedff;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
       font-size: 13px;
     }
 
     [data-theme="dark"] {
-      --bg: #202124;
-      --surface: #202124;
-      --surface-2: #292a2d;
-      --surface-3: #303134;
-      --line: #3c4043;
-      --line-soft: #35363a;
-      --text: #e8eaed;
-      --muted: #9aa0a6;
-      --muted-2: #5f6368;
-      --accent: #8a8ce0;
-      --accent-dark: #7779d4;
+      --bg: #0f0e17;
+      --surface: #16151f;
+      --surface-2: #1e1d2a;
+      --surface-3: #1a1928;
+      --line: #282640;
+      --line-soft: #201f34;
+      --text: #dddce8;
+      --muted: #6e6e96;
+      --muted-2: #48486a;
+      --accent: #7c6df2;
+      --accent-dark: #6a5be0;
       --accent-text: #fff;
-      --shadow: 0 1px 3px rgba(0,0,0,0.4);
-      --hover: #35363a;
-      --weekend-bg: #202124;
-      --today-bg: #25262e;
+      --shadow: 0 2px 8px rgba(0,0,0,0.5);
+      --hover: #1e1d30;
+      --weekend-bg: #121121;
+      --today-bg: #1c1b2c;
     }
 
     * { box-sizing: border-box; }
@@ -656,6 +656,13 @@
       text-align: right;
       padding-right: 10px;
       transform: translateY(-7px);
+    }
+
+    /* the 00:00 label has no hour line above it, so shifting it up would
+       tuck it under the sticky "all day" header — keep it in place */
+    .time-label:first-child {
+      transform: none;
+      padding-top: 2px;
     }
 
     .day-col {
@@ -1377,7 +1384,7 @@
 
       .app {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto 1fr;
+        grid-template-rows: auto 1fr;
       }
 
       .topbar {
@@ -1411,29 +1418,56 @@
 
       .desktop-views { display: none; }
 
-      /* view switch as its own full-width bar */
+      /* bottom tab bar: views on the sides, big "+" in the middle */
       .mobile-views {
         display: flex;
-        grid-row: 2;
-        grid-column: 1;
-        gap: 4px;
-        padding: 6px 10px;
+        align-items: center;
+        justify-content: space-around;
+        gap: 2px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 40;
+        padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
         background: var(--surface);
-        border-bottom: 1px solid var(--line);
+        border-top: 1px solid var(--line);
+        box-shadow: 0 -2px 10px rgba(0,0,0,.16);
       }
-      .mobile-views button {
+      .mobile-views button[data-view] {
         flex: 1;
-        height: 32px;
-        border-radius: 6px;
+        min-width: 0;
+        height: 42px;
+        border-radius: 10px;
         color: var(--muted);
         font-weight: 600;
-        font-size: 13px;
-        background: var(--surface-2);
+        font-size: 12px;
+        background: transparent;
       }
-      .mobile-views button.active {
+      .mobile-views button[data-view].active {
         background: var(--accent);
-        color: white;
+        color: #fff;
       }
+      /* centre add button */
+      .mobile-views .bb-add {
+        flex: 0 0 auto;
+        width: 52px;
+        height: 52px;
+        margin: -16px 6px 0;
+        border-radius: 16px;
+        background: var(--accent);
+        color: var(--accent-text);
+        font-size: 26px;
+        font-weight: 400;
+        line-height: 1;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,.28);
+      }
+      .mobile-views .bb-add:active { transform: scale(.94); }
+
+      /* keep calendar content clear of the bar */
+      .main { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
 
       /* sidebar becomes drawer */
       .sidebar {
@@ -1475,9 +1509,10 @@
         font-size: 13px;
       }
 
-      .main { grid-row: 3; }
+      .main { grid-row: 2; }
 
-      .fab { display: flex; }
+      /* the "+" now lives in the bottom bar, so the floating button is gone */
+      .fab { display: none; }
 
       /* week fits the whole screen so a swipe pages the entire week at once */
       .week-header .hrow { grid-template-columns: 42px repeat(7, minmax(0, 1fr)); }
@@ -1930,6 +1965,7 @@
     <nav class="mobile-views" id="viewSwitchMobile">
       <button data-view="day">День</button>
       <button data-view="week" class="active">Неделя</button>
+      <button type="button" class="bb-add" id="bbAdd" aria-label="Создать событие">＋</button>
       <button data-view="month">Месяц</button>
       <button data-view="agenda">Список</button>
     </nav>
@@ -2383,6 +2419,7 @@
       calendarShell: document.getElementById("calendarShell"),
       viewSwitch: document.getElementById("viewSwitch"),
       viewSwitchMobile: document.getElementById("viewSwitchMobile"),
+      bbAdd: document.getElementById("bbAdd"),
       todayBtn: document.getElementById("todayBtn"),
       prevBtn: document.getElementById("prevBtn"),
       nextBtn: document.getElementById("nextBtn"),
@@ -2566,6 +2603,13 @@
 
       els.createBtn.addEventListener("click", () => {
         if (isMobile()) closeDrawer();
+        const date = isoDate(state.selectedDate);
+        openModal({ date, start: nextRoundedTime(), end: addMinutesToTime(nextRoundedTime(), 60) });
+      });
+
+      // "+" in the mobile bottom bar
+      els.bbAdd.addEventListener("click", () => {
+        closeDrawer();
         const date = isoDate(state.selectedDate);
         openModal({ date, start: nextRoundedTime(), end: addMinutesToTime(nextRoundedTime(), 60) });
       });
