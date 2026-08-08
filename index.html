@@ -688,6 +688,20 @@
       background: rgba(124, 109, 242, .06);
     }
 
+    /* shaded non-working hours */
+    .offhours {
+      position: absolute;
+      left: 0; right: 0;
+      background: var(--surface-2);
+      opacity: .45;
+      pointer-events: none;
+      z-index: 1;
+    }
+    [data-theme="dark"] .offhours { opacity: .35; }
+
+    /* multi-day all-day chip marker */
+    .allday-chip.multi { font-style: normal; opacity: .95; }
+
     .now-line {
       position: absolute;
       left: 62px;
@@ -738,6 +752,7 @@
       box-shadow: none;
     }
     .event.is-task { z-index: 5; }
+    .event.dragging { z-index: 20; opacity: .85; box-shadow: 0 6px 18px rgba(0,0,0,.35); cursor: grabbing; }
 
     .event-title {
       font-weight: 600;
@@ -1065,6 +1080,75 @@
       flex-direction: column;
     }
 
+    /* reusable tool modal (find-time, analytics) */
+    .tool-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .38);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 55;
+      padding: 20px;
+    }
+    .tool-modal-backdrop.open { display: flex; }
+    .tool-modal {
+      width: min(520px, 96vw);
+      background: var(--surface);
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .tool-modal-body { padding: 14px 16px 18px; overflow: auto; }
+    @media (max-width: 760px) {
+      .tool-modal-backdrop { align-items: flex-end; padding: 0; }
+      .tool-modal {
+        width: 100%;
+        max-height: 90vh;
+        border-radius: 12px 12px 0 0;
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+    }
+
+    /* free-slot / analytics widgets */
+    .slot-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .slot-item button {
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .stat-bar-row { margin-bottom: 10px; }
+    .stat-bar-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+    .stat-bar-track { height: 10px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+    .stat-bar-fill { height: 100%; border-radius: 6px; }
+    .tool-field { display: grid; gap: 5px; margin-bottom: 12px; }
+    .tool-field label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    .tool-field select, .tool-field input {
+      height: 38px; border: 1px solid var(--line); border-radius: 8px;
+      background: var(--surface-2); color: var(--text); padding: 0 10px; font-size: 14px;
+    }
+    .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat-big { font-size: 26px; font-weight: 750; }
+    .stat-cap { font-size: 12px; color: var(--muted); }
+
     .modal-head {
       padding: 14px 16px;
       border-bottom: 1px solid var(--line-soft);
@@ -1164,6 +1248,23 @@
     }
     .dur-chip:hover { border-color: var(--muted-2); }
     .dur-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .byday-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .byday-chip {
+      width: 40px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .byday-chip.on {
       background: var(--accent);
       border-color: var(--accent);
       color: #fff;
@@ -1575,11 +1676,38 @@
     /* read-only holiday chip in all-day row */
     .allday-chip.holiday { font-style: italic; }
 
+    /* sidebar tools */
+    .tools-list { display: grid; gap: 6px; }
+    .tool-btn {
+      width: 100%;
+      text-align: left;
+      padding: 9px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .tool-btn:hover { background: var(--hover); border-color: var(--muted-2); }
+
+    .mini-select {
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 13px;
+      padding: 0 6px;
+    }
+    .work-range { display: flex; align-items: center; gap: 6px; }
+
     /* small settings rows in drawer */
     .setting-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       padding: 7px 0;
       font-size: 14px;
       font-weight: 650;
@@ -1863,6 +1991,20 @@
 
       <section class="sidebar-section">
         <div class="section-head">
+          <span>Инструменты</span>
+        </div>
+        <div class="tools-list">
+          <button class="tool-btn" id="findTimeBtn">🔎 Найти свободное время</button>
+          <button class="tool-btn" id="analyticsBtn">📊 Аналитика времени</button>
+          <button class="tool-btn" id="carryTasksBtn">↪ Перенести задачи на сегодня</button>
+          <button class="tool-btn" id="exportBtn">⤴ Экспорт .ics</button>
+          <button class="tool-btn" id="importBtn">⤵ Импорт .ics</button>
+          <input type="file" id="importFile" accept=".ics,text/calendar" style="display:none" />
+        </div>
+      </section>
+
+      <section class="sidebar-section">
+        <div class="section-head">
           <span>Настройки</span>
         </div>
         <div class="setting-row">
@@ -1881,13 +2023,28 @@
           <span>Номера недель</span>
           <label class="switch"><input type="checkbox" id="setWeekNumbers" /><span></span></label>
         </div>
-      </section>
-
-      <section class="sidebar-section">
-        <div class="ai-card">
-          <h3>Следующий этап</h3>
-          <p>Здесь потом можно добавить ИИ-распределение задач по свободным слотам недели.</p>
-          <button id="demoPlanBtn">Показать идею</button>
+        <div class="setting-row">
+          <span>Формат 12 часов (AM/PM)</span>
+          <label class="switch"><input type="checkbox" id="setHour12" /><span></span></label>
+        </div>
+        <div class="setting-row">
+          <span>Затенять нерабочие часы</span>
+          <label class="switch"><input type="checkbox" id="setWorkHours" /><span></span></label>
+        </div>
+        <div class="setting-row">
+          <span>Первый день недели</span>
+          <select id="setWeekStart" class="mini-select">
+            <option value="1">Понедельник</option>
+            <option value="0">Воскресенье</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <span>Рабочие часы</span>
+          <span class="work-range">
+            <select id="setWorkStart" class="mini-select"></select>
+            <span>–</span>
+            <select id="setWorkEnd" class="mini-select"></select>
+          </span>
         </div>
       </section>
     </aside>
@@ -1933,6 +2090,11 @@
           </div>
         </div>
 
+        <div class="field" id="endDateField" style="display:none">
+          <label for="eventEndDate">Дата окончания (многодневное)</label>
+          <input id="eventEndDate" type="date" />
+        </div>
+
         <div id="timeFields">
           <div class="form-grid">
             <div class="field">
@@ -1964,7 +2126,48 @@
             <option value="biweekly">Каждые 2 недели</option>
             <option value="monthly">Каждый месяц</option>
             <option value="yearly">Каждый год</option>
+            <option value="custom">Настроить…</option>
           </select>
+        </div>
+
+        <div id="customRepeat" style="display:none">
+          <div class="form-grid">
+            <div class="field">
+              <label for="rruleFreq">Частота</label>
+              <select id="rruleFreq">
+                <option value="daily">Дней</option>
+                <option value="weekly" selected>Недель</option>
+                <option value="monthly">Месяцев</option>
+                <option value="yearly">Лет</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="rruleInterval">Каждые</label>
+              <input id="rruleInterval" type="number" min="1" max="99" value="1" />
+            </div>
+          </div>
+          <div class="field" id="rruleBydayField">
+            <label>По дням недели</label>
+            <div class="byday-row" id="bydayRow"></div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="rruleEndType">Окончание</label>
+              <select id="rruleEndType">
+                <option value="never">Никогда</option>
+                <option value="until">До даты</option>
+                <option value="count">После N раз</option>
+              </select>
+            </div>
+            <div class="field" id="rruleUntilField" style="display:none">
+              <label for="rruleUntil">До</label>
+              <input id="rruleUntil" type="date" />
+            </div>
+            <div class="field" id="rruleCountField" style="display:none">
+              <label for="rruleCount">Повторов</label>
+              <input id="rruleCount" type="number" min="1" max="365" value="10" />
+            </div>
+          </div>
         </div>
 
         <div class="field">
@@ -2000,8 +2203,13 @@
         </div>
 
         <div class="field">
+          <label for="eventAttendees">Участники</label>
+          <input id="eventAttendees" placeholder="Имена или @ник через запятую" />
+        </div>
+
+        <div class="field">
           <label for="eventDescription">Описание</label>
-          <textarea id="eventDescription" placeholder="Заметка, участники..."></textarea>
+          <textarea id="eventDescription" placeholder="Заметка, повестка..."></textarea>
         </div>
 
         <div class="modal-actions">
@@ -2026,6 +2234,16 @@
     </div>
   </div>
 
+  <div class="tool-modal-backdrop" id="toolModalBackdrop">
+    <div class="tool-modal">
+      <div class="modal-head">
+        <h2 id="toolModalTitle">Инструмент</h2>
+        <button type="button" class="icon-btn" id="toolModalClose">×</button>
+      </div>
+      <div class="tool-modal-body" id="toolModalBody"></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -2043,6 +2261,13 @@
     const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
     const MONTHS_TITLE = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
     const MONTHS_SHORT = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+
+    /* UI prefs that some helpers need before `state` exists (e.g. startOfWeek
+       runs while building demo events). Kept in sync with the settings below. */
+    let uiPrefs = {
+      weekStart: Number(loadFlag("focusCalendar.weekStart", 1)),  // 1=Mon, 0=Sun
+      hour12: loadFlag("focusCalendar.hour12", false)
+    };
 
     // Works even when the page is opened as a local file (non-secure context),
     // where crypto.randomUUID is unavailable.
@@ -2147,6 +2372,9 @@
       notify: loadFlag("focusCalendar.notify", false),
       hideWeekends: loadFlag("focusCalendar.hideWeekends", false),
       weekNumbers: loadFlag("focusCalendar.weekNumbers", false),
+      workHours: loadFlag("focusCalendar.workHours", true),
+      workStart: Number(loadFlag("focusCalendar.workStart", 9)),
+      workEnd: Number(loadFlag("focusCalendar.workEnd", 18)),
       history: []
     };
 
@@ -2182,10 +2410,34 @@
       setHolidays: document.getElementById("setHolidays"),
       setHideWeekends: document.getElementById("setHideWeekends"),
       setWeekNumbers: document.getElementById("setWeekNumbers"),
+      setHour12: document.getElementById("setHour12"),
+      setWorkHours: document.getElementById("setWorkHours"),
+      setWeekStart: document.getElementById("setWeekStart"),
+      setWorkStart: document.getElementById("setWorkStart"),
+      setWorkEnd: document.getElementById("setWorkEnd"),
+      findTimeBtn: document.getElementById("findTimeBtn"),
+      analyticsBtn: document.getElementById("analyticsBtn"),
+      carryTasksBtn: document.getElementById("carryTasksBtn"),
+      exportBtn: document.getElementById("exportBtn"),
+      importBtn: document.getElementById("importBtn"),
+      importFile: document.getElementById("importFile"),
       voiceBtn: document.getElementById("voiceBtn"),
       eventLocation: document.getElementById("eventLocation"),
       eventPriority: document.getElementById("eventPriority"),
       eventColorRow: document.getElementById("eventColorRow"),
+      eventEndDate: document.getElementById("eventEndDate"),
+      endDateField: document.getElementById("endDateField"),
+      eventAttendees: document.getElementById("eventAttendees"),
+      customRepeat: document.getElementById("customRepeat"),
+      rruleFreq: document.getElementById("rruleFreq"),
+      rruleInterval: document.getElementById("rruleInterval"),
+      rruleBydayField: document.getElementById("rruleBydayField"),
+      bydayRow: document.getElementById("bydayRow"),
+      rruleEndType: document.getElementById("rruleEndType"),
+      rruleUntilField: document.getElementById("rruleUntilField"),
+      rruleUntil: document.getElementById("rruleUntil"),
+      rruleCountField: document.getElementById("rruleCountField"),
+      rruleCount: document.getElementById("rruleCount"),
       choiceBackdrop: document.getElementById("choiceBackdrop"),
       choiceTitle: document.getElementById("choiceTitle"),
       choiceText: document.getElementById("choiceText"),
@@ -2201,7 +2453,6 @@
       eventAllDay: document.getElementById("eventAllDay"),
       timeFields: document.getElementById("timeFields"),
       durRow: document.getElementById("durRow"),
-      demoPlanBtn: document.getElementById("demoPlanBtn"),
       toast: document.getElementById("toast"),
       sidebar: document.getElementById("sidebar"),
       scrim: document.getElementById("scrim"),
@@ -2209,7 +2460,11 @@
       drawerClose: document.getElementById("drawerClose"),
       fab: document.getElementById("fab"),
       themeBtn: document.getElementById("themeBtn"),
-      themeIcon: document.getElementById("themeIcon")
+      themeIcon: document.getElementById("themeIcon"),
+      toolModalBackdrop: document.getElementById("toolModalBackdrop"),
+      toolModalTitle: document.getElementById("toolModalTitle"),
+      toolModalBody: document.getElementById("toolModalBody"),
+      toolModalClose: document.getElementById("toolModalClose")
     };
 
     /* Telegram Mini App: expand to full height, keep content clear of
@@ -2342,6 +2597,7 @@
 
       els.eventAllDay.addEventListener("change", () => {
         els.timeFields.style.display = els.eventAllDay.checked ? "none" : "block";
+        els.endDateField.style.display = els.eventAllDay.checked ? "block" : "none";
       });
 
       els.durRow.addEventListener("click", (e) => {
@@ -2350,6 +2606,11 @@
       });
       els.eventStart.addEventListener("change", syncDurationChips);
       els.eventEnd.addEventListener("change", syncDurationChips);
+
+      // custom recurrence UI toggles
+      els.eventRepeat.addEventListener("change", syncRepeatUI);
+      els.rruleFreq.addEventListener("change", syncRepeatUI);
+      els.rruleEndType.addEventListener("change", syncRepeatUI);
 
       els.remindersGroup.addEventListener("change", (e) => {
         const chip = e.target.closest(".reminder-chip");
@@ -2396,8 +2657,48 @@
         saveEventFromForm();
       });
 
-      els.demoPlanBtn.addEventListener("click", () => {
-        showToast("На 2 этапе сюда добавим автопланирование задач по свободным слотам");
+      // tools
+      els.findTimeBtn.addEventListener("click", openFindTime);
+      els.analyticsBtn.addEventListener("click", openAnalytics);
+      els.carryTasksBtn.addEventListener("click", carryOverTasks);
+      els.exportBtn.addEventListener("click", exportIcs);
+      els.importBtn.addEventListener("click", () => els.importFile.click());
+      els.importFile.addEventListener("change", handleImportFile);
+
+      // display settings
+      els.setHour12.checked = uiPrefs.hour12;
+      els.setHour12.addEventListener("change", () => {
+        uiPrefs.hour12 = els.setHour12.checked;
+        saveFlag("focusCalendar.hour12", uiPrefs.hour12);
+        renderAll();
+      });
+      els.setWorkHours.checked = state.workHours;
+      els.setWorkHours.addEventListener("change", () => {
+        state.workHours = els.setWorkHours.checked;
+        saveFlag("focusCalendar.workHours", state.workHours);
+        renderAll();
+      });
+      els.setWeekStart.value = String(uiPrefs.weekStart);
+      els.setWeekStart.addEventListener("change", () => {
+        uiPrefs.weekStart = Number(els.setWeekStart.value);
+        saveFlag("focusCalendar.weekStart", uiPrefs.weekStart);
+        renderAll();
+      });
+      // work-hours range selects
+      const hourOpts = Array.from({ length: 25 }, (_, h) => `<option value="${h}">${formatHourLabel(h)}</option>`).join("");
+      els.setWorkStart.innerHTML = hourOpts;
+      els.setWorkEnd.innerHTML = hourOpts;
+      els.setWorkStart.value = String(state.workStart);
+      els.setWorkEnd.value = String(state.workEnd);
+      els.setWorkStart.addEventListener("change", () => {
+        state.workStart = Number(els.setWorkStart.value);
+        saveFlag("focusCalendar.workStart", state.workStart);
+        renderAll();
+      });
+      els.setWorkEnd.addEventListener("change", () => {
+        state.workEnd = Number(els.setWorkEnd.value);
+        saveFlag("focusCalendar.workEnd", state.workEnd);
+        renderAll();
       });
 
       // natural-language quick add
@@ -2450,16 +2751,13 @@
         if (e.target === els.choiceBackdrop && els.choiceCancel.onclick) els.choiceCancel.onclick();
       });
 
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") { closeModal(); closeDrawer(); els.choiceBackdrop.classList.remove("open"); }
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-          const tag = (e.target.tagName || "").toLowerCase();
-          if (tag === "input" || tag === "textarea" || tag === "select") return;
-          e.preventDefault();
-          undo();
-        }
+      // tool modal close
+      els.toolModalClose.addEventListener("click", closeToolModal);
+      els.toolModalBackdrop.addEventListener("click", (e) => {
+        if (e.target === els.toolModalBackdrop) closeToolModal();
       });
 
+      bindKeyboardShortcuts();
       bindSwipe();
     }
 
@@ -2506,7 +2804,7 @@
     }
     function fireNotification(ev, offset) {
       const when = offset === 0 ? "сейчас" : `через ${offset < 60 ? offset + " мин" : (offset / 60) + " ч"}`;
-      const body = `${ev.allDay ? "Весь день" : ev.start} · ${when}`;
+      const body = `${ev.allDay ? "Весь день" : formatTime(ev.start)} · ${when}`;
       try {
         if (state.notify && "Notification" in window && Notification.permission === "granted") {
           new Notification(ev.title, { body });
@@ -2596,6 +2894,43 @@
       if (!start) start = nextRoundedTime();
       const end = addMinutesToTime(start, durMin);
       return { title: title.charAt(0).toUpperCase() + title.slice(1), date: isoDate(date), start, end, calendarId: "startup" };
+    }
+
+    /* keyboard shortcuts (Google-Calendar style) */
+    function bindKeyboardShortcuts() {
+      document.addEventListener("keydown", (e) => {
+        const tag = (e.target.tagName || "").toLowerCase();
+        const typing = tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable;
+
+        // Escape and undo work everywhere
+        if (e.key === "Escape") {
+          closeModal(); closeDrawer(); closeToolModal();
+          els.choiceBackdrop.classList.remove("open");
+          return;
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+          if (typing) return;
+          e.preventDefault(); undo(); return;
+        }
+        if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+        // don't fire while a modal is open
+        if (els.modalBackdrop.classList.contains("open") || els.toolModalBackdrop.classList.contains("open")) return;
+
+        const setView = (v) => { state.view = v; saveView(); syncViewButtons(); renderAll(); };
+        switch (e.key.toLowerCase()) {
+          case "c": e.preventDefault(); openModal({ date: isoDate(state.selectedDate) }); break;
+          case "t": goToday(); break;
+          case "d": case "1": setView("day"); break;
+          case "x": case "2": setView("4day"); break;
+          case "w": case "3": setView("week"); break;
+          case "m": case "4": setView("month"); break;
+          case "a": case "5": setView("agenda"); break;
+          case "arrowright": case "n": case "j": navigate(1); break;
+          case "arrowleft": case "p": case "k": navigate(-1); break;
+          case "f": e.preventDefault(); openFindTime(); break;
+          case "/": e.preventDefault(); (isMobile() ? els.searchInputMobile : els.searchInput).focus(); break;
+        }
+      });
     }
 
     /* swipe to navigate prev/next on the calendar area */
@@ -2737,7 +3072,7 @@
 
       els.miniGrid.innerHTML = [
         ...(showWN ? ['<div class="mini-wnum"></div>'] : []),
-        ...DOW.map(d => `<div class="dow">${d}</div>`),
+        ...orderedDow().map(d => `<div class="dow">${d}</div>`),
         ...rows
       ].join("");
 
@@ -2807,12 +3142,15 @@
         <div class="hrow allday-row"${dynCols}>
           <div class="allday-label">весь<br>день</div>
           ${days.map(day => {
-            const dayAllDay = occ.filter(ev => ev.date === isoDate(day) && ev.allDay);
+            const iso = isoDate(day);
+            const dayAllDay = occ.filter(ev => ev.allDay && spansDay(ev, iso));
             return `<div class="allday-cell">${dayAllDay.map(ev => {
               const cal = getCalendar(ev.calendarId);
               const color = ev.color || cal.color;
-              const cls = "allday-chip" + (ev._holiday ? " holiday" : "");
-              return `<button class="${cls}" data-event-id="${ev.id}" data-date="${ev.date}" style="background:${color}">${escapeHtml(ev.title)}</button>`;
+              const multi = (ev._spanDays || 0) > 0;
+              const contd = multi && ev.date !== iso ? " ↩" : "";
+              const cls = "allday-chip" + (ev._holiday ? " holiday" : "") + (multi ? " multi" : "");
+              return `<button class="${cls}" data-event-id="${ev.id}" data-date="${ev.date}" style="background:${color}">${escapeHtml(ev.title)}${contd}</button>`;
             }).join("")}</div>`;
           }).join("")}
         </div>
@@ -2822,22 +3160,36 @@
 
       const timeLabels = `
         <div class="time-col">
-          ${Array.from({ length: HOURS }, (_, i) => `<div class="time-label">${pad(START_HOUR + i)}:00</div>`).join("")}
+          ${Array.from({ length: HOURS }, (_, i) => `<div class="time-label">${formatHourLabel(START_HOUR + i)}</div>`).join("")}
         </div>
       `;
 
+      // working-hours shading: dim the hours outside [workStart, workEnd)
+      const workShade = state.workHours ? (() => {
+        const parts = [];
+        if (state.workStart > START_HOUR) {
+          parts.push(`<div class="offhours" style="top:0;height:${(state.workStart - START_HOUR) * HOUR_HEIGHT}px"></div>`);
+        }
+        if (state.workEnd < END_HOUR) {
+          parts.push(`<div class="offhours" style="top:${(state.workEnd - START_HOUR) * HOUR_HEIGHT}px;height:${(END_HOUR - state.workEnd) * HOUR_HEIGHT}px"></div>`);
+        }
+        return parts.join("");
+      })() : "";
+
       const columns = days.map(day => {
-        const dayEvents = occ.filter(ev => ev.date === isoDate(day) && !ev.allDay);
+        const iso = isoDate(day);
+        const dayEvents = occ.filter(ev => ev.date === iso && !ev.allDay);
         const dayClass = [
           "day-col",
-          [0,6].includes(day.getDay()) ? "weekend" : "",
+          isWeekendDay(day) ? "weekend" : "",
           sameDay(day, new Date()) ? "today-bg" : ""
         ].filter(Boolean).join(" ");
 
         return `
-          <div class="${dayClass}" data-date="${isoDate(day)}">
+          <div class="${dayClass}" data-date="${iso}">
+            ${workShade}
             ${Array.from({ length: HOURS }, (_, i) => `
-              <div class="hour-cell" data-date="${isoDate(day)}" data-hour="${START_HOUR + i}"></div>
+              <div class="hour-cell" data-date="${iso}" data-hour="${START_HOUR + i}"></div>
             `).join("")}
             ${layoutDayEvents(dayEvents)}
           </div>
@@ -2932,7 +3284,7 @@
             ${check}
             <div style="min-width:0;flex:1">
               <div class="event-title">${priorityDot}${escapeHtml(ev.title)}${repeatBadge}</div>
-              ${height > 34 ? `<div class="event-time">${ev.start} — ${ev.end}</div>` : ""}
+              ${height > 34 ? `<div class="event-time">${formatTime(ev.start)} — ${formatTime(ev.end)}</div>` : ""}
               ${height > 62 && ev.description ? `<div class="event-desc">${escapeHtml(ev.description)}</div>` : ""}
               ${locationLine}
             </div>
@@ -3189,6 +3541,8 @@
       renderAll();
     }
 
+    let suppressClickUntil = 0;
+
     function bindEventInteractions() {
       els.calendarShell.querySelectorAll("[data-toggle-done]").forEach(btn => {
         btn.addEventListener("click", (e) => {
@@ -3202,12 +3556,78 @@
       els.calendarShell.querySelectorAll(".event[data-event-id], .allday-chip[data-event-id]").forEach(el => {
         el.addEventListener("click", (e) => {
           if (e.target.closest("[data-toggle-done], [data-resize]")) return;
+          if (Date.now() < suppressClickUntil) return;   // just finished a drag-move
           e.stopPropagation();
           openByElement(el);
         });
         el.addEventListener("dragstart", (e) => {
           e.dataTransfer.setData("text/event-id", el.dataset.eventId);
         });
+        if (el.classList.contains("event")) bindEventMove(el);
+      });
+    }
+
+    /* mobile: long-press an event, then drag to move it to another time/day */
+    function bindEventMove(el) {
+      el.addEventListener("pointerdown", (e) => {
+        if (!isMobile() || e.pointerType === "mouse") return;
+        if (e.target.closest("[data-resize], .event-check")) return;
+        const col0 = el.closest(".day-col");
+        const base = state.events.find(x => x.id === el.dataset.eventId);
+        if (!col0 || !base || base._holiday) return;
+        if (base.repeat && base.repeat !== "none") return; // don't move whole series by drag
+
+        const durMin = timeToMinutes(base.end) - timeToMinutes(base.start);
+        const grabOffset = e.clientY - el.getBoundingClientRect().top;
+        const startX = e.clientX, startY = e.clientY;
+        let moveMode = false, moved = false, newStart = timeToMinutes(base.start), newDate = base.date;
+
+        const timer = setTimeout(() => {
+          moveMode = true;
+          try { el.setPointerCapture(e.pointerId); } catch {}
+          el.classList.add("dragging");
+          if (navigator.vibrate) navigator.vibrate(15);
+        }, 350);
+
+        const onMove = (ev) => {
+          if (!moveMode) {
+            if (Math.abs(ev.clientX - startX) > 10 || Math.abs(ev.clientY - startY) > 10) cleanup();
+            return;
+          }
+          ev.preventDefault();
+          moved = true;
+          const under = document.elementFromPoint(ev.clientX, ev.clientY);
+          const targetCol = (under && under.closest && under.closest(".day-col")) || col0;
+          const rect = targetCol.getBoundingClientRect();
+          let mins = Math.round(((ev.clientY - rect.top - grabOffset) / HOUR_HEIGHT * 60) / 15) * 15;
+          mins = Math.max(START_HOUR * 60, Math.min(mins, END_HOUR * 60 - durMin));
+          newStart = mins;
+          newDate = targetCol.dataset.date;
+          el.style.top = ((mins - START_HOUR * 60) / 60 * HOUR_HEIGHT) + "px";
+        };
+        const onUp = () => {
+          clearTimeout(timer);
+          cleanup();
+          el.classList.remove("dragging");
+          if (moveMode && moved) {
+            suppressClickUntil = Date.now() + 400;
+            pushHistory();
+            base.date = newDate; base.endDate = newDate;
+            base.start = minToHHMM(newStart);
+            base.end = minToHHMM(Math.min(newStart + durMin, END_HOUR * 60 - 1));
+            base.allDay = false;
+            saveEvents(); scheduleNotifications(); renderAll();
+            showToast("Событие перенесено");
+          }
+        };
+        function cleanup() {
+          document.removeEventListener("pointermove", onMove);
+          document.removeEventListener("pointerup", onUp);
+          document.removeEventListener("pointercancel", onUp);
+        }
+        document.addEventListener("pointermove", onMove, { passive: false });
+        document.addEventListener("pointerup", onUp);
+        document.addEventListener("pointercancel", onUp);
       });
     }
 
@@ -3284,7 +3704,7 @@
         const isToday = sameDay(day, new Date());
         const items = groups[dateStr].map(ev => {
           const cal = getCalendar(ev.calendarId);
-          const time = ev.allDay ? "Весь день" : `${ev.start} — ${ev.end}`;
+          const time = ev.allDay ? "Весь день" : `${formatTime(ev.start)} — ${formatTime(ev.end)}`;
           const repeatBadge = (ev.repeat && ev.repeat !== "none") ? " ⟳" : "";
           const check = ev.isTask
             ? `<button class="agenda-check" data-toggle-done="${ev.id}" data-date="${ev.date}" title="Выполнено">${CHECK_SVG}</button>`
@@ -3342,7 +3762,7 @@
       els.calendarShell.innerHTML = `
         <div class="month-view">
           <div class="month-grid">
-            ${DOW.map(d => `<div class="month-dow">${d}</div>`).join("")}
+            ${orderedDow().map(d => `<div class="month-dow">${d}</div>`).join("")}
             ${days.map(day => {
               const dateStr = isoDate(day);
               const events = occ.filter(ev => ev.date === dateStr)
@@ -3367,10 +3787,10 @@
                   ${shown.map(ev => {
                     const cal = getCalendar(ev.calendarId);
                     const color = ev.color || cal.color;
-                    const label = ev.allDay ? escapeHtml(ev.title) : `${ev.start} ${escapeHtml(ev.title)}`;
+                    const label = ev.allDay ? escapeHtml(ev.title) : `${formatTime(ev.start)} ${escapeHtml(ev.title)}`;
                     return `<button class="month-event" data-event-id="${ev.id}" data-date="${ev.date}" style="background:${color}">${label}</button>`;
                   }).join("")}
-                  ${hidden > 0 ? `<div class="more-label" style="color:var(--muted);font-size:12px;font-weight:700;">+ ещё ${hidden}</div>` : ""}
+                  ${hidden > 0 ? `<button class="more-label" data-peek-date="${dateStr}" style="color:var(--muted);font-size:12px;font-weight:700;text-align:left;">+ ещё ${hidden}</button>` : ""}
                 </div>
               `;
             }).join("")}
@@ -3402,9 +3822,40 @@
         });
       });
 
+      els.calendarShell.querySelectorAll("[data-peek-date]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openDayPeek(btn.dataset.peekDate);
+        });
+      });
+
       els.calendarShell.querySelectorAll(".month-cell").forEach(cell => {
         cell.addEventListener("dblclick", () => {
           openModal({ date: cell.dataset.date, start: "10:00", end: "11:00" });
+        });
+      });
+    }
+
+    /* popover listing all events of a single day (month "+N more") */
+    function openDayPeek(iso) {
+      const day = parseDate(iso);
+      const events = getOccurrences(iso, iso)
+        .filter(ev => ev.date === iso || spansDay(ev, iso))
+        .sort((a, b) => Number(b.allDay) - Number(a.allDay) || a.start.localeCompare(b.start));
+      const rows = events.map(ev => {
+        const cal = getCalendar(ev.calendarId);
+        const time = ev.allDay ? "Весь день" : `${formatTime(ev.start)}–${formatTime(ev.end)}`;
+        return `<button class="slot-item" data-peek-event="${ev.id}" data-peek-evdate="${ev.date}" style="width:100%;text-align:left;cursor:pointer">
+          <span><span class="calendar-dot" style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${ev.color || cal.color};margin-right:8px"></span>${escapeHtml(ev.title)}</span>
+          <span style="color:var(--muted);font-size:13px">${time}</span>
+        </button>`;
+      }).join("") || `<p style="color:var(--muted)">Нет событий.</p>`;
+      openToolModal(`${day.getDate()} ${MONTHS_TITLE[day.getMonth()]}`, rows);
+      els.toolModalBody.querySelectorAll("[data-peek-event]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const ev = state.events.find(x => x.id === btn.dataset.peekEvent);
+          closeToolModal();
+          if (ev) openModal({ ...ev, date: btn.dataset.peekEvdate });
         });
       });
     }
@@ -3425,7 +3876,7 @@
       els.upcomingList.innerHTML = events.map(ev => {
         const day = parseDate(ev.date);
         const cal = getCalendar(ev.calendarId);
-        const time = ev.allDay ? "весь день" : `${ev.start} — ${ev.end}`;
+        const time = ev.allDay ? "весь день" : `${formatTime(ev.start)} — ${formatTime(ev.end)}`;
         return `
           <button class="upcoming-card" data-event-id="${ev.id}" data-date="${ev.date}" style="text-align:left;border-left:3px solid ${ev.color || cal.color}">
             <div class="upcoming-time">${humanDate(day)} · ${time}</div>
@@ -3500,24 +3951,366 @@
       syncDurationChips();
     }
 
+    /* ---------------- TOOL MODAL ---------------- */
+    function openToolModal(title, html) {
+      els.toolModalTitle.textContent = title;
+      els.toolModalBody.innerHTML = html;
+      els.toolModalBackdrop.classList.add("open");
+    }
+    function closeToolModal() {
+      els.toolModalBackdrop.classList.remove("open");
+      els.toolModalBody.innerHTML = "";
+    }
+
+    /* ---------------- FIND FREE TIME ---------------- */
+    function busyIntervalsForDay(iso) {
+      // returns sorted [ [startMin,endMin], ... ] of non-all-day, non-task events
+      const occ = getOccurrences(iso, iso)
+        .filter(ev => !ev.allDay && !ev._holiday && ev.date === iso);
+      return occ.map(ev => [timeToMinutes(ev.start), timeToMinutes(ev.end)])
+        .sort((a, b) => a[0] - b[0]);
+    }
+    function findFreeSlots({ durationMin, days, dayStart, dayEnd }) {
+      const results = [];
+      let cursor = new Date();
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+      for (let d = 0; d < days && results.length < 30; d++) {
+        const day = addDays(cursor, d);
+        const iso = isoDate(day);
+        const busy = busyIntervalsForDay(iso);
+        // earliest free time today is "now" rounded up
+        let from = dayStart * 60;
+        if (d === 0) {
+          const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+          from = Math.max(from, Math.ceil(nowMin / 15) * 15);
+        }
+        const limit = dayEnd * 60;
+        for (const [bs, be] of busy) {
+          if (be <= from) continue;
+          if (bs - from >= durationMin) {
+            results.push({ iso, start: from, end: from + durationMin });
+          }
+          from = Math.max(from, be);
+          if (from >= limit) break;
+        }
+        if (limit - from >= durationMin) {
+          results.push({ iso, start: from, end: from + durationMin });
+        }
+      }
+      return results.slice(0, 20);
+    }
+    function openFindTime() {
+      closeDrawer();
+      const html = `
+        <div class="tool-grid">
+          <div class="tool-field">
+            <label>Длительность</label>
+            <select id="ftDuration">
+              <option value="30">30 минут</option>
+              <option value="60" selected>1 час</option>
+              <option value="90">1.5 часа</option>
+              <option value="120">2 часа</option>
+            </select>
+          </div>
+          <div class="tool-field">
+            <label>На сколько дней вперёд</label>
+            <select id="ftDays">
+              <option value="7" selected>7 дней</option>
+              <option value="14">14 дней</option>
+              <option value="30">30 дней</option>
+            </select>
+          </div>
+          <div class="tool-field">
+            <label>Не раньше</label>
+            <select id="ftFrom"></select>
+          </div>
+          <div class="tool-field">
+            <label>Не позже</label>
+            <select id="ftTo"></select>
+          </div>
+        </div>
+        <button class="tool-btn" id="ftSearch" style="background:var(--accent);color:#fff;border:none;font-weight:700;height:40px">Показать свободные слоты</button>
+        <div id="ftResults" style="margin-top:14px"></div>
+      `;
+      openToolModal("Найти свободное время", html);
+      const hourOpts = Array.from({ length: 25 }, (_, h) => `<option value="${h}">${formatHourLabel(h)}</option>`).join("");
+      const from = document.getElementById("ftFrom");
+      const to = document.getElementById("ftTo");
+      from.innerHTML = hourOpts; to.innerHTML = hourOpts;
+      from.value = String(state.workStart); to.value = String(state.workEnd);
+
+      document.getElementById("ftSearch").addEventListener("click", () => {
+        const durationMin = Number(document.getElementById("ftDuration").value);
+        const days = Number(document.getElementById("ftDays").value);
+        const dayStart = Number(from.value), dayEnd = Number(to.value);
+        if (dayEnd <= dayStart) { showToast("Диапазон часов задан неверно"); return; }
+        const slots = findFreeSlots({ durationMin, days, dayStart, dayEnd });
+        const box = document.getElementById("ftResults");
+        if (!slots.length) { box.innerHTML = `<p style="color:var(--muted)">Свободных слотов не найдено в этом диапазоне.</p>`; return; }
+        box.innerHTML = slots.map((s, i) => {
+          const d = parseDate(s.iso);
+          const label = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}, ${formatTime(minToHHMM(s.start))}–${formatTime(minToHHMM(s.end))}`;
+          return `<div class="slot-item"><span>${label}</span><button data-slot="${i}">Создать</button></div>`;
+        }).join("");
+        box.querySelectorAll("[data-slot]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const s = slots[Number(btn.dataset.slot)];
+            closeToolModal();
+            openModal({ date: s.iso, start: minToHHMM(s.start), end: minToHHMM(s.end) });
+          });
+        });
+      });
+    }
+    function minToHHMM(min) { return `${pad(Math.floor(min / 60))}:${pad(min % 60)}`; }
+
+    /* names of timed events that overlap the given payload (same day) */
+    function findConflicts(payload, excludeId) {
+      if (payload.allDay || payload.isTask) return [];
+      const s = timeToMinutes(payload.start), e = timeToMinutes(payload.end);
+      return getOccurrences(payload.date, payload.date)
+        .filter(ev => ev.date === payload.date && !ev.allDay && !ev.isTask && !ev._holiday
+          && ev._baseId !== excludeId && ev.id !== excludeId
+          && timeToMinutes(ev.start) < e && s < timeToMinutes(ev.end))
+        .map(ev => ev.title);
+    }
+
+    /* ---------------- ANALYTICS ---------------- */
+    function openAnalytics() {
+      closeDrawer();
+      const start = startOfWeek(state.selectedDate);
+      const end = addDays(start, 6);
+      const occ = getOccurrences(isoDate(start), isoDate(end))
+        .filter(ev => !ev._holiday && !ev.allDay);
+      const perCal = {};
+      let totalMin = 0, meetingMin = 0;
+      const perDay = {};
+      occ.forEach(ev => {
+        const mins = Math.max(0, timeToMinutes(ev.end) - timeToMinutes(ev.start));
+        totalMin += mins;
+        perCal[ev.calendarId] = (perCal[ev.calendarId] || 0) + mins;
+        perDay[ev.date] = (perDay[ev.date] || 0) + mins;
+        if ((ev.attendees || []).length > 0) meetingMin += mins;
+      });
+      const fmtH = (m) => (m / 60).toFixed(1).replace(".0", "") + " ч";
+      const busiest = Object.entries(perDay).sort((a, b) => b[1] - a[1])[0];
+      const busiestLabel = busiest ? (() => { const d = parseDate(busiest[0]); return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} · ${fmtH(busiest[1])}`; })() : "—";
+      const maxCal = Math.max(1, ...Object.values(perCal));
+      const bars = Object.entries(perCal).sort((a, b) => b[1] - a[1]).map(([id, m]) => {
+        const cal = getCalendar(id);
+        return `<div class="stat-bar-row">
+          <div class="stat-bar-top"><span>${escapeHtml(cal.name)}</span><span>${fmtH(m)}</span></div>
+          <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.round(m / maxCal * 100)}%;background:${cal.color}"></div></div>
+        </div>`;
+      }).join("") || `<p style="color:var(--muted)">На этой неделе нет событий со временем.</p>`;
+      const html = `
+        <div class="tool-grid" style="margin-bottom:16px">
+          <div><div class="stat-big">${fmtH(totalMin)}</div><div class="stat-cap">Всего занято за неделю</div></div>
+          <div><div class="stat-big">${occ.length}</div><div class="stat-cap">Событий</div></div>
+          <div><div class="stat-big">${fmtH(meetingMin)}</div><div class="stat-cap">Встречи с участниками</div></div>
+          <div><div class="stat-big" style="font-size:18px;padding-top:6px">${busiestLabel}</div><div class="stat-cap">Самый плотный день</div></div>
+        </div>
+        <h3 style="margin:0 0 10px;font-size:14px">По календарям</h3>
+        ${bars}
+      `;
+      openToolModal(`Аналитика · ${start.getDate()}–${end.getDate()} ${MONTHS_SHORT[end.getMonth()]}`, html);
+    }
+
+    /* ---------------- CARRY OVER TASKS ---------------- */
+    function carryOverTasks() {
+      closeDrawer();
+      const todayIso = isoDate(new Date());
+      const overdue = state.events.filter(ev =>
+        ev.isTask && !ev.done && (!ev.repeat || ev.repeat === "none") && ev.date < todayIso
+      );
+      if (!overdue.length) { showToast("Нет незавершённых задач за прошлые дни"); return; }
+      pushHistory();
+      overdue.forEach(ev => { ev.date = todayIso; ev.endDate = todayIso; });
+      saveEvents();
+      scheduleNotifications();
+      renderAll();
+      showToast(`Перенесено задач на сегодня: ${overdue.length}`);
+    }
+
+    /* ---------------- .ICS EXPORT / IMPORT ---------------- */
+    function icsDate(iso, hhmm, allDay) {
+      const [y, m, d] = iso.split("-");
+      if (allDay) return `${y}${m}${d}`;
+      const [h, mi] = (hhmm || "00:00").split(":");
+      return `${y}${m}${d}T${h}${mi}00`;
+    }
+    function icsEscape(s) {
+      return String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+    }
+    function rruleToIcs(ev) {
+      const map = { daily: "DAILY", weekly: "WEEKLY", biweekly: "WEEKLY", monthly: "MONTHLY", yearly: "YEARLY" };
+      if (ev.repeat === "none" || !ev.repeat) return null;
+      if (ev.repeat === "custom" && ev.rrule) {
+        const rr = ev.rrule;
+        let s = `FREQ=${(map[rr.freq] || "WEEKLY")};INTERVAL=${rr.interval || 1}`;
+        if (rr.freq === "weekly" && Array.isArray(rr.byday) && rr.byday.length) {
+          const days = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+          s += `;BYDAY=${rr.byday.map(d => days[d]).join(",")}`;
+        }
+        if (rr.end && rr.end.type === "until" && rr.end.until) s += `;UNTIL=${rr.end.until.replace(/-/g, "")}`;
+        if (rr.end && rr.end.type === "count" && rr.end.count) s += `;COUNT=${rr.end.count}`;
+        return s;
+      }
+      let s = `FREQ=${map[ev.repeat]}`;
+      if (ev.repeat === "biweekly") s += ";INTERVAL=2";
+      return s;
+    }
+    function exportIcs() {
+      closeDrawer();
+      const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//FocusCalendar//RU"];
+      state.events.forEach(ev => {
+        lines.push("BEGIN:VEVENT");
+        lines.push(`UID:${ev.id}@focuscalendar`);
+        if (ev.allDay) {
+          lines.push(`DTSTART;VALUE=DATE:${icsDate(ev.date, null, true)}`);
+          const endExclusive = isoDate(addDays(parseDate(ev.endDate || ev.date), 1));
+          lines.push(`DTEND;VALUE=DATE:${icsDate(endExclusive, null, true)}`);
+        } else {
+          lines.push(`DTSTART:${icsDate(ev.date, ev.start)}`);
+          lines.push(`DTEND:${icsDate(ev.date, ev.end)}`);
+        }
+        lines.push(`SUMMARY:${icsEscape(ev.title)}`);
+        if (ev.description) lines.push(`DESCRIPTION:${icsEscape(ev.description)}`);
+        if (ev.location) lines.push(`LOCATION:${icsEscape(ev.location)}`);
+        const rr = rruleToIcs(ev);
+        if (rr) lines.push(`RRULE:${rr}`);
+        lines.push("END:VEVENT");
+      });
+      lines.push("END:VCALENDAR");
+      const blob = new Blob([lines.join("\r\n")], { type: "text/calendar" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `focus-calendar-${isoDate(new Date())}.ics`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      showToast(`Экспортировано событий: ${state.events.length}`);
+    }
+    function parseIcsDate(val) {
+      // returns { iso, time|null, allDay }
+      const m = val.match(/(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2}))?/);
+      if (!m) return null;
+      const iso = `${m[1]}-${m[2]}-${m[3]}`;
+      if (m[4]) return { iso, time: `${m[4]}:${m[5]}`, allDay: false };
+      return { iso, time: null, allDay: true };
+    }
+    function handleImportFile(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const added = importIcsText(String(reader.result));
+          showToast(added ? `Импортировано событий: ${added}` : "События не найдены");
+        } catch (err) {
+          showToast("Не удалось прочитать файл .ics");
+        }
+        els.importFile.value = "";
+      };
+      reader.readAsText(file);
+    }
+    function importIcsText(text) {
+      const unfolded = text.replace(/\r\n[ \t]/g, "").replace(/\n[ \t]/g, "");
+      const blocks = unfolded.split(/BEGIN:VEVENT/).slice(1);
+      let added = 0;
+      pushHistory();
+      blocks.forEach(block => {
+        const body = block.split(/END:VEVENT/)[0];
+        const get = (key) => {
+          const re = new RegExp(`(?:^|\\n)${key}[^:\\n]*:(.*)`, "i");
+          const mm = body.match(re);
+          return mm ? mm[1].trim() : "";
+        };
+        const summary = get("SUMMARY").replace(/\\,/g, ",").replace(/\\;/g, ";").replace(/\\n/gi, " ").replace(/\\\\/g, "\\");
+        const dtStart = get("DTSTART");
+        if (!dtStart) return;
+        const s = parseIcsDate(dtStart);
+        if (!s) return;
+        const dtEnd = get("DTEND");
+        const en = dtEnd ? parseIcsDate(dtEnd) : null;
+        const allDay = s.allDay;
+        let endDate = s.iso, endTime = null;
+        if (en) {
+          if (allDay) { endDate = isoDate(addDays(parseDate(en.iso), -1)); if (endDate < s.iso) endDate = s.iso; }
+          else endTime = en.time;
+        }
+        state.events.push(normalizeEvent({
+          id: uid(),
+          title: summary || "Событие",
+          date: s.iso,
+          endDate: allDay ? endDate : s.iso,
+          start: allDay ? "00:00" : (s.time || "09:00"),
+          end: allDay ? "23:59" : (endTime || addMinutesToTime(s.time || "09:00", 60)),
+          allDay,
+          description: get("DESCRIPTION").replace(/\\n/gi, "\n").replace(/\\,/g, ",").replace(/\\;/g, ";"),
+          location: get("LOCATION").replace(/\\,/g, ",").replace(/\\;/g, ";"),
+          calendarId: "startup"
+        }));
+        added++;
+      });
+      if (added) { saveEvents(); scheduleNotifications(); renderAll(); }
+      return added;
+    }
+
+    /* build the weekday toggle chips for custom recurrence, ordered by weekStart */
+    function renderBydayChips(selected = []) {
+      const order = Array.from({ length: 7 }, (_, i) => (uiPrefs.weekStart + i) % 7);
+      els.bydayRow.innerHTML = order.map(dow =>
+        `<button type="button" class="byday-chip${selected.includes(dow) ? " on" : ""}" data-dow="${dow}">${DOW[(dow + 6) % 7]}</button>`
+      ).join("");
+      els.bydayRow.querySelectorAll(".byday-chip").forEach(chip => {
+        chip.addEventListener("click", () => chip.classList.toggle("on"));
+      });
+    }
+    function getBydaySelection() {
+      return [...els.bydayRow.querySelectorAll(".byday-chip.on")].map(c => Number(c.dataset.dow));
+    }
+
+    /* show/hide the custom-recurrence sub-fields based on the current choices */
+    function syncRepeatUI() {
+      const custom = els.eventRepeat.value === "custom";
+      els.customRepeat.style.display = custom ? "block" : "none";
+      els.rruleBydayField.style.display = (custom && els.rruleFreq.value === "weekly") ? "grid" : "none";
+      els.rruleUntilField.style.display = (custom && els.rruleEndType.value === "until") ? "grid" : "none";
+      els.rruleCountField.style.display = (custom && els.rruleEndType.value === "count") ? "grid" : "none";
+    }
+
     function openModal(data = {}) {
       state.editingId = data.id || null;
       state.editingInstanceDate = data.id ? (data.date || null) : null;
       els.modalTitle.textContent = data.id ? "Редактировать событие" : "Новое событие";
       els.eventTitle.value = data.title || "";
       els.eventDate.value = data.date || isoDate(state.selectedDate);
+      els.eventEndDate.value = data.endDate && data.endDate !== (data.date || isoDate(state.selectedDate)) ? data.endDate : "";
       els.eventStart.value = data.start || "10:00";
       els.eventEnd.value = data.end || "11:00";
       els.eventCalendar.value = (data.calendarId === "holidays") ? "startup" : (data.calendarId || "startup");
       els.eventDescription.value = data.description || "";
       els.eventLocation.value = data.location || "";
+      els.eventAttendees.value = Array.isArray(data.attendees) ? data.attendees.join(", ") : "";
       els.eventPriority.value = data.priority || "";
       els.eventAllDay.checked = Boolean(data.allDay);
       els.eventIsTask.checked = Boolean(data.isTask);
       els.eventRepeat.value = data.repeat || "none";
+
+      // custom recurrence fields
+      const rr = data.rrule || {};
+      els.rruleFreq.value = rr.freq || "weekly";
+      els.rruleInterval.value = rr.interval || 1;
+      els.rruleEndType.value = (rr.end && rr.end.type) || "never";
+      els.rruleUntil.value = (rr.end && rr.end.until) || "";
+      els.rruleCount.value = (rr.end && rr.end.count) || 10;
+      renderBydayChips(Array.isArray(rr.byday) ? rr.byday : []);
+      syncRepeatUI();
+
       setReminderChips(Array.isArray(data.reminders) ? data.reminders : []);
       renderColorSwatches(data.color || "");
       els.timeFields.style.display = els.eventAllDay.checked ? "none" : "block";
+      els.endDateField.style.display = els.eventAllDay.checked ? "block" : "none";
       syncDurationChips();
       els.deleteEvent.classList.toggle("visible", Boolean(data.id));
       els.duplicateEvent.style.display = data.id ? "" : "none";
@@ -3546,18 +4339,46 @@
         return;
       }
 
+      // multi-day end date (all-day events only)
+      let endDate = els.eventDate.value;
+      if (allDay && els.eventEndDate.value && els.eventEndDate.value >= els.eventDate.value) {
+        endDate = els.eventEndDate.value;
+      }
+
+      // custom recurrence rrule
+      let repeat = els.eventRepeat.value;
+      let rrule = null;
+      if (repeat === "custom") {
+        const endType = els.rruleEndType.value;
+        rrule = {
+          freq: els.rruleFreq.value,
+          interval: Math.max(1, Number(els.rruleInterval.value) || 1),
+          byday: els.rruleFreq.value === "weekly" ? getBydaySelection() : [],
+          end: {
+            type: endType,
+            until: endType === "until" ? els.rruleUntil.value : null,
+            count: endType === "count" ? Math.max(1, Number(els.rruleCount.value) || 1) : null
+          }
+        };
+      }
+
+      const attendees = els.eventAttendees.value.split(",").map(s => s.trim()).filter(Boolean);
+
       const evColor = getSelectedColor();
       const payload = {
         title: els.eventTitle.value.trim(),
         date: els.eventDate.value,
+        endDate,
         start, end,
         allDay,
         isTask: els.eventIsTask.checked,
-        repeat: els.eventRepeat.value,
+        repeat,
+        rrule,
         reminders: getReminderChips(),
         calendarId: els.eventCalendar.value,
         description: els.eventDescription.value.trim(),
         location: els.eventLocation.value.trim(),
+        attendees,
         priority: els.eventPriority.value,
         color: evColor || null
       };
@@ -3565,23 +4386,21 @@
       if (!payload.title) { showToast("Добавь название события"); return; }
 
       const base = state.editingId ? state.events.find(ev => ev.id === state.editingId) : null;
+      const conflicts = findConflicts(payload, base ? base.id : null);
 
       const commit = (scope) => {
         pushHistory();
         if (!base) {
           state.events.push(normalizeEvent({ id: uid(), ...payload }));
-          showToast("Событие создано");
         } else if (scope === "this") {
           // detach this occurrence: add exception to series + create standalone event
           base.exceptions = [...(base.exceptions || []), state.editingInstanceDate];
-          state.events.push(normalizeEvent({ id: uid(), ...payload, repeat: "none" }));
-          showToast("Изменено только это событие");
+          state.events.push(normalizeEvent({ id: uid(), ...payload, repeat: "none", rrule: null }));
         } else {
           // edit whole series (or simple event): keep base id, keep series exceptions/doneDates
           state.events = state.events.map(ev => ev.id === base.id
             ? normalizeEvent({ ...ev, ...payload })
             : ev);
-          showToast("Событие обновлено");
         }
         saveEvents();
         scheduleNotifications();
@@ -3589,6 +4408,11 @@
         state.miniDate = parseDate(payload.date);
         closeModal();
         renderAll();
+        if (conflicts.length) {
+          showToast(`⚠ Пересекается: ${conflicts.slice(0, 2).join(", ")}${conflicts.length > 2 ? "…" : ""}`);
+        } else {
+          showToast(base ? "Событие обновлено" : "Событие создано");
+        }
       };
 
       if (base && base.repeat && base.repeat !== "none") {
@@ -3628,28 +4452,62 @@
       const startD = parseDate(startIso), endD = parseDate(endIso);
 
       getVisibleEvents().forEach(ev => {
-        if (!ev.repeat || ev.repeat === "none") {
-          if (ev.date >= startIso && ev.date <= endIso) out.push(ev);
-          return;
-        }
-        // recurring: walk from base date until past the window
+        const spanDays = Math.max(0, Math.round((parseDate(ev.endDate || ev.date) - parseDate(ev.date)) / 86400000));
+        const pushOcc = (iso) => {
+          if ((ev.exceptions || []).includes(iso)) return;
+          const occStart = parseDate(iso);
+          const occEnd = addDays(occStart, spanDays);
+          if (occEnd < startD || occStart > endD) return; // span outside window
+          out.push({ ...ev, date: iso, endDate: isoDate(occEnd), _baseId: ev.id, _instanceDate: iso, _spanDays: spanDays });
+        };
+
+        if (!ev.repeat || ev.repeat === "none") { pushOcc(ev.date); return; }
+
+        const rr = ev.rrule || {};
+        const interval = Math.max(1, rr.interval || 1);
+        const byday = (ev.repeat === "custom" && Array.isArray(rr.byday) && rr.byday.length) ? rr.byday : null;
+        const maxCount = (rr.end && rr.end.type === "count") ? Math.max(1, rr.end.count || 1) : Infinity;
+        const untilIso = (rr.end && rr.end.type === "until" && rr.end.until) ? rr.end.until : null;
         let cursor = parseDate(ev.date);
         const baseDay = cursor.getDate();
-        let guard = 0;
-        while (cursor <= endD && guard < 1000) {
+        let count = 0, guard = 0;
+
+        // custom weekly on specific weekdays
+        if (byday) {
+          let weekCursor = startOfWeek(cursor);
+          while (weekCursor <= endD && guard < 6000 && count < maxCount) {
+            guard++;
+            let broke = false;
+            for (let i = 0; i < 7; i++) {
+              const day = addDays(weekCursor, i);
+              if (day < cursor) continue;
+              if (!byday.includes(day.getDay())) continue;
+              const iso = isoDate(day);
+              if (untilIso && iso > untilIso) { broke = true; break; }
+              if (count >= maxCount) { broke = true; break; }
+              count++;
+              pushOcc(iso);
+            }
+            if (broke) break;
+            weekCursor = addDays(weekCursor, 7 * interval);
+          }
+          return;
+        }
+
+        // simple stepping series
+        const freq = ev.repeat === "custom" ? (rr.freq || "weekly") : ev.repeat;
+        while (cursor <= endD && guard < 6000 && count < maxCount) {
           guard++;
           const iso = isoDate(cursor);
-          if (cursor >= startD && !(ev.exceptions || []).includes(iso)) {
-            out.push({ ...ev, date: iso, _baseId: ev.id, _instanceDate: iso });
-          }
-          if (ev.repeat === "daily") cursor = addDays(cursor, 1);
-          else if (ev.repeat === "weekly") cursor = addDays(cursor, 7);
-          else if (ev.repeat === "biweekly") cursor = addDays(cursor, 14);
-          else if (ev.repeat === "yearly") {
-            cursor = new Date(cursor.getFullYear() + 1, cursor.getMonth(), baseDay);
-          } else {
-            // monthly: keep day-of-month, skip months that are too short
-            const nm = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+          if (untilIso && iso > untilIso) break;
+          count++;
+          pushOcc(iso);
+          if (freq === "daily") cursor = addDays(cursor, interval);
+          else if (freq === "weekly") cursor = addDays(cursor, 7 * interval);
+          else if (freq === "biweekly") cursor = addDays(cursor, 14);
+          else if (freq === "yearly") cursor = new Date(cursor.getFullYear() + interval, cursor.getMonth(), baseDay);
+          else { // monthly
+            const nm = new Date(cursor.getFullYear(), cursor.getMonth() + interval, 1);
             const maxDay = new Date(nm.getFullYear(), nm.getMonth() + 1, 0).getDate();
             nm.setDate(Math.min(baseDay, maxDay));
             cursor = nm;
@@ -3664,10 +4522,10 @@
             const iso = `${y}-${pad(h.m)}-${pad(h.d)}`;
             if (iso >= startIso && iso <= endIso) {
               out.push({
-                id: `hol-${iso}`, title: h.name, date: iso,
+                id: `hol-${iso}`, title: h.name, date: iso, endDate: iso,
                 start: "00:00", end: "23:59", allDay: true,
                 calendarId: "holidays", reminders: [], repeat: "none",
-                isTask: false, done: false, description: "", _holiday: true
+                isTask: false, done: false, description: "", _holiday: true, _spanDays: 0
               });
             }
           });
@@ -3676,13 +4534,19 @@
       return out;
     }
 
+    /* does an (all-day, possibly multi-day) occurrence cover the given day? */
+    function spansDay(ev, iso) {
+      return ev.date <= iso && iso <= (ev.endDate || ev.date);
+    }
+
     function getCalendar(id) {
       return calendars.find(c => c.id === id) || calendars[0];
     }
 
     /* ---------------- STORAGE ---------------- */
     function normalizeEvent(ev) {
-      const out = { allDay: false, repeat: "none", isTask: false, done: false, exceptions: [], reminders: [], location: "", priority: "", color: null, ...ev };
+      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], location: "", priority: "", color: null, attendees: [], meetingLink: "", endDate: null, calendarId: "startup", ...ev };
+      if (!out.calendarId) out.calendarId = "startup";
       // migrate legacy single `reminder` -> reminders[]
       if (!Array.isArray(out.reminders)) out.reminders = [];
       if (ev.reminder !== undefined && ev.reminder !== "" && ev.reminder !== null) {
@@ -3691,6 +4555,8 @@
       }
       delete out.reminder;
       if (!Array.isArray(out.exceptions)) out.exceptions = [];
+      if (!Array.isArray(out.attendees)) out.attendees = [];
+      if (!out.endDate) out.endDate = out.date;
       return out;
     }
     function loadEvents() {
@@ -3727,9 +4593,31 @@
     /* ---------------- DATE HELPERS ---------------- */
     function startOfWeek(date) {
       const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      const day = (d.getDay() + 6) % 7;
+      const day = (d.getDay() - uiPrefs.weekStart + 7) % 7;
       d.setDate(d.getDate() - day);
       return d;
+    }
+    /* weekday short labels ordered by the chosen first day of week */
+    function orderedDow() {
+      return Array.from({ length: 7 }, (_, i) => DOW[(uiPrefs.weekStart + i + 6) % 7]);
+    }
+    function isWeekendDay(date) {
+      return date.getDay() === 0 || date.getDay() === 6;
+    }
+    /* format a HH:MM string honouring the 12/24-hour setting */
+    function formatTime(hhmm) {
+      if (!hhmm) return "";
+      if (!uiPrefs.hour12) return hhmm;
+      let [h, m] = hhmm.split(":").map(Number);
+      const ampm = h < 12 ? "AM" : "PM";
+      h = h % 12; if (h === 0) h = 12;
+      return `${h}:${pad(m)} ${ampm}`;
+    }
+    function formatHourLabel(h) {
+      if (!uiPrefs.hour12) return `${pad(h)}:00`;
+      if (h === 0) return "12 AM";
+      if (h === 12) return "12 PM";
+      return h < 12 ? `${h} AM` : `${h - 12} PM`;
     }
     function addDays(date, days) {
       const d = new Date(date);
