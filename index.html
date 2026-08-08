@@ -280,8 +280,8 @@
     }
 
     .sidebar-section {
-      margin-top: 16px;
-      padding-top: 14px;
+      margin-top: 8px;
+      padding-top: 8px;
       border-top: 1px solid var(--line-soft);
     }
 
@@ -296,6 +296,33 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
+
+    /* collapsible sections keep the drawer short */
+    details.sidebar-section > summary.section-head {
+      cursor: pointer;
+      list-style: none;
+      margin-bottom: 0;
+      padding: 7px 0;
+      user-select: none;
+      border-radius: 6px;
+    }
+    details.sidebar-section > summary.section-head::-webkit-details-marker { display: none; }
+    details.sidebar-section > summary.section-head::after {
+      content: "";
+      width: 7px;
+      height: 7px;
+      margin-right: 3px;
+      border-right: 1.8px solid currentColor;
+      border-bottom: 1.8px solid currentColor;
+      transform: rotate(45deg) translate(-2px, -2px);
+      transition: transform .18s ease;
+      opacity: .8;
+    }
+    details.sidebar-section[open] > summary.section-head::after {
+      transform: rotate(-135deg) translate(-2px, -2px);
+    }
+    details.sidebar-section > summary.section-head:hover { color: var(--text); }
+    details.sidebar-section[open] > summary.section-head { margin-bottom: 6px; }
 
     .mini-month {
       background: transparent;
@@ -370,16 +397,16 @@
 
     .calendar-list {
       display: grid;
-      gap: 10px;
+      gap: 3px;
     }
 
     .calendar-item {
       display: flex;
       align-items: center;
       gap: 8px;
-      min-height: 30px;
+      min-height: 26px;
       border-radius: 6px;
-      padding: 4px 6px;
+      padding: 2px 6px;
       color: var(--text);
       font-weight: 500;
       font-size: 13px;
@@ -405,7 +432,7 @@
 
     .upcoming {
       display: grid;
-      gap: 10px;
+      gap: 6px;
     }
 
     .upcoming-card {
@@ -1051,7 +1078,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity .25s ease;
-      z-index: 30;
+      z-index: 42;
     }
 
     .scrim.open {
@@ -1476,7 +1503,7 @@
         left: 0;
         bottom: 0;
         width: min(330px, 86vw);
-        z-index: 35;
+        z-index: 45;
         transform: translateX(-104%);
         transition: transform .28s cubic-bezier(.4,.0,.2,1);
         box-shadow: var(--shadow);
@@ -1605,8 +1632,8 @@
     .quick-add-hint {
       font-size: 11px;
       color: var(--muted-2);
-      margin: -2px 0 10px;
-      line-height: 1.4;
+      margin: -2px 0 8px;
+      line-height: 1.35;
     }
     .voice-btn {
       width: 34px;
@@ -1712,11 +1739,11 @@
     .allday-chip.holiday { font-style: italic; }
 
     /* sidebar tools */
-    .tools-list { display: grid; gap: 6px; }
+    .tools-list { display: grid; gap: 4px; }
     .tool-btn {
       width: 100%;
       text-align: left;
-      padding: 9px 11px;
+      padding: 8px 10px;
       border-radius: 8px;
       border: 1px solid var(--line);
       background: var(--surface-2);
@@ -1743,9 +1770,9 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      padding: 7px 0;
-      font-size: 14px;
-      font-weight: 650;
+      padding: 4px 0;
+      font-size: 13px;
+      font-weight: 600;
     }
     .switch { position: relative; width: 42px; height: 24px; flex: 0 0 auto; }
     .switch input { opacity: 0; width: 0; height: 0; }
@@ -1996,7 +2023,7 @@
           </svg>
         </button>
       </div>
-      <div class="quick-add-hint">Быстрое создание: «завтра в 15:30 встреча на 2 часа». Enter — открыть карточку.</div>
+      <div class="quick-add-hint">Например: «завтра в 15:30 встреча на 2 часа»</div>
 
       <button class="create-btn" id="createBtn">＋ Создать событие</button>
 
@@ -2011,24 +2038,18 @@
         </div>
       </section>
 
-      <section class="sidebar-section">
-        <div class="section-head">
-          <span>Мои календари</span>
-        </div>
+      <details class="sidebar-section" open>
+        <summary class="section-head"><span>Мои календари</span></summary>
         <div class="calendar-list" id="calendarList"></div>
-      </section>
+      </details>
 
-      <section class="sidebar-section">
-        <div class="section-head">
-          <span>Ближайшие</span>
-        </div>
+      <details class="sidebar-section">
+        <summary class="section-head"><span>Ближайшие</span></summary>
         <div class="upcoming" id="upcomingList"></div>
-      </section>
+      </details>
 
-      <section class="sidebar-section">
-        <div class="section-head">
-          <span>Инструменты</span>
-        </div>
+      <details class="sidebar-section">
+        <summary class="section-head"><span>Инструменты</span></summary>
         <div class="tools-list">
           <button class="tool-btn" id="findTimeBtn">🔎 Найти свободное время</button>
           <button class="tool-btn" id="analyticsBtn">📊 Аналитика времени</button>
@@ -2037,16 +2058,10 @@
           <button class="tool-btn" id="importBtn">⤵ Импорт .ics</button>
           <input type="file" id="importFile" accept=".ics,text/calendar" style="display:none" />
         </div>
-      </section>
+      </details>
 
-      <section class="sidebar-section">
-        <div class="section-head">
-          <span>Настройки</span>
-        </div>
-        <div class="setting-row">
-          <span>Уведомления в браузере</span>
-          <label class="switch"><input type="checkbox" id="setNotify" /><span></span></label>
-        </div>
+      <details class="sidebar-section">
+        <summary class="section-head"><span>Вид календаря</span></summary>
         <div class="setting-row">
           <span>Российские праздники</span>
           <label class="switch"><input type="checkbox" id="setHolidays" checked /><span></span></label>
@@ -2060,18 +2075,18 @@
           <label class="switch"><input type="checkbox" id="setWeekNumbers" /><span></span></label>
         </div>
         <div class="setting-row">
-          <span>Формат 12 часов (AM/PM)</span>
-          <label class="switch"><input type="checkbox" id="setHour12" /><span></span></label>
-        </div>
-        <div class="setting-row">
           <span>Затенять нерабочие часы</span>
           <label class="switch"><input type="checkbox" id="setWorkHours" /><span></span></label>
         </div>
         <div class="setting-row">
+          <span>Формат 12 часов</span>
+          <label class="switch"><input type="checkbox" id="setHour12" /><span></span></label>
+        </div>
+        <div class="setting-row">
           <span>Первый день недели</span>
           <select id="setWeekStart" class="mini-select">
-            <option value="1">Понедельник</option>
-            <option value="0">Воскресенье</option>
+            <option value="1">Пн</option>
+            <option value="0">Вс</option>
           </select>
         </div>
         <div class="setting-row">
@@ -2082,7 +2097,15 @@
             <select id="setWorkEnd" class="mini-select"></select>
           </span>
         </div>
-      </section>
+      </details>
+
+      <details class="sidebar-section">
+        <summary class="section-head"><span>Уведомления</span></summary>
+        <div class="setting-row">
+          <span>Уведомления в браузере</span>
+          <label class="switch"><input type="checkbox" id="setNotify" /><span></span></label>
+        </div>
+      </details>
     </aside>
 
     <main class="main">
