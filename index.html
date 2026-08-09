@@ -30,6 +30,7 @@
       --topbar: 56px;
       --mini-cell: 30px;
       --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
       --hover: #eeedff;
       --weekend-bg: #f6f5ff;
       --today-bg: #eeedff;
@@ -545,7 +546,7 @@
     }
 
     .fourday-header .hrow {
-      grid-template-columns: 54px repeat(4, minmax(90px, 1fr));
+      grid-template-columns: 54px repeat(3, minmax(90px, 1fr));
     }
 
     .day-header .hrow {
@@ -661,7 +662,7 @@
     }
 
     .fourday-grid {
-      grid-template-columns: 54px repeat(4, minmax(90px, 1fr));
+      grid-template-columns: 54px repeat(3, minmax(90px, 1fr));
     }
 
     .day-grid {
@@ -786,6 +787,10 @@
       box-shadow: none;
     }
     .event.is-task { z-index: 5; }
+    /* an overnight event is drawn as two slices — flatten the joined edges */
+    .event.seg-head { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    .event.seg-tail { border-top-left-radius: 0; border-top-right-radius: 0; }
+
     .event.dragging { z-index: 20; opacity: .85; box-shadow: 0 6px 18px rgba(0,0,0,.35); cursor: grabbing; }
 
     .event-title {
@@ -819,15 +824,6 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-    }
-
-    .event-priority-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      margin-top: 2px;
-      background: rgba(255,255,255,0.8);
     }
 
     .month-view {
@@ -1445,56 +1441,60 @@
 
       .desktop-views { display: none; }
 
-      /* bottom tab bar: views on the sides, big "+" in the middle */
+      /* bottom tab bar: square-ish buttons, "+" in the middle */
       .mobile-views {
         display: flex;
         align-items: center;
-        justify-content: space-around;
-        gap: 2px;
+        justify-content: space-between;
+        gap: 6px;
         position: fixed;
         left: 0;
         right: 0;
         bottom: 0;
         z-index: 40;
-        padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+        /* extra bottom room so the phone's home indicator never overlaps */
+        padding: 8px 10px calc(18px + var(--safe-bottom));
         background: var(--surface);
         border-top: 1px solid var(--line);
-        box-shadow: 0 -2px 10px rgba(0,0,0,.16);
       }
       .mobile-views button[data-view] {
         flex: 1;
         min-width: 0;
-        height: 42px;
-        border-radius: 10px;
+        height: 44px;
+        border-radius: 12px;
         color: var(--muted);
         font-weight: 600;
         font-size: 12px;
-        background: transparent;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        /* barely-there purple glow underneath */
+        box-shadow: 0 3px 10px -4px rgba(124, 109, 242, .55);
       }
       .mobile-views button[data-view].active {
         background: var(--accent);
+        border-color: var(--accent);
         color: #fff;
+        box-shadow: 0 4px 14px -4px rgba(124, 109, 242, .85);
       }
-      /* centre add button */
+      /* centre add button — same square-with-rounded-corners language */
       .mobile-views .bb-add {
         flex: 0 0 auto;
         width: 52px;
-        height: 52px;
-        margin: -16px 6px 0;
-        border-radius: 16px;
+        height: 44px;
+        border-radius: 12px;
         background: var(--accent);
         color: var(--accent-text);
-        font-size: 26px;
+        font-size: 24px;
         font-weight: 400;
         line-height: 1;
         display: grid;
         place-items: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,.28);
+        box-shadow: 0 4px 14px -4px rgba(124, 109, 242, .9);
       }
       .mobile-views .bb-add:active { transform: scale(.94); }
 
       /* keep calendar content clear of the bar */
-      .main { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+      .main { padding-bottom: calc(78px + var(--safe-bottom)); }
 
       /* sidebar becomes drawer */
       .sidebar {
@@ -1868,15 +1868,6 @@
       color: var(--muted);
     }
 
-    /* priority badge */
-    .priority-badge {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      margin-right: 4px;
-      vertical-align: middle;
-    }
 
     /* location/url in event tooltip */
     .event-location {
@@ -1982,7 +1973,7 @@
 
       <div class="view-switch desktop-views" id="viewSwitch">
         <button data-view="day">День</button>
-        <button data-view="4day">4 дня</button>
+        <button data-view="3day">3 дня</button>
         <button data-view="week" class="active">Неделя</button>
         <button data-view="month">Месяц</button>
         <button data-view="agenda">Список</button>
@@ -1991,10 +1982,10 @@
 
     <nav class="mobile-views" id="viewSwitchMobile">
       <button data-view="day">День</button>
-      <button data-view="week" class="active">Неделя</button>
+      <button data-view="3day">3 дня</button>
       <button type="button" class="bb-add" id="bbAdd" aria-label="Создать событие">＋</button>
+      <button data-view="week" class="active">Неделя</button>
       <button data-view="month">Месяц</button>
-      <button data-view="agenda">Список</button>
     </nav>
 
     <aside class="sidebar" id="sidebar">
@@ -2037,11 +2028,6 @@
           <div class="mini-grid" id="miniGrid"></div>
         </div>
       </section>
-
-      <details class="sidebar-section" open>
-        <summary class="section-head"><span>Мои календари</span></summary>
-        <div class="calendar-list" id="calendarList"></div>
-      </details>
 
       <details class="sidebar-section">
         <summary class="section-head"><span>Ближайшие</span></summary>
@@ -2143,10 +2129,6 @@
             <label for="eventDate">Дата</label>
             <input id="eventDate" type="date" required />
           </div>
-          <div class="field">
-            <label for="eventCalendar">Календарь</label>
-            <select id="eventCalendar"></select>
-          </div>
         </div>
 
         <div class="field" id="endDateField" style="display:none">
@@ -2158,11 +2140,11 @@
           <div class="form-grid">
             <div class="field">
               <label for="eventStart">Начало</label>
-              <input id="eventStart" type="time" step="300" />
+              <input id="eventStart" type="time" step="60" />
             </div>
             <div class="field">
               <label for="eventEnd">Конец</label>
-              <input id="eventEnd" type="time" step="300" />
+              <input id="eventEnd" type="time" step="60" />
             </div>
           </div>
           <div class="dur-row" id="durRow">
@@ -2245,20 +2227,9 @@
           <input id="eventLocation" placeholder="Адрес или https://meet.google.com/..." />
         </div>
 
-        <div class="form-grid">
-          <div class="field">
-            <label for="eventPriority">Приоритет</label>
-            <select id="eventPriority">
-              <option value="">Без приоритета</option>
-              <option value="high">🔴 Высокий</option>
-              <option value="medium">🟡 Средний</option>
-              <option value="low">⚪ Низкий</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Цвет события</label>
-            <div class="color-row" id="eventColorRow"></div>
-          </div>
+        <div class="field">
+          <label>Цвет события</label>
+          <div class="color-row" id="eventColorRow"></div>
         </div>
 
         <div class="field">
@@ -2422,7 +2393,6 @@
       view: loadView(),
       selectedDate: new Date(),
       miniDate: new Date(),
-      visibleCalendars: new Set(calendars.map(c => c.id)),
       search: "",
       editingId: null,
       editingInstanceDate: null,
@@ -2451,7 +2421,6 @@
       miniTitle: document.getElementById("miniTitle"),
       miniPrev: document.getElementById("miniPrev"),
       miniNext: document.getElementById("miniNext"),
-      calendarList: document.getElementById("calendarList"),
       upcomingList: document.getElementById("upcomingList"),
       searchInput: document.getElementById("searchInput"),
       searchInputMobile: document.getElementById("searchInputMobile"),
@@ -2483,7 +2452,6 @@
       importFile: document.getElementById("importFile"),
       voiceBtn: document.getElementById("voiceBtn"),
       eventLocation: document.getElementById("eventLocation"),
-      eventPriority: document.getElementById("eventPriority"),
       eventColorRow: document.getElementById("eventColorRow"),
       eventEndDate: document.getElementById("eventEndDate"),
       endDateField: document.getElementById("endDateField"),
@@ -2508,7 +2476,6 @@
       eventDate: document.getElementById("eventDate"),
       eventStart: document.getElementById("eventStart"),
       eventEnd: document.getElementById("eventEnd"),
-      eventCalendar: document.getElementById("eventCalendar"),
       eventDescription: document.getElementById("eventDescription"),
       eventAllDay: document.getElementById("eventAllDay"),
       timeFields: document.getElementById("timeFields"),
@@ -2540,7 +2507,9 @@
         const safe = tg.safeAreaInset || {};
         const content = tg.contentSafeAreaInset || {};
         const top = (safe.top || 0) + (content.top || 0);
+        const bottom = Math.max(safe.bottom || 0, content.bottom || 0);
         document.documentElement.style.setProperty("--safe-top", top + "px");
+        document.documentElement.style.setProperty("--safe-bottom", bottom + "px");
       };
       applyInsets();
       try {
@@ -2554,8 +2523,6 @@
       initTelegram();
       applyTheme(loadTheme());
       syncViewButtons();
-      renderCalendarList();
-      renderEventCalendarOptions();
       renderColorSwatches("");
       bindEvents();
       renderAll();
@@ -2659,6 +2626,8 @@
       els.closeModal.addEventListener("click", closeModal);
       els.cancelModal.addEventListener("click", closeModal);
       els.modalBackdrop.addEventListener("click", (e) => {
+        // the tap that opened the sheet also fires a click here — ignore it
+        if (Date.now() - (state._modalOpenedAt || 0) < 400) return;
         if (e.target === els.modalBackdrop) closeModal();
       });
 
@@ -2988,7 +2957,7 @@
           case "c": e.preventDefault(); openModal({ date: isoDate(state.selectedDate) }); break;
           case "t": goToday(); break;
           case "d": case "1": setView("day"); break;
-          case "x": case "2": setView("4day"); break;
+          case "x": case "2": setView("3day"); break;
           case "w": case "3": setView("week"); break;
           case "m": case "4": setView("month"); break;
           case "a": case "5": setView("agenda"); break;
@@ -3037,7 +3006,7 @@
 
     function navigate(step) {
       if (state.view === "day") state.selectedDate = addDays(state.selectedDate, step);
-      else if (state.view === "4day") state.selectedDate = addDays(state.selectedDate, step * 4);
+      else if (state.view === "3day") state.selectedDate = addDays(state.selectedDate, step * 3);
       else if (state.view === "week") state.selectedDate = addDays(state.selectedDate, step * 7);
       else if (state.view === "agenda") state.selectedDate = addDays(state.selectedDate, step * 7);
       else state.selectedDate = new Date(state.selectedDate.getFullYear(), state.selectedDate.getMonth() + step, 1);
@@ -3063,8 +3032,8 @@
     function renderTitle() {
       if (state.view === "day") {
         els.rangeTitle.textContent = `${state.selectedDate.getDate()} ${MONTHS_TITLE[state.selectedDate.getMonth()]} ${state.selectedDate.getFullYear()}`;
-      } else if (state.view === "4day") {
-        const end = addDays(state.selectedDate, 3);
+      } else if (state.view === "3day") {
+        const end = addDays(state.selectedDate, 2);
         const sameMonth = state.selectedDate.getMonth() === end.getMonth();
         const left = sameMonth ? state.selectedDate.getDate() : `${state.selectedDate.getDate()} ${MONTHS_TITLE[state.selectedDate.getMonth()]}`;
         els.rangeTitle.textContent = `${left} — ${end.getDate()} ${MONTHS_TITLE[end.getMonth()]} ${end.getFullYear()}`;
@@ -3079,29 +3048,6 @@
       } else {
         els.rangeTitle.textContent = `${capitalize(MONTHS[state.selectedDate.getMonth()])} ${state.selectedDate.getFullYear()}`;
       }
-    }
-
-    function renderCalendarList() {
-      els.calendarList.innerHTML = calendars.map(cal => `
-        <label class="calendar-item">
-          <input type="checkbox" data-calendar="${cal.id}" checked />
-          <span class="calendar-dot" style="background:${cal.color}"></span>
-          <span>${cal.name}</span>
-        </label>
-      `).join("");
-
-      els.calendarList.addEventListener("change", (e) => {
-        const id = e.target.dataset.calendar;
-        if (!id) return;
-        if (e.target.checked) state.visibleCalendars.add(id);
-        else state.visibleCalendars.delete(id);
-        renderAll();
-      });
-    }
-
-    function renderEventCalendarOptions() {
-      els.eventCalendar.innerHTML = calendars.filter(cal => !cal.readonly)
-        .map(cal => `<option value="${cal.id}">${cal.name}</option>`).join("");
     }
 
     function renderMiniMonth() {
@@ -3172,20 +3118,20 @@
 
     function renderTimeGrid(view) {
       const isWeek = view === "week";
-      const isFourDay = view === "4day";
+      const isFourDay = view === "3day";
       let days;
       if (isWeek) {
         days = Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(state.selectedDate), i));
         if (state.hideWeekends) days = days.filter(d => d.getDay() !== 0 && d.getDay() !== 6);
       } else if (isFourDay) {
-        days = Array.from({ length: 4 }, (_, i) => addDays(state.selectedDate, i));
+        days = Array.from({ length: 3 }, (_, i) => addDays(state.selectedDate, i));
       } else {
         days = [state.selectedDate];
       }
 
       const headerClass = isFourDay ? "fourday-header" : isWeek ? "week-header" : "day-header";
       const gridClass = isFourDay ? "fourday-grid" : isWeek ? "week-grid" : "day-grid";
-      const occ = getOccurrences(isoDate(days[0]), isoDate(days[days.length - 1]));
+      const occ = getOccurrences(isoDate(addDays(days[0], -1)), isoDate(days[days.length - 1]));
 
       const gutter = isMobile() ? 42 : 54;
       const colMin = isMobile() ? 0 : 80;
@@ -3245,7 +3191,7 @@
 
       const columns = days.map(day => {
         const iso = isoDate(day);
-        const dayEvents = occ.filter(ev => ev.date === iso && !ev.allDay);
+        const dayEvents = occ.filter(ev => !ev.allDay).map(ev => daySegment(ev, iso)).filter(Boolean);
         const dayClass = [
           "day-col",
           isWeekendDay(day) ? "weekend" : "",
@@ -3287,8 +3233,32 @@
       bindDayTitles();
     }
 
+    /* a timed event whose end is at or before its start runs past midnight */
+    function isOvernight(ev) {
+      return !ev.allDay && timeToMinutes(ev.end) <= timeToMinutes(ev.start);
+    }
+    function eventDurationMin(ev) {
+      const s = timeToMinutes(ev.start), e = timeToMinutes(ev.end);
+      return e > s ? e - s : (24 * 60 - s) + e;
+    }
+    /* the slice of `ev` that falls on `iso`, or null.
+       Overnight events yield a head on their own day and a tail on the next. */
+    function daySegment(ev, iso) {
+      if (ev.date === iso) {
+        return isOvernight(ev)
+          ? { ...ev, _segStart: ev.start, _segEndMin: 24 * 60 }
+          : { ...ev, _segStart: ev.start, _segEndMin: timeToMinutes(ev.end) };
+      }
+      if (isOvernight(ev) && isoDate(addDays(parseDate(ev.date), 1)) === iso) {
+        return { ...ev, _segStart: "00:00", _segEndMin: timeToMinutes(ev.end), _tail: true };
+      }
+      return null;
+    }
+
     function rangesOverlap(a, b) {
-      return timeToMinutes(a.start) < timeToMinutes(b.end) && timeToMinutes(b.start) < timeToMinutes(a.end);
+      const as = timeToMinutes(a._segStart || a.start), ae = a._segEndMin != null ? a._segEndMin : timeToMinutes(a.end);
+      const bs = timeToMinutes(b._segStart || b.start), be = b._segEndMin != null ? b._segEndMin : timeToMinutes(b.end);
+      return as < be && bs < ae;
     }
 
     /* lay out overlapping events side by side.
@@ -3303,7 +3273,7 @@
       const foreground = plain.filter(e => !e._bg);
       const background = plain.filter(e => e._bg);
 
-      const sorted = [...foreground].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start) || timeToMinutes(b.end) - timeToMinutes(a.end));
+      const sorted = [...foreground].sort((a, b) => timeToMinutes(a._segStart || a.start) - timeToMinutes(b._segStart || b.start));
       const cols = [];
       sorted.forEach(ev => {
         let placed = false;
@@ -3323,26 +3293,28 @@
 
     const CHECK_SVG = '<svg viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-    const PRIORITY_COLORS = { high: "#ef4444", medium: "#f59e0b", low: "#9ca3af" };
-
     function eventMarkup(ev, col = 0, total = 1) {
       const cal = getCalendar(ev.calendarId);
       const color = ev.color || cal.color;
-      const top = (timeToMinutes(ev.start) - START_HOUR * 60) / 60 * HOUR_HEIGHT;
-      const height = Math.max(22, (timeToMinutes(ev.end) - timeToMinutes(ev.start)) / 60 * HOUR_HEIGHT - 2);
+      // geometry follows the slice shown on this day (overnight events are split)
+      const segStartMin = timeToMinutes(ev._segStart || ev.start);
+      const segEndMin = ev._segEndMin != null ? ev._segEndMin : timeToMinutes(ev.end);
+      const top = (segStartMin - START_HOUR * 60) / 60 * HOUR_HEIGHT;
+      const height = Math.max(22, (segEndMin - segStartMin) / 60 * HOUR_HEIGHT - 2);
       const compact = height < 40 ? "compact" : "";
       const gap = 3;
       const widthPct = 100 / total;
       const leftStyle = total > 1
         ? `left:calc(${col * widthPct}% + 3px);width:calc(${widthPct}% - ${gap + 3}px);right:auto;`
         : "";
-      const classes = ["event", compact, ev.isTask ? "is-task" : "", ev._bg ? "bg-block" : "", ev.done ? "done" : ""].filter(Boolean).join(" ");
+      const overnight = isOvernight(ev);
+      const classes = ["event", compact, ev.isTask ? "is-task" : "", ev._bg ? "bg-block" : "",
+                       ev.done ? "done" : "", ev._tail ? "seg-tail" : "", (overnight && !ev._tail) ? "seg-head" : ""].filter(Boolean).join(" ");
       const draggable = isMobile() ? "false" : "true";
       const check = ev.isTask
         ? `<button class="event-check" data-toggle-done="${ev.id}" data-date="${ev.date}" title="Отметить выполнение">${CHECK_SVG}</button>`
         : "";
       const repeatBadge = (ev.repeat && ev.repeat !== "none") ? `<span class="event-repeat-badge">⟳</span>` : "";
-      const priorityDot = ev.priority ? `<span class="event-priority-dot" style="background:${PRIORITY_COLORS[ev.priority] || 'transparent'}"></span>` : "";
       const locationLine = (ev.location && height > 56) ? `<div class="event-location">📍 ${escapeHtml(ev.location)}</div>` : "";
       return `
         <div class="${classes}" draggable="${draggable}" data-event-id="${ev.id}" data-date="${ev.date}"
@@ -3350,13 +3322,13 @@
           <div class="event-head">
             ${check}
             <div style="min-width:0;flex:1">
-              <div class="event-title">${priorityDot}${escapeHtml(ev.title)}${repeatBadge}</div>
-              ${height > 34 ? `<div class="event-time">${formatTime(ev.start)} — ${formatTime(ev.end)}</div>` : ""}
+              <div class="event-title">${escapeHtml(ev.title)}${repeatBadge}</div>
+              ${height > 34 ? `<div class="event-time">${formatTime(ev.start)} — ${formatTime(ev.end)}${overnight ? " ⤍" : ""}</div>` : ""}
               ${height > 62 && ev.description ? `<div class="event-desc">${escapeHtml(ev.description)}</div>` : ""}
               ${locationLine}
             </div>
           </div>
-          ${(ev._holiday || height < 38) ? "" : `<div class="event-resize" data-resize="${ev.id}" data-date="${ev.date}"></div>`}
+          ${(ev._holiday || overnight || height < 38) ? "" : `<div class="event-resize" data-resize="${ev.id}" data-date="${ev.date}"></div>`}
         </div>
       `;
     }
@@ -3428,7 +3400,7 @@
       }
 
       function snapToSlot(h, m) {
-        const snapped = Math.round(m / 30) * 30;
+        const snapped = Math.round(m / 5) * 5;
         if (snapped >= 60) return { h: Math.min(h + 1, 23), m: 0 };
         return { h, m: snapped };
       }
@@ -3570,6 +3542,16 @@
             const ds = dragState;
             dragState = null;
             commitDrag(ds);
+          } else if (pending) {
+            /* pending survives only if the finger never moved far enough to
+               scroll, so this is a deliberate tap: create a 1-hour event */
+            e.preventDefault();
+            const ds = pending;
+            openModal({
+              date: ds.date,
+              start: `${pad(ds.startH)}:${pad(ds.startM)}`,
+              end: `${pad(ds.endH)}:${pad(ds.endM)}`
+            });
           }
           pending = null;
         }, { passive: false });
@@ -3649,10 +3631,13 @@
         const startX = e.clientX, startY = e.clientY;
         let moveMode = false, moved = false, newStart = timeToMinutes(base.start), newDate = base.date;
 
+        const scroller = el.closest("#scrollArea");
         const timer = setTimeout(() => {
           moveMode = true;
           try { el.setPointerCapture(e.pointerId); } catch {}
           el.classList.add("dragging");
+          // freeze the grid: without this the drag scrolls the whole calendar
+          if (scroller) scroller.style.overflow = "hidden";
           if (navigator.vibrate) navigator.vibrate(15);
         }, 350);
 
@@ -3666,7 +3651,7 @@
           const under = document.elementFromPoint(ev.clientX, ev.clientY);
           const targetCol = (under && under.closest && under.closest(".day-col")) || col0;
           const rect = targetCol.getBoundingClientRect();
-          let mins = Math.round(((ev.clientY - rect.top - grabOffset) / HOUR_HEIGHT * 60) / 15) * 15;
+          let mins = Math.round((ev.clientY - rect.top - grabOffset) / HOUR_HEIGHT * 60);
           mins = Math.max(START_HOUR * 60, Math.min(mins, END_HOUR * 60 - durMin));
           newStart = mins;
           newDate = targetCol.dataset.date;
@@ -3676,6 +3661,7 @@
           clearTimeout(timer);
           cleanup();
           el.classList.remove("dragging");
+          if (scroller) scroller.style.overflow = "";
           if (moveMode && moved) {
             suppressClickUntil = Date.now() + 400;
             pushHistory();
@@ -3782,7 +3768,7 @@
               <span class="agenda-bar" style="background:${ev.color || cal.color}"></span>
               <span class="agenda-meta">
                 <span class="agenda-time">${time}${repeatBadge}</span>
-                <span class="agenda-title">${ev.priority ? `<span class="priority-badge" style="background:${PRIORITY_COLORS[ev.priority]}"></span>` : ""}${escapeHtml(ev.title)}</span>
+                <span class="agenda-title">${escapeHtml(ev.title)}</span>
                 ${ev.location ? `<span class="agenda-note">📍 ${escapeHtml(ev.location)}</span>` : ""}
                 ${ev.description ? `<span class="agenda-note">${escapeHtml(ev.description)}</span>` : ""}
                 <span class="agenda-cal"><span class="calendar-dot" style="width:8px;height:8px;background:${cal.color}"></span>${cal.name}</span>
@@ -4004,7 +3990,7 @@
       if (!els.durRow) return;
       const s = timeToMinutes(els.eventStart.value || "0:0");
       const e = timeToMinutes(els.eventEnd.value || "0:0");
-      const diff = e - s;
+      const diff = e > s ? e - s : (24 * 60 - s) + e;
       els.durRow.querySelectorAll(".dur-chip").forEach(chip => {
         chip.classList.toggle("active", Number(chip.dataset.dur) === diff);
       });
@@ -4012,8 +3998,7 @@
 
     function applyDuration(minutes) {
       const start = els.eventStart.value || "10:00";
-      let endMin = timeToMinutes(start) + minutes;
-      if (endMin > 24 * 60) endMin = 24 * 60 - 1;
+      const endMin = (timeToMinutes(start) + minutes) % (24 * 60);
       els.eventEnd.value = `${pad(Math.floor(endMin / 60))}:${pad(endMin % 60)}`;
       syncDurationChips();
     }
@@ -4355,11 +4340,9 @@
       els.eventEndDate.value = data.endDate && data.endDate !== (data.date || isoDate(state.selectedDate)) ? data.endDate : "";
       els.eventStart.value = data.start || "10:00";
       els.eventEnd.value = data.end || "11:00";
-      els.eventCalendar.value = (data.calendarId === "holidays") ? "startup" : (data.calendarId || "startup");
       els.eventDescription.value = data.description || "";
       els.eventLocation.value = data.location || "";
       els.eventAttendees.value = Array.isArray(data.attendees) ? data.attendees.join(", ") : "";
-      els.eventPriority.value = data.priority || "";
       els.eventAllDay.checked = Boolean(data.allDay);
       els.eventIsTask.checked = Boolean(data.isTask);
       els.eventRepeat.value = data.repeat || "none";
@@ -4382,6 +4365,7 @@
       els.deleteEvent.classList.toggle("visible", Boolean(data.id));
       els.duplicateEvent.style.display = data.id ? "" : "none";
       els.modalBackdrop.classList.add("open");
+      state._modalOpenedAt = Date.now();
       setTimeout(() => els.eventTitle.focus(), 30);
     }
 
@@ -4401,10 +4385,11 @@
       let end = els.eventEnd.value || "23:59";
 
       if (allDay) { start = "00:00"; end = "23:59"; }
-      else if (timeToMinutes(end) <= timeToMinutes(start)) {
-        showToast("Время окончания должно быть позже начала");
+      else if (timeToMinutes(end) === timeToMinutes(start)) {
+        showToast("Начало и конец совпадают");
         return;
       }
+      // end earlier than start simply means the event runs into the next day
 
       // multi-day end date (all-day events only)
       let endDate = els.eventDate.value;
@@ -4442,11 +4427,9 @@
         repeat,
         rrule,
         reminders: getReminderChips(),
-        calendarId: els.eventCalendar.value,
         description: els.eventDescription.value.trim(),
         location: els.eventLocation.value.trim(),
         attendees,
-        priority: els.eventPriority.value,
         color: evColor || null
       };
 
@@ -4507,7 +4490,6 @@
 
     function getVisibleEvents() {
       return state.events.filter(ev => {
-        if (!state.visibleCalendars.has(ev.calendarId)) return false;
         if (!state.search) return true;
         return `${ev.title} ${ev.description}`.toLowerCase().includes(state.search);
       });
@@ -4583,7 +4565,7 @@
       });
 
       // holidays
-      if (state.showHolidays && state.visibleCalendars.has("holidays")) {
+      if (state.showHolidays) {
         for (let y = startD.getFullYear(); y <= endD.getFullYear(); y++) {
           RU_HOLIDAYS.forEach(h => {
             const iso = `${y}-${pad(h.m)}-${pad(h.d)}`;
@@ -4606,14 +4588,14 @@
       return ev.date <= iso && iso <= (ev.endDate || ev.date);
     }
 
+    const DEFAULT_CAL = { id: null, name: "Событие", color: "#7c6df2" };
     function getCalendar(id) {
-      return calendars.find(c => c.id === id) || calendars[0];
+      return calendars.find(c => c.id === id) || DEFAULT_CAL;
     }
 
     /* ---------------- STORAGE ---------------- */
     function normalizeEvent(ev) {
-      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], location: "", priority: "", color: null, attendees: [], meetingLink: "", endDate: null, calendarId: "startup", ...ev };
-      if (!out.calendarId) out.calendarId = "startup";
+      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], location: "", color: null, attendees: [], meetingLink: "", endDate: null, calendarId: null, ...ev };
       // migrate legacy single `reminder` -> reminders[]
       if (!Array.isArray(out.reminders)) out.reminders = [];
       if (ev.reminder !== undefined && ev.reminder !== "" && ev.reminder !== null) {
@@ -4649,7 +4631,7 @@
     function loadView() {
       try {
         const v = localStorage.getItem("focusCalendar.view");
-        if (v) return v;
+        if (v) return v === "4day" ? "3day" : v;
       } catch {}
       return window.matchMedia("(max-width: 760px)").matches ? "day" : "week";
     }
