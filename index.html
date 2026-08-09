@@ -161,6 +161,23 @@
       color: var(--text);
     }
 
+    /* close buttons: the old "×" glyph rendered at body size and was a
+       tiny target — these are a full 44px with a crisp icon */
+    .close-btn {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .close-btn svg { width: 21px; height: 21px; display: block; }
+    .close-btn:hover { background: var(--hover); color: var(--text); }
+    .close-btn:active { transform: scale(.93); }
+
     .today-btn, .primary-btn, .ghost-btn {
       height: 32px;
       padding: 0 12px;
@@ -2227,7 +2244,7 @@
           </div>
           <div class="brand-text"><span>Calendar</span></div>
         </div>
-        <button class="icon-btn" id="drawerClose" aria-label="Закрыть">×</button>
+        <button class="close-btn" id="drawerClose" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
       </div>
 
       <input class="sidebar-search" id="searchInputMobile" placeholder="Поиск по событиям" />
@@ -2288,7 +2305,7 @@
       <button type="button" class="sheet-grip" id="sheetGrip" aria-label="Развернуть"></button>
       <div class="modal-head">
         <h2 id="modalTitle">Новое событие</h2>
-        <button type="button" class="icon-btn" id="closeModal">×</button>
+        <button type="button" class="close-btn" id="closeModal" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
       </div>
       <div class="modal-body">
         <div class="field">
@@ -2459,7 +2476,7 @@
     <div class="tool-modal">
       <div class="modal-head">
         <h2 id="toolModalTitle">Инструмент</h2>
-        <button type="button" class="icon-btn" id="toolModalClose">×</button>
+        <button type="button" class="close-btn" id="toolModalClose" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
       </div>
       <div class="tool-modal-body" id="toolModalBody"></div>
     </div>
