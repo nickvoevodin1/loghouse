@@ -2490,6 +2490,9 @@
     const END_HOUR = 24;
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
+    /* dragging and resizing land on quarter-hours */
+    const SNAP_MIN = 15;
+    const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
 
     const EVENT_COLORS = [
       /* purple */  "#7c6df2", "#a78bfa", "#5b4bd6", "#c4b5fd",
@@ -3554,7 +3557,7 @@
           const duration = eventDurationMin(ev);
           const rect = cell.getBoundingClientRect();
           const offsetMin = Math.max(0, Math.min(59, Math.round((e.clientY - rect.top) / HOUR_HEIGHT * 60)));
-          const startMin = Math.min(24 * 60 - 1, Number(cell.dataset.hour) * 60 + offsetMin);
+          const startMin = Math.min(24 * 60 - SNAP_MIN, snapMin(Number(cell.dataset.hour) * 60 + offsetMin));
           const start = minToHHMM(startMin);
           ev.date = cell.dataset.date;
           ev.start = start;
@@ -3579,8 +3582,9 @@
       }
 
       function snapToSlot(h, m) {
-        if (m >= 60) return { h: Math.min(h + 1, 23), m: 0 };
-        return { h, m };
+        const total = snapMin(h * 60 + m);
+        const hh = Math.floor(total / 60), mm = total % 60;
+        return hh > 23 ? { h: 23, m: 45 } : { h: hh, m: mm };
       }
 
       function updateOverlay(ds) {
@@ -3835,7 +3839,7 @@
           const under = document.elementFromPoint(ev.clientX, ev.clientY);
           const targetCol = (under && under.closest && under.closest(".day-col")) || col0;
           const rect = targetCol.getBoundingClientRect();
-          let mins = Math.round((ev.clientY - rect.top - grabOffset) / HOUR_HEIGHT * 60);
+          let mins = snapMin((ev.clientY - rect.top - grabOffset) / HOUR_HEIGHT * 60);
           mins = Math.max(START_HOUR * 60, Math.min(mins, END_HOUR * 60 - durMin));
           newStart = mins;
           newDate = targetCol.dataset.date;
@@ -3887,7 +3891,7 @@
 
         const move = (me) => {
           const y = me.clientY - colRect.top;
-          let endMin = START_HOUR * 60 + Math.round(y / HOUR_HEIGHT * 60);
+          let endMin = snapMin(START_HOUR * 60 + y / HOUR_HEIGHT * 60);
           endMin = Math.min(END_HOUR * 60, Math.max(startMin + 15, endMin));
           eventEl.style.height = `${Math.max(30, (endMin - startMin) / 60 * HOUR_HEIGHT - 4)}px`;
           eventEl.dataset.tmpEnd = `${pad(Math.floor(endMin / 60))}:${pad(endMin % 60)}`;
@@ -4874,12 +4878,12 @@
 
         const onMove = (ev) => {
           ev.preventDefault();
-          const deltaMin = Math.round((ev.clientY - y0) / HOUR_HEIGHT * 60);
+          const deltaMin = (ev.clientY - y0) / HOUR_HEIGHT * 60;
           if (mode === "move") {
-            const ns = Math.max(0, Math.min(24 * 60 - dur, s0 + deltaMin));
+            const ns = Math.max(0, Math.min(24 * 60 - dur, snapMin(s0 + deltaMin)));
             commit(ns, ns + dur);
           } else {
-            const ne = Math.max(s0 + 5, Math.min(24 * 60, e0 + deltaMin));
+            const ne = Math.max(s0 + SNAP_MIN, Math.min(24 * 60, snapMin(e0 + deltaMin)));
             commit(s0, ne);
           }
         };
