@@ -66,10 +66,17 @@
       min-height: 100%;
       background: var(--bg);
       color: var(--text);
+      overscroll-behavior: none;
     }
 
+    /* Pinning the body removes any page scroll, so an overscroll inside the
+       calendar cannot chain outwards — that chaining is what Telegram reads
+       as its swipe-to-close gesture and it dragged the whole mini app down. */
     body {
+      position: fixed;
+      inset: 0;
       overflow: hidden;
+      overscroll-behavior: none;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -271,6 +278,7 @@
       border-right: 1px solid var(--line);
       background: var(--surface);
       overflow: auto;
+      overscroll-behavior: contain;
       padding: 14px;
     }
 
@@ -525,6 +533,7 @@
     .week-view, .day-view {
       height: 100%;
       overflow: auto;
+      overscroll-behavior: contain;
       position: relative;
     }
 
@@ -810,6 +819,10 @@
     .event.seg-head { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
     .event.seg-tail { border-top-left-radius: 0; border-top-right-radius: 0; }
 
+    /* while the sheet is open the grid gets slack at the bottom, otherwise a
+       draft late in the day cannot be scrolled clear of the sheet */
+    #scrollArea.sheet-space { padding-bottom: 60vh; }
+
     /* live preview of the event being created, shown above the open sheet */
     .draft-event {
       position: absolute;
@@ -880,6 +893,7 @@
     .month-view {
       height: 100%;
       overflow: auto;
+      overscroll-behavior: contain;
       background: var(--surface);
     }
 
@@ -976,6 +990,7 @@
     .agenda-view {
       height: 100%;
       overflow: auto;
+      overscroll-behavior: contain;
       background: var(--surface);
       padding: 8px 0 100px;
     }
@@ -1185,7 +1200,7 @@
       display: flex;
       flex-direction: column;
     }
-    .tool-modal-body { padding: 14px 16px 18px; overflow: auto; }
+    .tool-modal-body { padding: 14px 16px 18px; overflow: auto; overscroll-behavior: contain; }
 
     /* full-screen variant (settings, tasks) */
     .tool-modal-backdrop.fullscreen { padding: 0; align-items: stretch; }
@@ -1320,6 +1335,7 @@
       display: grid;
       gap: 10px;
       overflow: auto;
+      overscroll-behavior: contain;
     }
 
     .field {
@@ -2138,6 +2154,7 @@
     .fourday-view {
       height: 100%;
       overflow: auto;
+      overscroll-behavior: contain;
       position: relative;
     }
 
@@ -2718,7 +2735,13 @@
       if (!tg) return;
       try { tg.ready(); } catch {}
       try { tg.expand(); } catch {}
-      try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch {}
+      // some clients drop this when the viewport changes, so re-arm it
+      const lockSwipes = () => {
+        try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch {}
+        try { tg.isVerticalSwipesEnabled = false; } catch {}
+      };
+      lockSwipes();
+      try { tg.onEvent("viewportChanged", lockSwipes); } catch {}
 
       const applyInsets = () => {
         const safe = tg.safeAreaInset || {};
@@ -4804,6 +4827,8 @@
     /* ---------------- DRAFT PREVIEW ON THE GRID ---------------- */
     function clearDraft() {
       els.calendarShell.querySelectorAll(".draft-event").forEach(d => d.remove());
+      const area = document.getElementById("scrollArea");
+      if (area) area.classList.remove("sheet-space");
     }
 
     function renderDraft() {
@@ -4825,6 +4850,8 @@
       el.style.background = getSelectedColor() || EVENT_COLORS[0];
       el.innerHTML = `<span>${escapeHtml(els.eventTitle.value || "Новое событие")} · ${formatTime(els.eventStart.value)}–${formatTime(els.eventEnd.value)}</span><div class="draft-resize"></div>`;
       col.appendChild(el);
+      const area = document.getElementById("scrollArea");
+      if (area) area.classList.add("sheet-space");
       bindDraftDrag(el, col);
       scrollDraftIntoView(el);
     }
