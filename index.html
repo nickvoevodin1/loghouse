@@ -791,6 +791,38 @@
     .event.seg-head { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
     .event.seg-tail { border-top-left-radius: 0; border-top-right-radius: 0; }
 
+    /* live preview of the event being created, shown above the open sheet */
+    .draft-event {
+      position: absolute;
+      left: 2px; right: 2px;
+      border-radius: 6px;
+      padding: 3px 7px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 12;
+      opacity: .95;
+      outline: 2px solid rgba(255,255,255,.55);
+      touch-action: none;
+      overflow: hidden;
+    }
+    .draft-resize {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 18px;
+      touch-action: none;
+      cursor: ns-resize;
+    }
+    .draft-resize::after {
+      content: "";
+      position: absolute;
+      left: 50%; bottom: 3px;
+      width: 26px; height: 3px;
+      border-radius: 2px;
+      background: rgba(255,255,255,.9);
+      transform: translateX(-50%);
+    }
+
     .event.dragging { z-index: 20; opacity: .85; box-shadow: 0 6px 18px rgba(0,0,0,.35); cursor: grabbing; }
 
     .event-title {
@@ -1576,15 +1608,41 @@
 
       /* modal -> bottom sheet */
       .modal-backdrop { align-items: flex-end; padding: 0; }
+      /* the sheet only dims what is behind it, so the grid above stays readable */
+      .modal-backdrop.sheet-half {
+        background: rgba(15,23,42,.18);
+        backdrop-filter: none;
+        pointer-events: none;          /* let the draft above the sheet be grabbed */
+      }
+      .modal-backdrop.sheet-half .modal { pointer-events: auto; }
       .modal {
         width: 100%;
+        height: var(--sheet-h, 52vh);
         max-height: 94vh;
-        border-radius: 12px 12px 0 0;
+        border-radius: 14px 14px 0 0;
         animation: sheetUp .3s cubic-bezier(.4,0,.2,1);
-        padding-bottom: env(safe-area-inset-bottom);
+        padding-bottom: var(--safe-bottom);
+        box-shadow: 0 -6px 24px rgba(0,0,0,.35);
       }
-      .modal-body { padding-bottom: 24px; }
-      .modal-actions { position: sticky; bottom: 0; background: var(--surface); padding: 12px 0 4px; }
+      .modal-backdrop.dragging .modal { animation: none; transition: none; }
+      .sheet-grip {
+        display: block;
+        width: 100%;
+        padding: 9px 0 3px;
+        background: none;
+        touch-action: none;
+        cursor: grab;
+      }
+      .sheet-grip::before {
+        content: "";
+        display: block;
+        width: 40px; height: 4px;
+        margin: 0 auto;
+        border-radius: 3px;
+        background: var(--muted-2);
+      }
+      .modal-body { padding-bottom: 20px; }
+      .modal-actions { position: sticky; bottom: 0; background: var(--surface); padding: 10px 0 4px; }
     }
 
     @keyframes sheetUp {
@@ -1844,11 +1902,93 @@
 
     /* individual event color picker row */
     .color-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
+      margin-top: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-2);
     }
+    .color-row[hidden] { display: none; }
+
+    .color-pick-btn {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      min-height: 40px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .color-pick-dot {
+      width: 18px; height: 18px;
+      border-radius: 6px;
+      background: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    /* custom reminder row */
+    .custom-remind {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .custom-remind input {
+      width: 74px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0 9px;
+      font-size: 13px;
+    }
+    .custom-remind select {
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0 8px;
+      font-size: 13px;
+    }
+    .custom-remind button {
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* compact one-line toggles */
+    .toggle-row { display: flex; gap: 8px; }
+    .mini-toggle {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .mini-toggle input { width: 17px; height: 17px; accent-color: var(--accent); }
+    .mini-toggle:has(input:checked) { border-color: var(--accent); background: var(--hover); }
     .color-swatch {
       width: 22px;
       height: 22px;
@@ -2104,6 +2244,7 @@
 
   <div class="modal-backdrop" id="modalBackdrop">
     <form class="modal" id="eventForm">
+      <button type="button" class="sheet-grip" id="sheetGrip" aria-label="Развернуть"></button>
       <div class="modal-head">
         <h2 id="modalTitle">Новое событие</h2>
         <button type="button" class="icon-btn" id="closeModal">×</button>
@@ -2114,21 +2255,20 @@
           <input id="eventTitle" required placeholder="Например: Созвон по MVP" />
         </div>
 
-        <label class="allday-toggle" for="eventAllDay">
-          <input type="checkbox" id="eventAllDay" />
-          <span>Весь день</span>
-        </label>
+        <div class="toggle-row">
+          <label class="mini-toggle" for="eventAllDay">
+            <input type="checkbox" id="eventAllDay" />
+            <span>Весь день</span>
+          </label>
+          <label class="mini-toggle" for="eventIsTask">
+            <input type="checkbox" id="eventIsTask" />
+            <span>Задача</span>
+          </label>
+        </div>
 
-        <label class="allday-toggle" for="eventIsTask">
-          <input type="checkbox" id="eventIsTask" />
-          <span>Это задача (с галочкой выполнения)</span>
-        </label>
-
-        <div class="form-grid">
-          <div class="field">
-            <label for="eventDate">Дата</label>
-            <input id="eventDate" type="date" required />
-          </div>
+        <div class="field">
+          <label for="eventDate">Дата</label>
+          <input id="eventDate" type="date" required />
         </div>
 
         <div class="field" id="endDateField" style="display:none">
@@ -2148,13 +2288,10 @@
             </div>
           </div>
           <div class="dur-row" id="durRow">
-            <button type="button" class="dur-chip" data-dur="15">15 мин</button>
-            <button type="button" class="dur-chip" data-dur="30">30 мин</button>
-            <button type="button" class="dur-chip" data-dur="45">45 мин</button>
-            <button type="button" class="dur-chip" data-dur="60">1 ч</button>
-            <button type="button" class="dur-chip" data-dur="90">1.5 ч</button>
-            <button type="button" class="dur-chip" data-dur="120">2 ч</button>
-            <button type="button" class="dur-chip" data-dur="180">3 ч</button>
+            <button type="button" class="dur-chip" data-dur="15">15м</button>
+            <button type="button" class="dur-chip" data-dur="30">30м</button>
+            <button type="button" class="dur-chip" data-dur="60">1ч</button>
+            <button type="button" class="dur-chip" data-dur="120">2ч</button>
           </div>
         </div>
 
@@ -2220,6 +2357,15 @@
             <label class="reminder-chip"><input type="checkbox" value="60" /><span>За 1 час</span></label>
             <label class="reminder-chip"><input type="checkbox" value="1440" /><span>За 1 день</span></label>
           </div>
+          <div class="custom-remind">
+            <input id="remindCustomVal" type="number" min="1" max="999" placeholder="15" />
+            <select id="remindCustomUnit">
+              <option value="1">минут</option>
+              <option value="60">часов</option>
+              <option value="1440">дней</option>
+            </select>
+            <button type="button" id="remindCustomAdd">Добавить</button>
+          </div>
         </div>
 
         <div class="field">
@@ -2229,7 +2375,11 @@
 
         <div class="field">
           <label>Цвет события</label>
-          <div class="color-row" id="eventColorRow"></div>
+          <button type="button" class="color-pick-btn" id="colorPickBtn">
+            <span class="color-pick-dot" id="colorPickDot"></span>
+            <span id="colorPickName">Выбрать цвет</span>
+          </button>
+          <div class="color-row" id="eventColorRow" hidden></div>
         </div>
 
         <div class="field">
@@ -2284,8 +2434,12 @@
     const HOUR_HEIGHT = 48;
 
     const EVENT_COLORS = [
-      "#7c6df2", "#3b82f6", "#10b981", "#f97316",
-      "#ef4444", "#ec4899", "#f59e0b", "#06b6d4"
+      /* purple */  "#7c6df2", "#a78bfa", "#5b4bd6", "#c4b5fd",
+      /* blue */    "#3b82f6", "#60a5fa", "#1d4ed8", "#06b6d4",
+      /* green */   "#10b981", "#34d399", "#047857", "#84cc16",
+      /* warm */    "#f97316", "#fb923c", "#f59e0b", "#facc15",
+      /* red/pink */"#ef4444", "#f87171", "#be123c", "#ec4899",
+      /* neutral */ "#f472b6", "#8b5a2b", "#64748b", "#94a3b8"
     ];
     const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
     const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
@@ -2453,6 +2607,13 @@
       voiceBtn: document.getElementById("voiceBtn"),
       eventLocation: document.getElementById("eventLocation"),
       eventColorRow: document.getElementById("eventColorRow"),
+      sheetGrip: document.getElementById("sheetGrip"),
+      colorPickBtn: document.getElementById("colorPickBtn"),
+      colorPickDot: document.getElementById("colorPickDot"),
+      colorPickName: document.getElementById("colorPickName"),
+      remindCustomVal: document.getElementById("remindCustomVal"),
+      remindCustomUnit: document.getElementById("remindCustomUnit"),
+      remindCustomAdd: document.getElementById("remindCustomAdd"),
       eventEndDate: document.getElementById("eventEndDate"),
       endDateField: document.getElementById("endDateField"),
       eventAttendees: document.getElementById("eventAttendees"),
@@ -2636,12 +2797,36 @@
         els.endDateField.style.display = els.eventAllDay.checked ? "block" : "none";
       });
 
+      // colour picker toggles the palette open
+      els.colorPickBtn.addEventListener("click", () => {
+        els.eventColorRow.hidden = !els.eventColorRow.hidden;
+      });
+
+      // add a reminder at an arbitrary offset
+      els.remindCustomAdd.addEventListener("click", () => {
+        const n = Number(els.remindCustomVal.value);
+        if (!n || n < 1) { showToast("Укажи число"); return; }
+        const minutes = n * Number(els.remindCustomUnit.value);
+        if (minutes > 60 * 24 * 30) { showToast("Слишком большой интервал"); return; }
+        if (PRESET_REMINDERS.includes(minutes)) {
+          const preset = els.remindersGroup.querySelector(`.reminder-chip input[value="${minutes}"]`);
+          if (preset) { preset.checked = true; preset.closest(".reminder-chip").classList.add("on"); }
+        } else {
+          addCustomReminderChip(minutes);
+        }
+        els.remindCustomVal.value = "";
+      });
+
       els.durRow.addEventListener("click", (e) => {
         const chip = e.target.closest(".dur-chip");
-        if (chip) applyDuration(Number(chip.dataset.dur));
+        if (chip) { applyDuration(Number(chip.dataset.dur)); renderDraft(); }
       });
-      els.eventStart.addEventListener("change", syncDurationChips);
-      els.eventEnd.addEventListener("change", syncDurationChips);
+      els.eventStart.addEventListener("change", () => { syncDurationChips(); renderDraft(); });
+      els.eventEnd.addEventListener("change", () => { syncDurationChips(); renderDraft(); });
+      els.eventDate.addEventListener("change", renderDraft);
+      els.eventTitle.addEventListener("input", renderDraft);
+      els.eventAllDay.addEventListener("change", renderDraft);
+      bindSheetGrip();
 
       // custom recurrence UI toggles
       els.eventRepeat.addEventListener("change", syncRepeatUI);
@@ -3434,6 +3619,7 @@
       els.calendarShell.querySelectorAll(".day-col").forEach(col => {
         col.addEventListener("mousedown", (e) => {
           if (isMobile()) return;
+          if (els.modalBackdrop.classList.contains("open")) return;
           if (e.button !== 0) return;
           if (e.target.closest(".event, [data-resize]")) return;
           e.preventDefault();
@@ -3484,7 +3670,8 @@
         }
 
         col.addEventListener("touchstart", (e) => {
-          if (e.target.closest(".event")) return;
+          if (e.target.closest(".event, .draft-event")) return;
+          if (els.modalBackdrop.classList.contains("open")) return;
           const touch = e.changedTouches[0];
           const { h, m } = getHourMinFromY(col, touch.clientY);
           const snapped = snapToSlot(h, m);
@@ -3953,31 +4140,61 @@
     }
 
     /* ---------------- MODAL ---------------- */
+    const PRESET_REMINDERS = [0, 10, 30, 60, 1440];
+
+    function reminderLabel(min) {
+      if (min === 0) return "В момент";
+      if (min % 1440 === 0) return `За ${min / 1440} дн.`;
+      if (min % 60 === 0) return `За ${min / 60} ч`;
+      return `За ${min} мин`;
+    }
+
     function setReminderChips(reminders) {
+      els.remindersGroup.querySelectorAll(".reminder-chip.custom").forEach(c => c.remove());
       els.remindersGroup.querySelectorAll(".reminder-chip").forEach(chip => {
         const input = chip.querySelector("input");
         const on = reminders.includes(Number(input.value));
         input.checked = on;
         chip.classList.toggle("on", on);
       });
+      // anything that is not a preset becomes its own removable chip
+      reminders.filter(m => !PRESET_REMINDERS.includes(m)).forEach(addCustomReminderChip);
     }
+
+    function addCustomReminderChip(minutes) {
+      if (getReminderChips().includes(minutes)) return;
+      const chip = document.createElement("label");
+      chip.className = "reminder-chip custom on";
+      chip.innerHTML = `<input type="checkbox" value="${minutes}" checked /><span>${reminderLabel(minutes)}</span>`;
+      els.remindersGroup.appendChild(chip);
+    }
+
     function getReminderChips() {
       return [...els.remindersGroup.querySelectorAll(".reminder-chip input:checked")].map(i => Number(i.value));
     }
 
     function renderColorSwatches(selectedColor) {
-      const swatches = EVENT_COLORS.map(c => `
+      els.eventColorRow.innerHTML = EVENT_COLORS.map(c => `
         <button type="button" class="color-swatch${selectedColor === c ? " selected" : ""}"
           style="background:${c}" data-color="${c}" title="${c}"></button>
       `).join("");
-      const clear = `<button type="button" class="color-swatch clear" data-color="" title="Цвет календаря">×</button>`;
-      els.eventColorRow.innerHTML = swatches + clear;
+      els.eventColorRow.hidden = true;
       els.eventColorRow.querySelectorAll(".color-swatch").forEach(sw => {
         sw.addEventListener("click", () => {
           els.eventColorRow.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("selected"));
           sw.classList.add("selected");
+          els.eventColorRow.hidden = true;
+          syncColorButton();
+          renderDraft();
         });
       });
+      syncColorButton();
+    }
+
+    function syncColorButton() {
+      const c = getSelectedColor() || EVENT_COLORS[0];
+      els.colorPickDot.style.background = c;
+      els.colorPickName.textContent = getSelectedColor() ? "Цвет выбран" : "Выбрать цвет";
     }
 
     function getSelectedColor() {
@@ -4331,6 +4548,159 @@
       els.rruleCountField.style.display = (custom && els.rruleEndType.value === "count") ? "grid" : "none";
     }
 
+    /* ---------------- BOTTOM SHEET ---------------- */
+    const SHEET_HALF = 52, SHEET_FULL = 94;   // vh
+
+    function setSheet(mode) {
+      if (!isMobile()) return;
+      const full = mode === "full";
+      document.documentElement.style.setProperty("--sheet-h", (full ? SHEET_FULL : SHEET_HALF) + "vh");
+      els.modalBackdrop.classList.toggle("sheet-half", !full);
+      els.modalBackdrop.classList.toggle("sheet-full", full);
+      renderDraft();
+    }
+
+    function bindSheetGrip() {
+      let startY = 0, startH = 0, dragging = false;
+      const vh = () => window.innerHeight / 100;
+
+      els.sheetGrip.addEventListener("pointerdown", (e) => {
+        if (!isMobile()) return;
+        e.preventDefault();
+        dragging = true;
+        startY = e.clientY;
+        startH = els.eventForm.getBoundingClientRect().height;
+        els.modalBackdrop.classList.add("dragging");
+        try { els.sheetGrip.setPointerCapture(e.pointerId); } catch {}
+      });
+
+      els.sheetGrip.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        const h = Math.min(SHEET_FULL * vh(), Math.max(18 * vh(), startH + (startY - e.clientY)));
+        document.documentElement.style.setProperty("--sheet-h", h + "px");
+      });
+
+      const end = (e) => {
+        if (!dragging) return;
+        dragging = false;
+        els.modalBackdrop.classList.remove("dragging");
+        const h = els.eventForm.getBoundingClientRect().height / vh();
+        if (h < 32) { closeModal(); return; }
+        setSheet(h > 68 ? "full" : "half");
+      };
+      els.sheetGrip.addEventListener("pointerup", end);
+      els.sheetGrip.addEventListener("pointercancel", end);
+      // tapping the grip toggles between the two heights
+      els.sheetGrip.addEventListener("click", () => {
+        if (!isMobile()) return;
+        setSheet(els.modalBackdrop.classList.contains("sheet-full") ? "half" : "full");
+      });
+    }
+
+    /* ---------------- DRAFT PREVIEW ON THE GRID ---------------- */
+    function clearDraft() {
+      els.calendarShell.querySelectorAll(".draft-event").forEach(d => d.remove());
+    }
+
+    function renderDraft() {
+      clearDraft();
+      if (!isMobile()) return;
+      if (!els.modalBackdrop.classList.contains("open")) return;
+      if (els.modalBackdrop.classList.contains("sheet-full")) return;
+      if (els.eventAllDay.checked) return;
+      const col = els.calendarShell.querySelector(`.day-col[data-date="${els.eventDate.value}"]`);
+      if (!col) return;
+
+      const s = timeToMinutes(els.eventStart.value || "0:00");
+      const e = timeToMinutes(els.eventEnd.value || "0:00");
+      const dur = e > s ? e - s : (24 * 60 - s) + e;
+      const el = document.createElement("div");
+      el.className = "draft-event";
+      el.style.top = ((s - START_HOUR * 60) / 60 * HOUR_HEIGHT) + "px";
+      el.style.height = Math.max(18, dur / 60 * HOUR_HEIGHT - 2) + "px";
+      el.style.background = getSelectedColor() || EVENT_COLORS[0];
+      el.innerHTML = `<span>${escapeHtml(els.eventTitle.value || "Новое событие")} · ${formatTime(els.eventStart.value)}–${formatTime(els.eventEnd.value)}</span><div class="draft-resize"></div>`;
+      col.appendChild(el);
+      bindDraftDrag(el, col);
+      scrollDraftIntoView(el);
+    }
+
+    function scrollDraftIntoView(el) {
+      const area = document.getElementById("scrollArea");
+      if (!area) return;
+      // wait a frame so the sheet has its final height before measuring
+      requestAnimationFrame(() => {
+        const areaRect = area.getBoundingClientRect();
+        const sheetVh = els.modalBackdrop.classList.contains("sheet-full") ? SHEET_FULL : SHEET_HALF;
+        const sheetTopY = window.innerHeight - sheetVh * window.innerHeight / 100;
+        const band = sheetTopY - areaRect.top;          // usable strip above the sheet
+        if (band <= 40) return;
+        const r = el.getBoundingClientRect();           // real position, header included
+        const margin = 40;
+        if (r.top < areaRect.top + margin || r.bottom > sheetTopY - 8) {
+          const targetY = areaRect.top + Math.max(margin, (band - r.height) / 2);
+          area.scrollTop = Math.max(0, area.scrollTop + (r.top - targetY));
+        }
+      });
+    }
+
+    /* drag the draft to move it, or its bottom edge to change the length */
+    function bindDraftDrag(el, col) {
+      // update the fields and the node itself — re-rendering mid-drag would
+      // destroy the element under the finger and drop pointer capture
+      const commit = (startMin, endMin) => {
+        const s = ((startMin % 1440) + 1440) % 1440;
+        const e = ((endMin % 1440) + 1440) % 1440;
+        els.eventStart.value = minToHHMM(s);
+        els.eventEnd.value = minToHHMM(e);
+        const dur = e > s ? e - s : (24 * 60 - s) + e;
+        el.style.top = ((s - START_HOUR * 60) / 60 * HOUR_HEIGHT) + "px";
+        el.style.height = Math.max(18, dur / 60 * HOUR_HEIGHT - 2) + "px";
+        const label = el.querySelector("span");
+        if (label) label.textContent = `${els.eventTitle.value || "Новое событие"} · ${formatTime(els.eventStart.value)}–${formatTime(els.eventEnd.value)}`;
+        syncDurationChips();
+      };
+
+      const startDrag = (e, mode) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const rect = col.getBoundingClientRect();
+        const s0 = timeToMinutes(els.eventStart.value || "0:00");
+        const e0 = timeToMinutes(els.eventEnd.value || "0:00");
+        const dur = e0 > s0 ? e0 - s0 : (24 * 60 - s0) + e0;
+        const y0 = e.clientY;
+        const target = e.currentTarget;
+        try { target.setPointerCapture(e.pointerId); } catch {}
+
+        const onMove = (ev) => {
+          ev.preventDefault();
+          const deltaMin = Math.round((ev.clientY - y0) / HOUR_HEIGHT * 60);
+          if (mode === "move") {
+            const ns = Math.max(0, Math.min(24 * 60 - dur, s0 + deltaMin));
+            commit(ns, ns + dur);
+          } else {
+            const ne = Math.max(s0 + 5, Math.min(24 * 60, e0 + deltaMin));
+            commit(s0, ne);
+          }
+        };
+        const onUp = () => {
+          document.removeEventListener("pointermove", onMove);
+          document.removeEventListener("pointerup", onUp);
+          document.removeEventListener("pointercancel", onUp);
+          renderDraft();
+        };
+        document.addEventListener("pointermove", onMove, { passive: false });
+        document.addEventListener("pointerup", onUp);
+        document.addEventListener("pointercancel", onUp);
+      };
+
+      el.addEventListener("pointerdown", (e) => {
+        if (e.target.closest(".draft-resize")) return;
+        startDrag(e, "move");
+      });
+      el.querySelector(".draft-resize").addEventListener("pointerdown", (e) => startDrag(e, "resize"));
+    }
+
     function openModal(data = {}) {
       state.editingId = data.id || null;
       state.editingInstanceDate = data.id ? (data.date || null) : null;
@@ -4366,11 +4736,15 @@
       els.duplicateEvent.style.display = data.id ? "" : "none";
       els.modalBackdrop.classList.add("open");
       state._modalOpenedAt = Date.now();
+      setSheet("half");
+      renderDraft();
       setTimeout(() => els.eventTitle.focus(), 30);
     }
 
     function closeModal() {
       els.modalBackdrop.classList.remove("open");
+      els.modalBackdrop.classList.remove("sheet-half", "sheet-full");
+      clearDraft();
       state.editingId = null;
       state.editingInstanceDate = null;
       els.eventForm.reset();
