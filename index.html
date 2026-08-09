@@ -32,6 +32,7 @@
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --hover: #eeedff;
+      --bar-bg: #f2f0fd;
       --weekend-bg: #f6f5ff;
       --today-bg: #eeedff;
       font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
@@ -53,6 +54,7 @@
       --accent-text: #fff;
       --shadow: 0 2px 8px rgba(0,0,0,0.5);
       --hover: #1e1d30;
+      --bar-bg: #1b1830;
       --weekend-bg: #121121;
       --today-bg: #1c1b2c;
     }
@@ -1167,6 +1169,19 @@
       flex-direction: column;
     }
     .tool-modal-body { padding: 14px 16px 18px; overflow: auto; }
+
+    /* full-screen variant (settings, tasks) */
+    .tool-modal-backdrop.fullscreen { padding: 0; align-items: stretch; }
+    .tool-modal-backdrop.fullscreen .tool-modal {
+      width: 100%;
+      max-width: none;
+      height: 100%;
+      max-height: none;
+      border-radius: 0;
+      border: 0;
+    }
+    .tool-modal-backdrop.fullscreen .modal-head { padding-top: calc(14px + var(--safe-top)); }
+    .tool-modal-backdrop.fullscreen .tool-modal-body { padding-bottom: calc(24px + var(--safe-bottom)); }
     @media (max-width: 760px) {
       .tool-modal-backdrop { align-items: flex-end; padding: 0; }
       .tool-modal {
@@ -1208,6 +1223,49 @@
       background: var(--surface-2); color: var(--text); padding: 0 10px; font-size: 14px;
     }
     .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    /* task list rows */
+    .task-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .task-check {
+      flex: 0 0 auto;
+      width: 22px; height: 22px;
+      border-radius: 7px;
+      border: 2px solid var(--line);
+      background: var(--surface);
+      display: grid;
+      place-items: center;
+      padding: 0;
+    }
+    .task-check svg { opacity: 0; width: 13px; height: 13px; color: #fff; }
+    .task-row.done .task-check { background: var(--accent); border-color: var(--accent); }
+    .task-row.done .task-check svg { opacity: 1; }
+    .task-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+      background: none;
+      padding: 0;
+    }
+    .task-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .task-when { font-size: 12px; color: var(--muted); flex: 0 0 auto; }
+    .task-row.done .task-title { text-decoration: line-through; color: var(--muted); }
+
     .set-group {
       margin: 18px 0 6px;
       font-size: 11px;
@@ -1480,7 +1538,7 @@
 
       .topbar .menu-btn { order: 1; }
       .topbar .nav-group { order: 2; }
-      .topbar #themeBtn { order: 9; }
+      .topbar #tasksBtn { order: 9; }
       .topbar .spacer { display: none; }
 
       .nav-group .today-btn { display: none; }
@@ -1500,34 +1558,46 @@
         z-index: 40;
         /* extra bottom room so the phone's home indicator never overlaps */
         padding: 8px 10px calc(18px + var(--safe-bottom));
-        background: var(--surface);
+        background: var(--bar-bg);
         border-top: 1px solid var(--line);
+        /* one soft halo around the whole bar rather than a glow per button */
+        box-shadow: 0 -4px 26px -8px rgba(124, 109, 242, .45);
+      }
+      .mobile-views::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: -18px;
+        transform: translateX(-50%);
+        width: 76%;
+        height: 46px;
+        border-radius: 50%;
+        background: radial-gradient(ellipse at center, rgba(124,109,242,.42), rgba(124,109,242,0) 70%);
+        filter: blur(9px);
+        pointer-events: none;
       }
       .mobile-views button[data-view] {
         flex: 1;
         min-width: 0;
         height: 44px;
-        border-radius: 12px;
+        border-radius: 18px;
         color: var(--muted);
         font-weight: 600;
         font-size: 12px;
         background: var(--surface-2);
         border: 1px solid var(--line);
-        /* barely-there purple glow underneath */
-        box-shadow: 0 3px 10px -4px rgba(124, 109, 242, .55);
       }
       .mobile-views button[data-view].active {
         background: var(--accent);
         border-color: var(--accent);
         color: #fff;
-        box-shadow: 0 4px 14px -4px rgba(124, 109, 242, .85);
       }
       /* centre add button — same square-with-rounded-corners language */
       .mobile-views .bb-add {
         flex: 0 0 auto;
         width: 52px;
         height: 44px;
-        border-radius: 12px;
+        border-radius: 18px;
         background: var(--accent);
         color: var(--accent-text);
         font-size: 24px;
@@ -1535,7 +1605,7 @@
         line-height: 1;
         display: grid;
         place-items: center;
-        box-shadow: 0 4px 14px -4px rgba(124, 109, 242, .9);
+        box-shadow: 0 0 16px -2px rgba(124, 109, 242, .7);
       }
       .mobile-views .bb-add:active { transform: scale(.94); }
 
@@ -2117,6 +2187,14 @@
 
       <div class="range-title" id="rangeTitle"></div>
 
+      <button class="icon-btn" id="tasksBtn" title="Задачник" aria-label="Задачник">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M3 5.5l1.6 1.6L7.6 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 13.5l1.6 1.6L7.6 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10 6h7M10 14h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </button>
+
       <div class="spacer"></div>
 
       <input class="search" id="searchInput" placeholder="Поиск по событиям" />
@@ -2190,8 +2268,6 @@
           <button class="tool-btn" id="findTimeBtn">🔎 Найти свободное время</button>
           <button class="tool-btn" id="analyticsBtn">📊 Аналитика времени</button>
           <button class="tool-btn" id="carryTasksBtn">↪ Перенести задачи на сегодня</button>
-          <button class="tool-btn" id="exportBtn">⤴ Экспорт .ics</button>
-          <button class="tool-btn" id="importBtn">⤵ Импорт .ics</button>
           <input type="file" id="importFile" accept=".ics,text/calendar" style="display:none" />
         </div>
       </details>
@@ -2561,11 +2637,10 @@
       remindersGroup: document.getElementById("remindersGroup"),
       quickAdd: document.getElementById("quickAdd"),
       settingsBtn: document.getElementById("settingsBtn"),
+      tasksBtn: document.getElementById("tasksBtn"),
       findTimeBtn: document.getElementById("findTimeBtn"),
       analyticsBtn: document.getElementById("analyticsBtn"),
       carryTasksBtn: document.getElementById("carryTasksBtn"),
-      exportBtn: document.getElementById("exportBtn"),
-      importBtn: document.getElementById("importBtn"),
       importFile: document.getElementById("importFile"),
       voiceBtn: document.getElementById("voiceBtn"),
       eventLocation: document.getElementById("eventLocation"),
@@ -2848,10 +2923,9 @@
       els.findTimeBtn.addEventListener("click", openFindTime);
       els.analyticsBtn.addEventListener("click", openAnalytics);
       els.carryTasksBtn.addEventListener("click", carryOverTasks);
-      els.exportBtn.addEventListener("click", exportIcs);
-      els.importBtn.addEventListener("click", () => els.importFile.click());
       els.importFile.addEventListener("change", handleImportFile);
       els.settingsBtn.addEventListener("click", openSettings);
+      els.tasksBtn.addEventListener("click", openTasks);
 
       // natural-language quick add
       els.quickAdd.addEventListener("keydown", (e) => {
@@ -3460,8 +3534,11 @@
           const id = e.dataTransfer.getData("text/event-id");
           const ev = state.events.find(item => item.id === id);
           if (!ev) return;
-          const duration = timeToMinutes(ev.end) - timeToMinutes(ev.start);
-          const start = `${pad(Number(cell.dataset.hour))}:00`;
+          const duration = eventDurationMin(ev);
+          const rect = cell.getBoundingClientRect();
+          const offsetMin = Math.max(0, Math.min(59, Math.round((e.clientY - rect.top) / HOUR_HEIGHT * 60)));
+          const startMin = Math.min(24 * 60 - 1, Number(cell.dataset.hour) * 60 + offsetMin);
+          const start = minToHHMM(startMin);
           ev.date = cell.dataset.date;
           ev.start = start;
           ev.end = addMinutesToTime(start, duration);
@@ -3485,9 +3562,8 @@
       }
 
       function snapToSlot(h, m) {
-        const snapped = Math.round(m / 5) * 5;
-        if (snapped >= 60) return { h: Math.min(h + 1, 23), m: 0 };
-        return { h, m: snapped };
+        if (m >= 60) return { h: Math.min(h + 1, 23), m: 0 };
+        return { h, m };
       }
 
       function updateOverlay(ds) {
@@ -3719,6 +3795,10 @@
         let moveMode = false, moved = false, newStart = timeToMinutes(base.start), newDate = base.date;
 
         const scroller = el.closest("#scrollArea");
+        // preventDefault on pointermove does NOT stop touch scrolling — only a
+        // non-passive touchmove does, so block it here once the drag is armed
+        const blockScroll = (te) => { if (moveMode) te.preventDefault(); };
+        document.addEventListener("touchmove", blockScroll, { passive: false });
         const timer = setTimeout(() => {
           moveMode = true;
           try { el.setPointerCapture(e.pointerId); } catch {}
@@ -3764,6 +3844,7 @@
           document.removeEventListener("pointermove", onMove);
           document.removeEventListener("pointerup", onUp);
           document.removeEventListener("pointercancel", onUp);
+          document.removeEventListener("touchmove", blockScroll);
         }
         document.addEventListener("pointermove", onMove, { passive: false });
         document.addEventListener("pointerup", onUp);
@@ -3789,7 +3870,7 @@
 
         const move = (me) => {
           const y = me.clientY - colRect.top;
-          let endMin = START_HOUR * 60 + Math.round((y / HOUR_HEIGHT * 60) / 15) * 15;
+          let endMin = START_HOUR * 60 + Math.round(y / HOUR_HEIGHT * 60);
           endMin = Math.min(END_HOUR * 60, Math.max(startMin + 15, endMin));
           eventEl.style.height = `${Math.max(30, (endMin - startMin) / 60 * HOUR_HEIGHT - 4)}px`;
           eventEl.dataset.tmpEnd = `${pad(Math.floor(endMin / 60))}:${pad(endMin % 60)}`;
@@ -4127,13 +4208,14 @@
     }
 
     /* ---------------- TOOL MODAL ---------------- */
-    function openToolModal(title, html) {
+    function openToolModal(title, html, opts = {}) {
       els.toolModalTitle.textContent = title;
       els.toolModalBody.innerHTML = html;
+      els.toolModalBackdrop.classList.toggle("fullscreen", !!opts.full);
       els.toolModalBackdrop.classList.add("open");
     }
     function closeToolModal() {
-      els.toolModalBackdrop.classList.remove("open");
+      els.toolModalBackdrop.classList.remove("open", "fullscreen");
       els.toolModalBody.innerHTML = "";
     }
 
@@ -4199,7 +4281,13 @@
 
         <h3 class="set-group">Прочее</h3>
         ${row("Спрашивать перед удалением", sw("stConfirmDelete", state.confirmDelete))}
-      `);
+
+        <h3 class="set-group">Данные</h3>
+        <div class="tools-list">
+          <button type="button" class="tool-btn" id="stExport">⤴ Экспорт .ics</button>
+          <button type="button" class="tool-btn" id="stImport">⤵ Импорт .ics</button>
+        </div>
+      `, { full: true });
 
       const $ = (id) => document.getElementById(id);
       const onFlag = (id, key, apply) => {
@@ -4243,12 +4331,85 @@
         scheduleNotifications();
       });
 
+      $("stExport").addEventListener("click", exportIcs);
+      $("stImport").addEventListener("click", () => els.importFile.click());
+
       els.toolModalBody.querySelectorAll("[data-src]").forEach(cb => {
         cb.addEventListener("change", () => {
           const picked = [...els.toolModalBody.querySelectorAll("[data-src]:checked")].map(i => i.dataset.src);
           state.upShow = picked;
           saveFlag("focusCalendar.upShow", picked);
           renderUpcoming();
+        });
+      });
+    }
+
+    /* ---------------- TASKS ---------------- */
+    /* A plain list of everything flagged as a task in the calendar,
+       grouped by when it is due. Same data, different view. */
+    function openTasks() {
+      closeDrawer();
+      const todayIso = isoDate(new Date());
+      const from = isoDate(addDays(new Date(), -365));
+      const to = isoDate(addDays(new Date(), 365));
+
+      const tasks = getOccurrences(from, to)
+        .filter(ev => ev.isTask && !ev._holiday)
+        .sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+
+      const isDone = (ev) => (ev.repeat && ev.repeat !== "none")
+        ? (ev.doneDates || []).includes(ev.date)
+        : !!ev.done;
+
+      const buckets = [
+        { key: "over",  title: "Просрочено", items: [] },
+        { key: "today", title: "Сегодня",    items: [] },
+        { key: "soon",  title: "Дальше",     items: [] },
+        { key: "done",  title: "Выполнено",  items: [] }
+      ];
+      tasks.forEach(ev => {
+        if (isDone(ev)) buckets[3].items.push(ev);
+        else if (ev.date < todayIso) buckets[0].items.push(ev);
+        else if (ev.date === todayIso) buckets[1].items.push(ev);
+        else buckets[2].items.push(ev);
+      });
+
+      const rowFor = (ev) => {
+        const day = parseDate(ev.date);
+        const when = ev.date === todayIso
+          ? (ev.allDay ? "сегодня" : formatTime(ev.start))
+          : `${day.getDate()} ${MONTHS_SHORT[day.getMonth()]}${ev.allDay ? "" : ", " + formatTime(ev.start)}`;
+        const done = isDone(ev);
+        return `<div class="task-row${done ? " done" : ""}">
+          <button type="button" class="task-check" data-done-id="${ev.id}" data-done-date="${ev.date}" aria-label="Выполнено">${CHECK_SVG}</button>
+          <button type="button" class="task-main" data-open-id="${ev.id}" data-open-date="${ev.date}">
+            <span class="task-title">${escapeHtml(ev.title)}</span>
+            <span class="task-when">${when}</span>
+          </button>
+        </div>`;
+      };
+
+      const body = buckets.filter(b => b.items.length).map(b =>
+        `<h3 class="set-group">${b.title} · ${b.items.length}</h3>${b.items.map(rowFor).join("")}`
+      ).join("") || `<p style="color:var(--muted)">Задач пока нет. Отметьте «Задача» при создании события.</p>`;
+
+      openToolModal("Задачник", body, { full: true });
+
+      els.toolModalBody.querySelectorAll("[data-done-id]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          toggleDone(btn.dataset.doneId, btn.dataset.doneDate);
+          openTasks();                       // refresh in place
+        });
+      });
+      els.toolModalBody.querySelectorAll("[data-open-id]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const ev = state.events.find(x => x.id === btn.dataset.openId);
+          if (!ev) return;
+          closeToolModal();
+          state.selectedDate = parseDate(btn.dataset.openDate);
+          state.miniDate = new Date(state.selectedDate);
+          renderAll();
+          openModal({ ...ev, date: btn.dataset.openDate });
         });
       });
     }
