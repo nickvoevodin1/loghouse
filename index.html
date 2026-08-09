@@ -1624,7 +1624,7 @@
         transition: transform .28s cubic-bezier(.4,.0,.2,1);
         box-shadow: var(--shadow);
         border-right: 1px solid var(--line);
-        padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+        padding: calc(14px + var(--safe-top)) 16px calc(24px + var(--safe-bottom));
       }
 
       .sidebar.open { transform: translateX(0); }
