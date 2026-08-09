@@ -30,6 +30,7 @@
       --topbar: 56px;
       --mini-cell: 30px;
       --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
       --hover: #eeedff;
       --weekend-bg: #f6f5ff;
       --today-bg: #eeedff;
@@ -545,7 +546,7 @@
     }
 
     .fourday-header .hrow {
-      grid-template-columns: 54px repeat(4, minmax(90px, 1fr));
+      grid-template-columns: 54px repeat(3, minmax(90px, 1fr));
     }
 
     .day-header .hrow {
@@ -661,7 +662,7 @@
     }
 
     .fourday-grid {
-      grid-template-columns: 54px repeat(4, minmax(90px, 1fr));
+      grid-template-columns: 54px repeat(3, minmax(90px, 1fr));
     }
 
     .day-grid {
@@ -786,6 +787,42 @@
       box-shadow: none;
     }
     .event.is-task { z-index: 5; }
+    /* an overnight event is drawn as two slices — flatten the joined edges */
+    .event.seg-head { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    .event.seg-tail { border-top-left-radius: 0; border-top-right-radius: 0; }
+
+    /* live preview of the event being created, shown above the open sheet */
+    .draft-event {
+      position: absolute;
+      left: 2px; right: 2px;
+      border-radius: 6px;
+      padding: 3px 7px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 12;
+      opacity: .95;
+      outline: 2px solid rgba(255,255,255,.55);
+      touch-action: none;
+      overflow: hidden;
+    }
+    .draft-resize {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 18px;
+      touch-action: none;
+      cursor: ns-resize;
+    }
+    .draft-resize::after {
+      content: "";
+      position: absolute;
+      left: 50%; bottom: 3px;
+      width: 26px; height: 3px;
+      border-radius: 2px;
+      background: rgba(255,255,255,.9);
+      transform: translateX(-50%);
+    }
+
     .event.dragging { z-index: 20; opacity: .85; box-shadow: 0 6px 18px rgba(0,0,0,.35); cursor: grabbing; }
 
     .event-title {
@@ -819,15 +856,6 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-    }
-
-    .event-priority-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      margin-top: 2px;
-      background: rgba(255,255,255,0.8);
     }
 
     .month-view {
@@ -1180,6 +1208,20 @@
       background: var(--surface-2); color: var(--text); padding: 0 10px; font-size: 14px;
     }
     .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .set-group {
+      margin: 18px 0 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+    }
+    .set-group:first-child { margin-top: 0; }
+    .set-hint { font-size: 12px; color: var(--muted-2); margin-bottom: 7px; }
+    .src-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+    .src-item { justify-content: flex-start; min-height: 36px; font-size: 12px; }
+    .settings-entry { margin-top: 8px; }
+
     .stat-big { font-size: 26px; font-weight: 750; }
     .stat-cap { font-size: 12px; color: var(--muted); }
 
@@ -1445,56 +1487,60 @@
 
       .desktop-views { display: none; }
 
-      /* bottom tab bar: views on the sides, big "+" in the middle */
+      /* bottom tab bar: square-ish buttons, "+" in the middle */
       .mobile-views {
         display: flex;
         align-items: center;
-        justify-content: space-around;
-        gap: 2px;
+        justify-content: space-between;
+        gap: 6px;
         position: fixed;
         left: 0;
         right: 0;
         bottom: 0;
         z-index: 40;
-        padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+        /* extra bottom room so the phone's home indicator never overlaps */
+        padding: 8px 10px calc(18px + var(--safe-bottom));
         background: var(--surface);
         border-top: 1px solid var(--line);
-        box-shadow: 0 -2px 10px rgba(0,0,0,.16);
       }
       .mobile-views button[data-view] {
         flex: 1;
         min-width: 0;
-        height: 42px;
-        border-radius: 10px;
+        height: 44px;
+        border-radius: 12px;
         color: var(--muted);
         font-weight: 600;
         font-size: 12px;
-        background: transparent;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        /* barely-there purple glow underneath */
+        box-shadow: 0 3px 10px -4px rgba(124, 109, 242, .55);
       }
       .mobile-views button[data-view].active {
         background: var(--accent);
+        border-color: var(--accent);
         color: #fff;
+        box-shadow: 0 4px 14px -4px rgba(124, 109, 242, .85);
       }
-      /* centre add button */
+      /* centre add button — same square-with-rounded-corners language */
       .mobile-views .bb-add {
         flex: 0 0 auto;
         width: 52px;
-        height: 52px;
-        margin: -16px 6px 0;
-        border-radius: 16px;
+        height: 44px;
+        border-radius: 12px;
         background: var(--accent);
         color: var(--accent-text);
-        font-size: 26px;
+        font-size: 24px;
         font-weight: 400;
         line-height: 1;
         display: grid;
         place-items: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,.28);
+        box-shadow: 0 4px 14px -4px rgba(124, 109, 242, .9);
       }
       .mobile-views .bb-add:active { transform: scale(.94); }
 
       /* keep calendar content clear of the bar */
-      .main { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+      .main { padding-bottom: calc(78px + var(--safe-bottom)); }
 
       /* sidebar becomes drawer */
       .sidebar {
@@ -1576,15 +1622,41 @@
 
       /* modal -> bottom sheet */
       .modal-backdrop { align-items: flex-end; padding: 0; }
+      /* the sheet only dims what is behind it, so the grid above stays readable */
+      .modal-backdrop.sheet-half {
+        background: rgba(15,23,42,.18);
+        backdrop-filter: none;
+        pointer-events: none;          /* let the draft above the sheet be grabbed */
+      }
+      .modal-backdrop.sheet-half .modal { pointer-events: auto; }
       .modal {
         width: 100%;
+        height: var(--sheet-h, 52vh);
         max-height: 94vh;
-        border-radius: 12px 12px 0 0;
+        border-radius: 14px 14px 0 0;
         animation: sheetUp .3s cubic-bezier(.4,0,.2,1);
-        padding-bottom: env(safe-area-inset-bottom);
+        padding-bottom: var(--safe-bottom);
+        box-shadow: 0 -6px 24px rgba(0,0,0,.35);
       }
-      .modal-body { padding-bottom: 24px; }
-      .modal-actions { position: sticky; bottom: 0; background: var(--surface); padding: 12px 0 4px; }
+      .modal-backdrop.dragging .modal { animation: none; transition: none; }
+      .sheet-grip {
+        display: block;
+        width: 100%;
+        padding: 9px 0 3px;
+        background: none;
+        touch-action: none;
+        cursor: grab;
+      }
+      .sheet-grip::before {
+        content: "";
+        display: block;
+        width: 40px; height: 4px;
+        margin: 0 auto;
+        border-radius: 3px;
+        background: var(--muted-2);
+      }
+      .modal-body { padding-bottom: 20px; }
+      .modal-actions { position: sticky; bottom: 0; background: var(--surface); padding: 10px 0 4px; }
     }
 
     @keyframes sheetUp {
@@ -1844,11 +1916,93 @@
 
     /* individual event color picker row */
     .color-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
+      margin-top: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-2);
     }
+    .color-row[hidden] { display: none; }
+
+    .color-pick-btn {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      min-height: 40px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .color-pick-dot {
+      width: 18px; height: 18px;
+      border-radius: 6px;
+      background: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    /* custom reminder row */
+    .custom-remind {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .custom-remind input {
+      width: 74px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0 9px;
+      font-size: 13px;
+    }
+    .custom-remind select {
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0 8px;
+      font-size: 13px;
+    }
+    .custom-remind button {
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* compact one-line toggles */
+    .toggle-row { display: flex; gap: 8px; }
+    .mini-toggle {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .mini-toggle input { width: 17px; height: 17px; accent-color: var(--accent); }
+    .mini-toggle:has(input:checked) { border-color: var(--accent); background: var(--hover); }
     .color-swatch {
       width: 22px;
       height: 22px;
@@ -1868,15 +2022,6 @@
       color: var(--muted);
     }
 
-    /* priority badge */
-    .priority-badge {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      margin-right: 4px;
-      vertical-align: middle;
-    }
 
     /* location/url in event tooltip */
     .event-location {
@@ -1976,13 +2121,9 @@
 
       <input class="search" id="searchInput" placeholder="Поиск по событиям" />
 
-      <button class="icon-btn" id="themeBtn" title="Тема" aria-label="Сменить тему">
-        <svg id="themeIcon" width="20" height="20" viewBox="0 0 20 20" fill="none"></svg>
-      </button>
-
       <div class="view-switch desktop-views" id="viewSwitch">
         <button data-view="day">День</button>
-        <button data-view="4day">4 дня</button>
+        <button data-view="3day">3 дня</button>
         <button data-view="week" class="active">Неделя</button>
         <button data-view="month">Месяц</button>
         <button data-view="agenda">Список</button>
@@ -1991,10 +2132,10 @@
 
     <nav class="mobile-views" id="viewSwitchMobile">
       <button data-view="day">День</button>
-      <button data-view="week" class="active">Неделя</button>
+      <button data-view="3day">3 дня</button>
       <button type="button" class="bb-add" id="bbAdd" aria-label="Создать событие">＋</button>
+      <button data-view="week" class="active">Неделя</button>
       <button data-view="month">Месяц</button>
-      <button data-view="agenda">Список</button>
     </nav>
 
     <aside class="sidebar" id="sidebar">
@@ -2039,11 +2180,6 @@
       </section>
 
       <details class="sidebar-section" open>
-        <summary class="section-head"><span>Мои календари</span></summary>
-        <div class="calendar-list" id="calendarList"></div>
-      </details>
-
-      <details class="sidebar-section">
         <summary class="section-head"><span>Ближайшие</span></summary>
         <div class="upcoming" id="upcomingList"></div>
       </details>
@@ -2060,52 +2196,7 @@
         </div>
       </details>
 
-      <details class="sidebar-section">
-        <summary class="section-head"><span>Вид календаря</span></summary>
-        <div class="setting-row">
-          <span>Российские праздники</span>
-          <label class="switch"><input type="checkbox" id="setHolidays" checked /><span></span></label>
-        </div>
-        <div class="setting-row">
-          <span>Скрыть выходные</span>
-          <label class="switch"><input type="checkbox" id="setHideWeekends" /><span></span></label>
-        </div>
-        <div class="setting-row">
-          <span>Номера недель</span>
-          <label class="switch"><input type="checkbox" id="setWeekNumbers" /><span></span></label>
-        </div>
-        <div class="setting-row">
-          <span>Затенять нерабочие часы</span>
-          <label class="switch"><input type="checkbox" id="setWorkHours" /><span></span></label>
-        </div>
-        <div class="setting-row">
-          <span>Формат 12 часов</span>
-          <label class="switch"><input type="checkbox" id="setHour12" /><span></span></label>
-        </div>
-        <div class="setting-row">
-          <span>Первый день недели</span>
-          <select id="setWeekStart" class="mini-select">
-            <option value="1">Пн</option>
-            <option value="0">Вс</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <span>Рабочие часы</span>
-          <span class="work-range">
-            <select id="setWorkStart" class="mini-select"></select>
-            <span>–</span>
-            <select id="setWorkEnd" class="mini-select"></select>
-          </span>
-        </div>
-      </details>
-
-      <details class="sidebar-section">
-        <summary class="section-head"><span>Уведомления</span></summary>
-        <div class="setting-row">
-          <span>Уведомления в браузере</span>
-          <label class="switch"><input type="checkbox" id="setNotify" /><span></span></label>
-        </div>
-      </details>
+      <button class="tool-btn settings-entry" id="settingsBtn">⚙ Настройки</button>
     </aside>
 
     <main class="main">
@@ -2118,6 +2209,7 @@
 
   <div class="modal-backdrop" id="modalBackdrop">
     <form class="modal" id="eventForm">
+      <button type="button" class="sheet-grip" id="sheetGrip" aria-label="Развернуть"></button>
       <div class="modal-head">
         <h2 id="modalTitle">Новое событие</h2>
         <button type="button" class="icon-btn" id="closeModal">×</button>
@@ -2128,25 +2220,20 @@
           <input id="eventTitle" required placeholder="Например: Созвон по MVP" />
         </div>
 
-        <label class="allday-toggle" for="eventAllDay">
-          <input type="checkbox" id="eventAllDay" />
-          <span>Весь день</span>
-        </label>
+        <div class="toggle-row">
+          <label class="mini-toggle" for="eventAllDay">
+            <input type="checkbox" id="eventAllDay" />
+            <span>Весь день</span>
+          </label>
+          <label class="mini-toggle" for="eventIsTask">
+            <input type="checkbox" id="eventIsTask" />
+            <span>Задача</span>
+          </label>
+        </div>
 
-        <label class="allday-toggle" for="eventIsTask">
-          <input type="checkbox" id="eventIsTask" />
-          <span>Это задача (с галочкой выполнения)</span>
-        </label>
-
-        <div class="form-grid">
-          <div class="field">
-            <label for="eventDate">Дата</label>
-            <input id="eventDate" type="date" required />
-          </div>
-          <div class="field">
-            <label for="eventCalendar">Календарь</label>
-            <select id="eventCalendar"></select>
-          </div>
+        <div class="field">
+          <label for="eventDate">Дата</label>
+          <input id="eventDate" type="date" required />
         </div>
 
         <div class="field" id="endDateField" style="display:none">
@@ -2158,21 +2245,18 @@
           <div class="form-grid">
             <div class="field">
               <label for="eventStart">Начало</label>
-              <input id="eventStart" type="time" step="300" />
+              <input id="eventStart" type="time" step="60" />
             </div>
             <div class="field">
               <label for="eventEnd">Конец</label>
-              <input id="eventEnd" type="time" step="300" />
+              <input id="eventEnd" type="time" step="60" />
             </div>
           </div>
           <div class="dur-row" id="durRow">
-            <button type="button" class="dur-chip" data-dur="15">15 мин</button>
-            <button type="button" class="dur-chip" data-dur="30">30 мин</button>
-            <button type="button" class="dur-chip" data-dur="45">45 мин</button>
-            <button type="button" class="dur-chip" data-dur="60">1 ч</button>
-            <button type="button" class="dur-chip" data-dur="90">1.5 ч</button>
-            <button type="button" class="dur-chip" data-dur="120">2 ч</button>
-            <button type="button" class="dur-chip" data-dur="180">3 ч</button>
+            <button type="button" class="dur-chip" data-dur="15">15м</button>
+            <button type="button" class="dur-chip" data-dur="30">30м</button>
+            <button type="button" class="dur-chip" data-dur="60">1ч</button>
+            <button type="button" class="dur-chip" data-dur="120">2ч</button>
           </div>
         </div>
 
@@ -2238,6 +2322,15 @@
             <label class="reminder-chip"><input type="checkbox" value="60" /><span>За 1 час</span></label>
             <label class="reminder-chip"><input type="checkbox" value="1440" /><span>За 1 день</span></label>
           </div>
+          <div class="custom-remind">
+            <input id="remindCustomVal" type="number" min="1" max="999" placeholder="15" />
+            <select id="remindCustomUnit">
+              <option value="1">минут</option>
+              <option value="60">часов</option>
+              <option value="1440">дней</option>
+            </select>
+            <button type="button" id="remindCustomAdd">Добавить</button>
+          </div>
         </div>
 
         <div class="field">
@@ -2245,20 +2338,13 @@
           <input id="eventLocation" placeholder="Адрес или https://meet.google.com/..." />
         </div>
 
-        <div class="form-grid">
-          <div class="field">
-            <label for="eventPriority">Приоритет</label>
-            <select id="eventPriority">
-              <option value="">Без приоритета</option>
-              <option value="high">🔴 Высокий</option>
-              <option value="medium">🟡 Средний</option>
-              <option value="low">⚪ Низкий</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Цвет события</label>
-            <div class="color-row" id="eventColorRow"></div>
-          </div>
+        <div class="field">
+          <label>Цвет события</label>
+          <button type="button" class="color-pick-btn" id="colorPickBtn">
+            <span class="color-pick-dot" id="colorPickDot"></span>
+            <span id="colorPickName">Выбрать цвет</span>
+          </button>
+          <div class="color-row" id="eventColorRow" hidden></div>
         </div>
 
         <div class="field">
@@ -2313,8 +2399,12 @@
     const HOUR_HEIGHT = 48;
 
     const EVENT_COLORS = [
-      "#7c6df2", "#3b82f6", "#10b981", "#f97316",
-      "#ef4444", "#ec4899", "#f59e0b", "#06b6d4"
+      /* purple */  "#7c6df2", "#a78bfa", "#5b4bd6", "#c4b5fd",
+      /* blue */    "#3b82f6", "#60a5fa", "#1d4ed8", "#06b6d4",
+      /* green */   "#10b981", "#34d399", "#047857", "#84cc16",
+      /* warm */    "#f97316", "#fb923c", "#f59e0b", "#facc15",
+      /* red/pink */"#ef4444", "#f87171", "#be123c", "#ec4899",
+      /* neutral */ "#f472b6", "#8b5a2b", "#64748b", "#94a3b8"
     ];
     const DOW = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
     const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
@@ -2371,7 +2461,7 @@
       {
         id: uid(),
         title: "Планирование MVP календаря",
-        date: isoDate(addDays(startOfWeek(new Date()), 1)),
+        date: isoDate(addDays(new Date(), 1)),
         start: "10:00", end: "11:30",
         calendarId: "startup", allDay: false, reminder: "10",
         description: "Обсудить недельный вид, создание событий и следующий слой задач."
@@ -2379,7 +2469,7 @@
       {
         id: uid(),
         title: "Пары в университете",
-        date: isoDate(addDays(startOfWeek(new Date()), 2)),
+        date: isoDate(addDays(new Date(), 2)),
         start: "09:30", end: "13:00",
         calendarId: "study", allDay: false, reminder: "30",
         description: "Оставить блок занятым, чтобы ИИ потом не ставил задачи на это время."
@@ -2387,7 +2477,7 @@
       {
         id: uid(),
         title: "Работа над сайтом клиента",
-        date: isoDate(addDays(startOfWeek(new Date()), 3)),
+        date: isoDate(addDays(new Date(), 3)),
         start: "15:00", end: "18:00",
         calendarId: "work", allDay: false, reminder: "",
         description: "Финальные правки и адаптив."
@@ -2395,7 +2485,7 @@
       {
         id: uid(),
         title: "Тренировка / перезагрузка",
-        date: isoDate(addDays(startOfWeek(new Date()), 4)),
+        date: isoDate(addDays(new Date(), 4)),
         start: "19:30", end: "20:30",
         calendarId: "personal", allDay: false, reminder: "60",
         description: "Важный слот восстановления."
@@ -2403,7 +2493,7 @@
       {
         id: uid(),
         title: "Дедлайн: сдать проект",
-        date: isoDate(addDays(startOfWeek(new Date()), 4)),
+        date: isoDate(addDays(new Date(), 4)),
         start: "00:00", end: "23:59",
         calendarId: "study", allDay: true, reminder: "1440",
         description: "Пример события «весь день»."
@@ -2411,7 +2501,7 @@
       {
         id: uid(),
         title: "Разбор задач на неделю",
-        date: isoDate(addDays(startOfWeek(new Date()), 0)),
+        date: isoDate(new Date()),
         start: "12:00", end: "13:00",
         calendarId: "startup", allDay: false, reminder: "",
         description: "Пример события для теста интерфейса."
@@ -2422,7 +2512,6 @@
       view: loadView(),
       selectedDate: new Date(),
       miniDate: new Date(),
-      visibleCalendars: new Set(calendars.map(c => c.id)),
       search: "",
       editingId: null,
       editingInstanceDate: null,
@@ -2434,6 +2523,12 @@
       workHours: loadFlag("focusCalendar.workHours", true),
       workStart: Number(loadFlag("focusCalendar.workStart", 9)),
       workEnd: Number(loadFlag("focusCalendar.workEnd", 18)),
+      // what the "Ближайшие" list shows
+      upShow: loadFlag("focusCalendar.upShow", ["events", "tasks", "birthdays"]),
+      upCount: Number(loadFlag("focusCalendar.upCount", 3)),
+      upDays: Number(loadFlag("focusCalendar.upDays", 30)),
+      defaultDuration: Number(loadFlag("focusCalendar.defaultDuration", 60)),
+      confirmDelete: loadFlag("focusCalendar.confirmDelete", true),
       history: []
     };
 
@@ -2451,7 +2546,6 @@
       miniTitle: document.getElementById("miniTitle"),
       miniPrev: document.getElementById("miniPrev"),
       miniNext: document.getElementById("miniNext"),
-      calendarList: document.getElementById("calendarList"),
       upcomingList: document.getElementById("upcomingList"),
       searchInput: document.getElementById("searchInput"),
       searchInputMobile: document.getElementById("searchInputMobile"),
@@ -2466,15 +2560,7 @@
       eventRepeat: document.getElementById("eventRepeat"),
       remindersGroup: document.getElementById("remindersGroup"),
       quickAdd: document.getElementById("quickAdd"),
-      setNotify: document.getElementById("setNotify"),
-      setHolidays: document.getElementById("setHolidays"),
-      setHideWeekends: document.getElementById("setHideWeekends"),
-      setWeekNumbers: document.getElementById("setWeekNumbers"),
-      setHour12: document.getElementById("setHour12"),
-      setWorkHours: document.getElementById("setWorkHours"),
-      setWeekStart: document.getElementById("setWeekStart"),
-      setWorkStart: document.getElementById("setWorkStart"),
-      setWorkEnd: document.getElementById("setWorkEnd"),
+      settingsBtn: document.getElementById("settingsBtn"),
       findTimeBtn: document.getElementById("findTimeBtn"),
       analyticsBtn: document.getElementById("analyticsBtn"),
       carryTasksBtn: document.getElementById("carryTasksBtn"),
@@ -2483,8 +2569,14 @@
       importFile: document.getElementById("importFile"),
       voiceBtn: document.getElementById("voiceBtn"),
       eventLocation: document.getElementById("eventLocation"),
-      eventPriority: document.getElementById("eventPriority"),
       eventColorRow: document.getElementById("eventColorRow"),
+      sheetGrip: document.getElementById("sheetGrip"),
+      colorPickBtn: document.getElementById("colorPickBtn"),
+      colorPickDot: document.getElementById("colorPickDot"),
+      colorPickName: document.getElementById("colorPickName"),
+      remindCustomVal: document.getElementById("remindCustomVal"),
+      remindCustomUnit: document.getElementById("remindCustomUnit"),
+      remindCustomAdd: document.getElementById("remindCustomAdd"),
       eventEndDate: document.getElementById("eventEndDate"),
       endDateField: document.getElementById("endDateField"),
       eventAttendees: document.getElementById("eventAttendees"),
@@ -2508,7 +2600,6 @@
       eventDate: document.getElementById("eventDate"),
       eventStart: document.getElementById("eventStart"),
       eventEnd: document.getElementById("eventEnd"),
-      eventCalendar: document.getElementById("eventCalendar"),
       eventDescription: document.getElementById("eventDescription"),
       eventAllDay: document.getElementById("eventAllDay"),
       timeFields: document.getElementById("timeFields"),
@@ -2519,8 +2610,6 @@
       menuBtn: document.getElementById("menuBtn"),
       drawerClose: document.getElementById("drawerClose"),
       fab: document.getElementById("fab"),
-      themeBtn: document.getElementById("themeBtn"),
-      themeIcon: document.getElementById("themeIcon"),
       toolModalBackdrop: document.getElementById("toolModalBackdrop"),
       toolModalTitle: document.getElementById("toolModalTitle"),
       toolModalBody: document.getElementById("toolModalBody"),
@@ -2540,7 +2629,9 @@
         const safe = tg.safeAreaInset || {};
         const content = tg.contentSafeAreaInset || {};
         const top = (safe.top || 0) + (content.top || 0);
+        const bottom = Math.max(safe.bottom || 0, content.bottom || 0);
         document.documentElement.style.setProperty("--safe-top", top + "px");
+        document.documentElement.style.setProperty("--safe-bottom", bottom + "px");
       };
       applyInsets();
       try {
@@ -2554,8 +2645,6 @@
       initTelegram();
       applyTheme(loadTheme());
       syncViewButtons();
-      renderCalendarList();
-      renderEventCalendarOptions();
       renderColorSwatches("");
       bindEvents();
       renderAll();
@@ -2566,25 +2655,30 @@
     const ICON_MOON = '<path d="M16 11.5A6 6 0 0 1 8.5 4a6 6 0 1 0 7.5 7.5Z" fill="currentColor"/>';
     const ICON_SUN = '<circle cx="10" cy="10" r="4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M15.8 4.2l-1.4 1.4M5.6 14.4l-1.4 1.4"/></g>';
 
+    function prefersDark() {
+      return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
+    /* stored preference: "light" | "dark" | "system" */
+    function loadThemePref() {
+      try { return localStorage.getItem("focusCalendar.theme") || "system"; } catch { return "system"; }
+    }
     function loadTheme() {
-      try {
-        const saved = localStorage.getItem("focusCalendar.theme");
-        if (saved) return saved;
-      } catch {}
-      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      const pref = loadThemePref();
+      return pref === "system" ? (prefersDark() ? "dark" : "light") : pref;
+    }
+    function setThemePref(pref) {
+      try { localStorage.setItem("focusCalendar.theme", pref); } catch {}
+      applyTheme(pref === "system" ? (prefersDark() ? "dark" : "light") : pref);
     }
 
     function applyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
-      els.themeIcon.innerHTML = theme === "dark" ? ICON_SUN : ICON_MOON;
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.setAttribute("content", theme === "dark" ? "#0f0e17" : "#7c6df2");
     }
 
     function toggleTheme() {
-      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-      applyTheme(next);
-      try { localStorage.setItem("focusCalendar.theme", next); } catch {}
+      setThemePref(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
     }
 
     /* ---------------- DRAWER ---------------- */
@@ -2611,7 +2705,6 @@
       els.menuBtn.addEventListener("click", openDrawer);
       els.drawerClose.addEventListener("click", closeDrawer);
       els.scrim.addEventListener("click", closeDrawer);
-      els.themeBtn.addEventListener("click", toggleTheme);
 
       [els.viewSwitch, els.viewSwitchMobile].forEach(sw => {
         sw.addEventListener("click", (e) => {
@@ -2659,6 +2752,8 @@
       els.closeModal.addEventListener("click", closeModal);
       els.cancelModal.addEventListener("click", closeModal);
       els.modalBackdrop.addEventListener("click", (e) => {
+        // the tap that opened the sheet also fires a click here — ignore it
+        if (Date.now() - (state._modalOpenedAt || 0) < 400) return;
         if (e.target === els.modalBackdrop) closeModal();
       });
 
@@ -2667,12 +2762,36 @@
         els.endDateField.style.display = els.eventAllDay.checked ? "block" : "none";
       });
 
+      // colour picker toggles the palette open
+      els.colorPickBtn.addEventListener("click", () => {
+        els.eventColorRow.hidden = !els.eventColorRow.hidden;
+      });
+
+      // add a reminder at an arbitrary offset
+      els.remindCustomAdd.addEventListener("click", () => {
+        const n = Number(els.remindCustomVal.value);
+        if (!n || n < 1) { showToast("Укажи число"); return; }
+        const minutes = n * Number(els.remindCustomUnit.value);
+        if (minutes > 60 * 24 * 30) { showToast("Слишком большой интервал"); return; }
+        if (PRESET_REMINDERS.includes(minutes)) {
+          const preset = els.remindersGroup.querySelector(`.reminder-chip input[value="${minutes}"]`);
+          if (preset) { preset.checked = true; preset.closest(".reminder-chip").classList.add("on"); }
+        } else {
+          addCustomReminderChip(minutes);
+        }
+        els.remindCustomVal.value = "";
+      });
+
       els.durRow.addEventListener("click", (e) => {
         const chip = e.target.closest(".dur-chip");
-        if (chip) applyDuration(Number(chip.dataset.dur));
+        if (chip) { applyDuration(Number(chip.dataset.dur)); renderDraft(); }
       });
-      els.eventStart.addEventListener("change", syncDurationChips);
-      els.eventEnd.addEventListener("change", syncDurationChips);
+      els.eventStart.addEventListener("change", () => { syncDurationChips(); renderDraft(); });
+      els.eventEnd.addEventListener("change", () => { syncDurationChips(); renderDraft(); });
+      els.eventDate.addEventListener("change", renderDraft);
+      els.eventTitle.addEventListener("input", renderDraft);
+      els.eventAllDay.addEventListener("change", renderDraft);
+      bindSheetGrip();
 
       // custom recurrence UI toggles
       els.eventRepeat.addEventListener("change", syncRepeatUI);
@@ -2703,6 +2822,7 @@
           renderAll();
         };
         if (base.repeat && base.repeat !== "none") askThisOrAll("Удалить", doDelete);
+        else if (state.confirmDelete && !confirm(`Удалить «${base.title}»?`)) return;
         else doDelete("all");
       });
 
@@ -2731,42 +2851,7 @@
       els.exportBtn.addEventListener("click", exportIcs);
       els.importBtn.addEventListener("click", () => els.importFile.click());
       els.importFile.addEventListener("change", handleImportFile);
-
-      // display settings
-      els.setHour12.checked = uiPrefs.hour12;
-      els.setHour12.addEventListener("change", () => {
-        uiPrefs.hour12 = els.setHour12.checked;
-        saveFlag("focusCalendar.hour12", uiPrefs.hour12);
-        renderAll();
-      });
-      els.setWorkHours.checked = state.workHours;
-      els.setWorkHours.addEventListener("change", () => {
-        state.workHours = els.setWorkHours.checked;
-        saveFlag("focusCalendar.workHours", state.workHours);
-        renderAll();
-      });
-      els.setWeekStart.value = String(uiPrefs.weekStart);
-      els.setWeekStart.addEventListener("change", () => {
-        uiPrefs.weekStart = Number(els.setWeekStart.value);
-        saveFlag("focusCalendar.weekStart", uiPrefs.weekStart);
-        renderAll();
-      });
-      // work-hours range selects
-      const hourOpts = Array.from({ length: 25 }, (_, h) => `<option value="${h}">${formatHourLabel(h)}</option>`).join("");
-      els.setWorkStart.innerHTML = hourOpts;
-      els.setWorkEnd.innerHTML = hourOpts;
-      els.setWorkStart.value = String(state.workStart);
-      els.setWorkEnd.value = String(state.workEnd);
-      els.setWorkStart.addEventListener("change", () => {
-        state.workStart = Number(els.setWorkStart.value);
-        saveFlag("focusCalendar.workStart", state.workStart);
-        renderAll();
-      });
-      els.setWorkEnd.addEventListener("change", () => {
-        state.workEnd = Number(els.setWorkEnd.value);
-        saveFlag("focusCalendar.workEnd", state.workEnd);
-        renderAll();
-      });
+      els.settingsBtn.addEventListener("click", openSettings);
 
       // natural-language quick add
       els.quickAdd.addEventListener("keydown", (e) => {
@@ -2777,37 +2862,6 @@
         els.quickAdd.value = "";
         if (isMobile()) closeDrawer();
         openModal(parsed);
-      });
-
-      // settings toggles
-      els.setNotify.checked = state.notify;
-      els.setHolidays.checked = state.showHolidays;
-      els.setNotify.addEventListener("change", async () => {
-        if (els.setNotify.checked) {
-          const ok = await requestNotifyPermission();
-          if (!ok) { els.setNotify.checked = false; showToast("Браузер не разрешил уведомления"); return; }
-        }
-        state.notify = els.setNotify.checked;
-        saveFlag("focusCalendar.notify", state.notify);
-        scheduleNotifications();
-        showToast(state.notify ? "Уведомления включены" : "Уведомления выключены");
-      });
-      els.setHolidays.addEventListener("change", () => {
-        state.showHolidays = els.setHolidays.checked;
-        saveFlag("focusCalendar.holidays", state.showHolidays);
-        renderAll();
-      });
-      els.setHideWeekends.checked = state.hideWeekends;
-      els.setHideWeekends.addEventListener("change", () => {
-        state.hideWeekends = els.setHideWeekends.checked;
-        saveFlag("focusCalendar.hideWeekends", state.hideWeekends);
-        renderAll();
-      });
-      els.setWeekNumbers.checked = state.weekNumbers;
-      els.setWeekNumbers.addEventListener("change", () => {
-        state.weekNumbers = els.setWeekNumbers.checked;
-        saveFlag("focusCalendar.weekNumbers", state.weekNumbers);
-        renderMiniMonth();
       });
 
       // voice input
@@ -2988,7 +3042,7 @@
           case "c": e.preventDefault(); openModal({ date: isoDate(state.selectedDate) }); break;
           case "t": goToday(); break;
           case "d": case "1": setView("day"); break;
-          case "x": case "2": setView("4day"); break;
+          case "x": case "2": setView("3day"); break;
           case "w": case "3": setView("week"); break;
           case "m": case "4": setView("month"); break;
           case "a": case "5": setView("agenda"); break;
@@ -3037,7 +3091,7 @@
 
     function navigate(step) {
       if (state.view === "day") state.selectedDate = addDays(state.selectedDate, step);
-      else if (state.view === "4day") state.selectedDate = addDays(state.selectedDate, step * 4);
+      else if (state.view === "3day") state.selectedDate = addDays(state.selectedDate, step * 3);
       else if (state.view === "week") state.selectedDate = addDays(state.selectedDate, step * 7);
       else if (state.view === "agenda") state.selectedDate = addDays(state.selectedDate, step * 7);
       else state.selectedDate = new Date(state.selectedDate.getFullYear(), state.selectedDate.getMonth() + step, 1);
@@ -3063,8 +3117,8 @@
     function renderTitle() {
       if (state.view === "day") {
         els.rangeTitle.textContent = `${state.selectedDate.getDate()} ${MONTHS_TITLE[state.selectedDate.getMonth()]} ${state.selectedDate.getFullYear()}`;
-      } else if (state.view === "4day") {
-        const end = addDays(state.selectedDate, 3);
+      } else if (state.view === "3day") {
+        const end = addDays(state.selectedDate, 2);
         const sameMonth = state.selectedDate.getMonth() === end.getMonth();
         const left = sameMonth ? state.selectedDate.getDate() : `${state.selectedDate.getDate()} ${MONTHS_TITLE[state.selectedDate.getMonth()]}`;
         els.rangeTitle.textContent = `${left} — ${end.getDate()} ${MONTHS_TITLE[end.getMonth()]} ${end.getFullYear()}`;
@@ -3079,29 +3133,6 @@
       } else {
         els.rangeTitle.textContent = `${capitalize(MONTHS[state.selectedDate.getMonth()])} ${state.selectedDate.getFullYear()}`;
       }
-    }
-
-    function renderCalendarList() {
-      els.calendarList.innerHTML = calendars.map(cal => `
-        <label class="calendar-item">
-          <input type="checkbox" data-calendar="${cal.id}" checked />
-          <span class="calendar-dot" style="background:${cal.color}"></span>
-          <span>${cal.name}</span>
-        </label>
-      `).join("");
-
-      els.calendarList.addEventListener("change", (e) => {
-        const id = e.target.dataset.calendar;
-        if (!id) return;
-        if (e.target.checked) state.visibleCalendars.add(id);
-        else state.visibleCalendars.delete(id);
-        renderAll();
-      });
-    }
-
-    function renderEventCalendarOptions() {
-      els.eventCalendar.innerHTML = calendars.filter(cal => !cal.readonly)
-        .map(cal => `<option value="${cal.id}">${cal.name}</option>`).join("");
     }
 
     function renderMiniMonth() {
@@ -3172,20 +3203,20 @@
 
     function renderTimeGrid(view) {
       const isWeek = view === "week";
-      const isFourDay = view === "4day";
+      const isFourDay = view === "3day";
       let days;
       if (isWeek) {
         days = Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(state.selectedDate), i));
         if (state.hideWeekends) days = days.filter(d => d.getDay() !== 0 && d.getDay() !== 6);
       } else if (isFourDay) {
-        days = Array.from({ length: 4 }, (_, i) => addDays(state.selectedDate, i));
+        days = Array.from({ length: 3 }, (_, i) => addDays(state.selectedDate, i));
       } else {
         days = [state.selectedDate];
       }
 
       const headerClass = isFourDay ? "fourday-header" : isWeek ? "week-header" : "day-header";
       const gridClass = isFourDay ? "fourday-grid" : isWeek ? "week-grid" : "day-grid";
-      const occ = getOccurrences(isoDate(days[0]), isoDate(days[days.length - 1]));
+      const occ = getOccurrences(isoDate(addDays(days[0], -1)), isoDate(days[days.length - 1]));
 
       const gutter = isMobile() ? 42 : 54;
       const colMin = isMobile() ? 0 : 80;
@@ -3245,7 +3276,7 @@
 
       const columns = days.map(day => {
         const iso = isoDate(day);
-        const dayEvents = occ.filter(ev => ev.date === iso && !ev.allDay);
+        const dayEvents = occ.filter(ev => !ev.allDay).map(ev => daySegment(ev, iso)).filter(Boolean);
         const dayClass = [
           "day-col",
           isWeekendDay(day) ? "weekend" : "",
@@ -3287,8 +3318,32 @@
       bindDayTitles();
     }
 
+    /* a timed event whose end is at or before its start runs past midnight */
+    function isOvernight(ev) {
+      return !ev.allDay && timeToMinutes(ev.end) <= timeToMinutes(ev.start);
+    }
+    function eventDurationMin(ev) {
+      const s = timeToMinutes(ev.start), e = timeToMinutes(ev.end);
+      return e > s ? e - s : (24 * 60 - s) + e;
+    }
+    /* the slice of `ev` that falls on `iso`, or null.
+       Overnight events yield a head on their own day and a tail on the next. */
+    function daySegment(ev, iso) {
+      if (ev.date === iso) {
+        return isOvernight(ev)
+          ? { ...ev, _segStart: ev.start, _segEndMin: 24 * 60 }
+          : { ...ev, _segStart: ev.start, _segEndMin: timeToMinutes(ev.end) };
+      }
+      if (isOvernight(ev) && isoDate(addDays(parseDate(ev.date), 1)) === iso) {
+        return { ...ev, _segStart: "00:00", _segEndMin: timeToMinutes(ev.end), _tail: true };
+      }
+      return null;
+    }
+
     function rangesOverlap(a, b) {
-      return timeToMinutes(a.start) < timeToMinutes(b.end) && timeToMinutes(b.start) < timeToMinutes(a.end);
+      const as = timeToMinutes(a._segStart || a.start), ae = a._segEndMin != null ? a._segEndMin : timeToMinutes(a.end);
+      const bs = timeToMinutes(b._segStart || b.start), be = b._segEndMin != null ? b._segEndMin : timeToMinutes(b.end);
+      return as < be && bs < ae;
     }
 
     /* lay out overlapping events side by side.
@@ -3303,7 +3358,7 @@
       const foreground = plain.filter(e => !e._bg);
       const background = plain.filter(e => e._bg);
 
-      const sorted = [...foreground].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start) || timeToMinutes(b.end) - timeToMinutes(a.end));
+      const sorted = [...foreground].sort((a, b) => timeToMinutes(a._segStart || a.start) - timeToMinutes(b._segStart || b.start));
       const cols = [];
       sorted.forEach(ev => {
         let placed = false;
@@ -3323,26 +3378,28 @@
 
     const CHECK_SVG = '<svg viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-    const PRIORITY_COLORS = { high: "#ef4444", medium: "#f59e0b", low: "#9ca3af" };
-
     function eventMarkup(ev, col = 0, total = 1) {
       const cal = getCalendar(ev.calendarId);
       const color = ev.color || cal.color;
-      const top = (timeToMinutes(ev.start) - START_HOUR * 60) / 60 * HOUR_HEIGHT;
-      const height = Math.max(22, (timeToMinutes(ev.end) - timeToMinutes(ev.start)) / 60 * HOUR_HEIGHT - 2);
+      // geometry follows the slice shown on this day (overnight events are split)
+      const segStartMin = timeToMinutes(ev._segStart || ev.start);
+      const segEndMin = ev._segEndMin != null ? ev._segEndMin : timeToMinutes(ev.end);
+      const top = (segStartMin - START_HOUR * 60) / 60 * HOUR_HEIGHT;
+      const height = Math.max(22, (segEndMin - segStartMin) / 60 * HOUR_HEIGHT - 2);
       const compact = height < 40 ? "compact" : "";
       const gap = 3;
       const widthPct = 100 / total;
       const leftStyle = total > 1
         ? `left:calc(${col * widthPct}% + 3px);width:calc(${widthPct}% - ${gap + 3}px);right:auto;`
         : "";
-      const classes = ["event", compact, ev.isTask ? "is-task" : "", ev._bg ? "bg-block" : "", ev.done ? "done" : ""].filter(Boolean).join(" ");
+      const overnight = isOvernight(ev);
+      const classes = ["event", compact, ev.isTask ? "is-task" : "", ev._bg ? "bg-block" : "",
+                       ev.done ? "done" : "", ev._tail ? "seg-tail" : "", (overnight && !ev._tail) ? "seg-head" : ""].filter(Boolean).join(" ");
       const draggable = isMobile() ? "false" : "true";
       const check = ev.isTask
         ? `<button class="event-check" data-toggle-done="${ev.id}" data-date="${ev.date}" title="Отметить выполнение">${CHECK_SVG}</button>`
         : "";
       const repeatBadge = (ev.repeat && ev.repeat !== "none") ? `<span class="event-repeat-badge">⟳</span>` : "";
-      const priorityDot = ev.priority ? `<span class="event-priority-dot" style="background:${PRIORITY_COLORS[ev.priority] || 'transparent'}"></span>` : "";
       const locationLine = (ev.location && height > 56) ? `<div class="event-location">📍 ${escapeHtml(ev.location)}</div>` : "";
       return `
         <div class="${classes}" draggable="${draggable}" data-event-id="${ev.id}" data-date="${ev.date}"
@@ -3350,13 +3407,13 @@
           <div class="event-head">
             ${check}
             <div style="min-width:0;flex:1">
-              <div class="event-title">${priorityDot}${escapeHtml(ev.title)}${repeatBadge}</div>
-              ${height > 34 ? `<div class="event-time">${formatTime(ev.start)} — ${formatTime(ev.end)}</div>` : ""}
+              <div class="event-title">${escapeHtml(ev.title)}${repeatBadge}</div>
+              ${height > 34 ? `<div class="event-time">${formatTime(ev.start)} — ${formatTime(ev.end)}${overnight ? " ⤍" : ""}</div>` : ""}
               ${height > 62 && ev.description ? `<div class="event-desc">${escapeHtml(ev.description)}</div>` : ""}
               ${locationLine}
             </div>
           </div>
-          ${(ev._holiday || height < 38) ? "" : `<div class="event-resize" data-resize="${ev.id}" data-date="${ev.date}"></div>`}
+          ${(ev._holiday || overnight || height < 38) ? "" : `<div class="event-resize" data-resize="${ev.id}" data-date="${ev.date}"></div>`}
         </div>
       `;
     }
@@ -3428,7 +3485,7 @@
       }
 
       function snapToSlot(h, m) {
-        const snapped = Math.round(m / 30) * 30;
+        const snapped = Math.round(m / 5) * 5;
         if (snapped >= 60) return { h: Math.min(h + 1, 23), m: 0 };
         return { h, m: snapped };
       }
@@ -3462,6 +3519,7 @@
       els.calendarShell.querySelectorAll(".day-col").forEach(col => {
         col.addEventListener("mousedown", (e) => {
           if (isMobile()) return;
+          if (els.modalBackdrop.classList.contains("open")) return;
           if (e.button !== 0) return;
           if (e.target.closest(".event, [data-resize]")) return;
           e.preventDefault();
@@ -3512,7 +3570,8 @@
         }
 
         col.addEventListener("touchstart", (e) => {
-          if (e.target.closest(".event")) return;
+          if (e.target.closest(".event, .draft-event")) return;
+          if (els.modalBackdrop.classList.contains("open")) return;
           const touch = e.changedTouches[0];
           const { h, m } = getHourMinFromY(col, touch.clientY);
           const snapped = snapToSlot(h, m);
@@ -3570,6 +3629,16 @@
             const ds = dragState;
             dragState = null;
             commitDrag(ds);
+          } else if (pending) {
+            /* pending survives only if the finger never moved far enough to
+               scroll, so this is a deliberate tap: create a 1-hour event */
+            e.preventDefault();
+            const ds = pending;
+            openModal({
+              date: ds.date,
+              start: `${pad(ds.startH)}:${pad(ds.startM)}`,
+              end: `${pad(ds.endH)}:${pad(ds.endM)}`
+            });
           }
           pending = null;
         }, { passive: false });
@@ -3649,10 +3718,13 @@
         const startX = e.clientX, startY = e.clientY;
         let moveMode = false, moved = false, newStart = timeToMinutes(base.start), newDate = base.date;
 
+        const scroller = el.closest("#scrollArea");
         const timer = setTimeout(() => {
           moveMode = true;
           try { el.setPointerCapture(e.pointerId); } catch {}
           el.classList.add("dragging");
+          // freeze the grid: without this the drag scrolls the whole calendar
+          if (scroller) scroller.style.overflow = "hidden";
           if (navigator.vibrate) navigator.vibrate(15);
         }, 350);
 
@@ -3666,7 +3738,7 @@
           const under = document.elementFromPoint(ev.clientX, ev.clientY);
           const targetCol = (under && under.closest && under.closest(".day-col")) || col0;
           const rect = targetCol.getBoundingClientRect();
-          let mins = Math.round(((ev.clientY - rect.top - grabOffset) / HOUR_HEIGHT * 60) / 15) * 15;
+          let mins = Math.round((ev.clientY - rect.top - grabOffset) / HOUR_HEIGHT * 60);
           mins = Math.max(START_HOUR * 60, Math.min(mins, END_HOUR * 60 - durMin));
           newStart = mins;
           newDate = targetCol.dataset.date;
@@ -3676,6 +3748,7 @@
           clearTimeout(timer);
           cleanup();
           el.classList.remove("dragging");
+          if (scroller) scroller.style.overflow = "";
           if (moveMode && moved) {
             suppressClickUntil = Date.now() + 400;
             pushHistory();
@@ -3782,7 +3855,7 @@
               <span class="agenda-bar" style="background:${ev.color || cal.color}"></span>
               <span class="agenda-meta">
                 <span class="agenda-time">${time}${repeatBadge}</span>
-                <span class="agenda-title">${ev.priority ? `<span class="priority-badge" style="background:${PRIORITY_COLORS[ev.priority]}"></span>` : ""}${escapeHtml(ev.title)}</span>
+                <span class="agenda-title">${escapeHtml(ev.title)}</span>
                 ${ev.location ? `<span class="agenda-note">📍 ${escapeHtml(ev.location)}</span>` : ""}
                 ${ev.description ? `<span class="agenda-note">${escapeHtml(ev.description)}</span>` : ""}
                 <span class="agenda-cal"><span class="calendar-dot" style="width:8px;height:8px;background:${cal.color}"></span>${cal.name}</span>
@@ -3929,11 +4002,17 @@
 
     function renderUpcoming() {
       const nowDate = isoDate(new Date());
-      const horizon = isoDate(addDays(new Date(), 90));
+      const horizon = isoDate(addDays(new Date(), state.upDays));
+      const show = state.upShow || [];
       const events = getOccurrences(nowDate, horizon)
-        .filter(ev => !ev._holiday)
+        .filter(ev => {
+          if (ev._holiday || ev.calendarId === "holidays") return show.includes("holidays");
+          if (ev.calendarId === "birthdays") return show.includes("birthdays");
+          if (ev.isTask) return show.includes("tasks");
+          return show.includes("events");
+        })
         .sort((a, b) => (a.date + (a.allDay ? "00:00" : a.start)).localeCompare(b.date + (b.allDay ? "00:00" : b.start)))
-        .slice(0, 5);
+        .slice(0, state.upCount);
 
       if (!events.length) {
         els.upcomingList.innerHTML = `<div class="upcoming-card"><div class="upcoming-title">Нет ближайших событий</div></div>`;
@@ -3967,31 +4046,61 @@
     }
 
     /* ---------------- MODAL ---------------- */
+    const PRESET_REMINDERS = [0, 10, 30, 60, 1440];
+
+    function reminderLabel(min) {
+      if (min === 0) return "В момент";
+      if (min % 1440 === 0) return `За ${min / 1440} дн.`;
+      if (min % 60 === 0) return `За ${min / 60} ч`;
+      return `За ${min} мин`;
+    }
+
     function setReminderChips(reminders) {
+      els.remindersGroup.querySelectorAll(".reminder-chip.custom").forEach(c => c.remove());
       els.remindersGroup.querySelectorAll(".reminder-chip").forEach(chip => {
         const input = chip.querySelector("input");
         const on = reminders.includes(Number(input.value));
         input.checked = on;
         chip.classList.toggle("on", on);
       });
+      // anything that is not a preset becomes its own removable chip
+      reminders.filter(m => !PRESET_REMINDERS.includes(m)).forEach(addCustomReminderChip);
     }
+
+    function addCustomReminderChip(minutes) {
+      if (getReminderChips().includes(minutes)) return;
+      const chip = document.createElement("label");
+      chip.className = "reminder-chip custom on";
+      chip.innerHTML = `<input type="checkbox" value="${minutes}" checked /><span>${reminderLabel(minutes)}</span>`;
+      els.remindersGroup.appendChild(chip);
+    }
+
     function getReminderChips() {
       return [...els.remindersGroup.querySelectorAll(".reminder-chip input:checked")].map(i => Number(i.value));
     }
 
     function renderColorSwatches(selectedColor) {
-      const swatches = EVENT_COLORS.map(c => `
+      els.eventColorRow.innerHTML = EVENT_COLORS.map(c => `
         <button type="button" class="color-swatch${selectedColor === c ? " selected" : ""}"
           style="background:${c}" data-color="${c}" title="${c}"></button>
       `).join("");
-      const clear = `<button type="button" class="color-swatch clear" data-color="" title="Цвет календаря">×</button>`;
-      els.eventColorRow.innerHTML = swatches + clear;
+      els.eventColorRow.hidden = true;
       els.eventColorRow.querySelectorAll(".color-swatch").forEach(sw => {
         sw.addEventListener("click", () => {
           els.eventColorRow.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("selected"));
           sw.classList.add("selected");
+          els.eventColorRow.hidden = true;
+          syncColorButton();
+          renderDraft();
         });
       });
+      syncColorButton();
+    }
+
+    function syncColorButton() {
+      const c = getSelectedColor() || EVENT_COLORS[0];
+      els.colorPickDot.style.background = c;
+      els.colorPickName.textContent = getSelectedColor() ? "Цвет выбран" : "Выбрать цвет";
     }
 
     function getSelectedColor() {
@@ -4004,7 +4113,7 @@
       if (!els.durRow) return;
       const s = timeToMinutes(els.eventStart.value || "0:0");
       const e = timeToMinutes(els.eventEnd.value || "0:0");
-      const diff = e - s;
+      const diff = e > s ? e - s : (24 * 60 - s) + e;
       els.durRow.querySelectorAll(".dur-chip").forEach(chip => {
         chip.classList.toggle("active", Number(chip.dataset.dur) === diff);
       });
@@ -4012,8 +4121,7 @@
 
     function applyDuration(minutes) {
       const start = els.eventStart.value || "10:00";
-      let endMin = timeToMinutes(start) + minutes;
-      if (endMin > 24 * 60) endMin = 24 * 60 - 1;
+      const endMin = (timeToMinutes(start) + minutes) % (24 * 60);
       els.eventEnd.value = `${pad(Math.floor(endMin / 60))}:${pad(endMin % 60)}`;
       syncDurationChips();
     }
@@ -4027,6 +4135,122 @@
     function closeToolModal() {
       els.toolModalBackdrop.classList.remove("open");
       els.toolModalBody.innerHTML = "";
+    }
+
+    /* ---------------- SETTINGS ---------------- */
+    const UP_SOURCES = [
+      { id: "events",    label: "Обычные события" },
+      { id: "tasks",     label: "Задачи" },
+      { id: "birthdays", label: "Дни рождения" },
+      { id: "holidays",  label: "Праздники" }
+    ];
+
+    function openSettings() {
+      closeDrawer();
+      const pref = loadThemePref();
+      const hourOpts = (sel) => Array.from({ length: 25 }, (_, h) =>
+        `<option value="${h}"${h === sel ? " selected" : ""}>${formatHourLabel(h)}</option>`).join("");
+      const row = (label, control) => `<div class="setting-row"><span>${label}</span>${control}</div>`;
+      const sw = (id, on) => `<label class="switch"><input type="checkbox" id="${id}"${on ? " checked" : ""} /><span></span></label>`;
+
+      openToolModal("Настройки", `
+        <h3 class="set-group">Внешний вид</h3>
+        ${row("Тема", `<select id="stTheme" class="mini-select">
+            <option value="system"${pref === "system" ? " selected" : ""}>Системная</option>
+            <option value="light"${pref === "light" ? " selected" : ""}>Светлая</option>
+            <option value="dark"${pref === "dark" ? " selected" : ""}>Тёмная</option>
+          </select>`)}
+        ${row("Формат 12 часов", sw("stHour12", uiPrefs.hour12))}
+        ${row("Первый день недели", `<select id="stWeekStart" class="mini-select">
+            <option value="1"${uiPrefs.weekStart === 1 ? " selected" : ""}>Понедельник</option>
+            <option value="0"${uiPrefs.weekStart === 0 ? " selected" : ""}>Воскресенье</option>
+          </select>`)}
+
+        <h3 class="set-group">Календарь</h3>
+        ${row("Российские праздники", sw("stHolidays", state.showHolidays))}
+        ${row("Скрыть выходные", sw("stHideWeekends", state.hideWeekends))}
+        ${row("Номера недель", sw("stWeekNumbers", state.weekNumbers))}
+        ${row("Затенять нерабочие часы", sw("stWorkHours", state.workHours))}
+        ${row("Рабочие часы", `<span class="work-range">
+            <select id="stWorkStart" class="mini-select">${hourOpts(state.workStart)}</select><span>–</span>
+            <select id="stWorkEnd" class="mini-select">${hourOpts(state.workEnd)}</select>
+          </span>`)}
+        ${row("Длительность по умолчанию", `<select id="stDefDur" class="mini-select">
+            ${[15, 30, 45, 60, 90, 120].map(m => `<option value="${m}"${state.defaultDuration === m ? " selected" : ""}>${m < 60 ? m + " мин" : (m / 60) + " ч"}</option>`).join("")}
+          </select>`)}
+
+        <h3 class="set-group">Блок «Ближайшие»</h3>
+        <div class="set-hint">Что показывать в списке</div>
+        <div class="src-list">
+          ${UP_SOURCES.map(src => `<label class="mini-toggle src-item">
+            <input type="checkbox" data-src="${src.id}"${state.upShow.includes(src.id) ? " checked" : ""} />
+            <span>${src.label}</span>
+          </label>`).join("")}
+        </div>
+        ${row("Сколько показывать", `<select id="stUpCount" class="mini-select">
+            ${[3, 5, 10].map(n => `<option value="${n}"${state.upCount === n ? " selected" : ""}>${n}</option>`).join("")}
+          </select>`)}
+        ${row("Период", `<select id="stUpDays" class="mini-select">
+            ${[7, 30, 90].map(n => `<option value="${n}"${state.upDays === n ? " selected" : ""}>${n} дней</option>`).join("")}
+          </select>`)}
+
+        <h3 class="set-group">Уведомления</h3>
+        ${row("Уведомления в браузере", sw("stNotify", state.notify))}
+
+        <h3 class="set-group">Прочее</h3>
+        ${row("Спрашивать перед удалением", sw("stConfirmDelete", state.confirmDelete))}
+      `);
+
+      const $ = (id) => document.getElementById(id);
+      const onFlag = (id, key, apply) => {
+        const el = $(id);
+        if (el) el.addEventListener("change", () => { apply(el.checked); saveFlag(key, el.checked); renderAll(); });
+      };
+      const onPick = (id, key, apply) => {
+        const el = $(id);
+        if (el) el.addEventListener("change", () => { apply(Number(el.value)); saveFlag(key, Number(el.value)); renderAll(); });
+      };
+
+      $("stTheme").addEventListener("change", (e) => setThemePref(e.target.value));
+      $("stHour12").addEventListener("change", (e) => {
+        uiPrefs.hour12 = e.target.checked;
+        saveFlag("focusCalendar.hour12", uiPrefs.hour12);
+        renderAll();
+      });
+      $("stWeekStart").addEventListener("change", (e) => {
+        uiPrefs.weekStart = Number(e.target.value);
+        saveFlag("focusCalendar.weekStart", uiPrefs.weekStart);
+        renderAll();
+      });
+      onFlag("stHolidays", "focusCalendar.holidays", v => state.showHolidays = v);
+      onFlag("stHideWeekends", "focusCalendar.hideWeekends", v => state.hideWeekends = v);
+      onFlag("stWeekNumbers", "focusCalendar.weekNumbers", v => state.weekNumbers = v);
+      onFlag("stWorkHours", "focusCalendar.workHours", v => state.workHours = v);
+      onFlag("stConfirmDelete", "focusCalendar.confirmDelete", v => state.confirmDelete = v);
+      onPick("stWorkStart", "focusCalendar.workStart", v => state.workStart = v);
+      onPick("stWorkEnd", "focusCalendar.workEnd", v => state.workEnd = v);
+      onPick("stDefDur", "focusCalendar.defaultDuration", v => state.defaultDuration = v);
+      onPick("stUpCount", "focusCalendar.upCount", v => state.upCount = v);
+      onPick("stUpDays", "focusCalendar.upDays", v => state.upDays = v);
+
+      $("stNotify").addEventListener("change", async (e) => {
+        if (e.target.checked) {
+          const ok = await requestNotifyPermission();
+          if (!ok) { e.target.checked = false; showToast("Браузер не разрешил уведомления"); return; }
+        }
+        state.notify = e.target.checked;
+        saveFlag("focusCalendar.notify", state.notify);
+        scheduleNotifications();
+      });
+
+      els.toolModalBody.querySelectorAll("[data-src]").forEach(cb => {
+        cb.addEventListener("change", () => {
+          const picked = [...els.toolModalBody.querySelectorAll("[data-src]:checked")].map(i => i.dataset.src);
+          state.upShow = picked;
+          saveFlag("focusCalendar.upShow", picked);
+          renderUpcoming();
+        });
+      });
     }
 
     /* ---------------- FIND FREE TIME ---------------- */
@@ -4346,6 +4570,159 @@
       els.rruleCountField.style.display = (custom && els.rruleEndType.value === "count") ? "grid" : "none";
     }
 
+    /* ---------------- BOTTOM SHEET ---------------- */
+    const SHEET_HALF = 52, SHEET_FULL = 94;   // vh
+
+    function setSheet(mode) {
+      if (!isMobile()) return;
+      const full = mode === "full";
+      document.documentElement.style.setProperty("--sheet-h", (full ? SHEET_FULL : SHEET_HALF) + "vh");
+      els.modalBackdrop.classList.toggle("sheet-half", !full);
+      els.modalBackdrop.classList.toggle("sheet-full", full);
+      renderDraft();
+    }
+
+    function bindSheetGrip() {
+      let startY = 0, startH = 0, dragging = false;
+      const vh = () => window.innerHeight / 100;
+
+      els.sheetGrip.addEventListener("pointerdown", (e) => {
+        if (!isMobile()) return;
+        e.preventDefault();
+        dragging = true;
+        startY = e.clientY;
+        startH = els.eventForm.getBoundingClientRect().height;
+        els.modalBackdrop.classList.add("dragging");
+        try { els.sheetGrip.setPointerCapture(e.pointerId); } catch {}
+      });
+
+      els.sheetGrip.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        const h = Math.min(SHEET_FULL * vh(), Math.max(18 * vh(), startH + (startY - e.clientY)));
+        document.documentElement.style.setProperty("--sheet-h", h + "px");
+      });
+
+      const end = (e) => {
+        if (!dragging) return;
+        dragging = false;
+        els.modalBackdrop.classList.remove("dragging");
+        const h = els.eventForm.getBoundingClientRect().height / vh();
+        if (h < 32) { closeModal(); return; }
+        setSheet(h > 68 ? "full" : "half");
+      };
+      els.sheetGrip.addEventListener("pointerup", end);
+      els.sheetGrip.addEventListener("pointercancel", end);
+      // tapping the grip toggles between the two heights
+      els.sheetGrip.addEventListener("click", () => {
+        if (!isMobile()) return;
+        setSheet(els.modalBackdrop.classList.contains("sheet-full") ? "half" : "full");
+      });
+    }
+
+    /* ---------------- DRAFT PREVIEW ON THE GRID ---------------- */
+    function clearDraft() {
+      els.calendarShell.querySelectorAll(".draft-event").forEach(d => d.remove());
+    }
+
+    function renderDraft() {
+      clearDraft();
+      if (!isMobile()) return;
+      if (!els.modalBackdrop.classList.contains("open")) return;
+      if (els.modalBackdrop.classList.contains("sheet-full")) return;
+      if (els.eventAllDay.checked) return;
+      const col = els.calendarShell.querySelector(`.day-col[data-date="${els.eventDate.value}"]`);
+      if (!col) return;
+
+      const s = timeToMinutes(els.eventStart.value || "0:00");
+      const e = timeToMinutes(els.eventEnd.value || "0:00");
+      const dur = e > s ? e - s : (24 * 60 - s) + e;
+      const el = document.createElement("div");
+      el.className = "draft-event";
+      el.style.top = ((s - START_HOUR * 60) / 60 * HOUR_HEIGHT) + "px";
+      el.style.height = Math.max(18, dur / 60 * HOUR_HEIGHT - 2) + "px";
+      el.style.background = getSelectedColor() || EVENT_COLORS[0];
+      el.innerHTML = `<span>${escapeHtml(els.eventTitle.value || "Новое событие")} · ${formatTime(els.eventStart.value)}–${formatTime(els.eventEnd.value)}</span><div class="draft-resize"></div>`;
+      col.appendChild(el);
+      bindDraftDrag(el, col);
+      scrollDraftIntoView(el);
+    }
+
+    function scrollDraftIntoView(el) {
+      const area = document.getElementById("scrollArea");
+      if (!area) return;
+      // wait a frame so the sheet has its final height before measuring
+      requestAnimationFrame(() => {
+        const areaRect = area.getBoundingClientRect();
+        const sheetVh = els.modalBackdrop.classList.contains("sheet-full") ? SHEET_FULL : SHEET_HALF;
+        const sheetTopY = window.innerHeight - sheetVh * window.innerHeight / 100;
+        const band = sheetTopY - areaRect.top;          // usable strip above the sheet
+        if (band <= 40) return;
+        const r = el.getBoundingClientRect();           // real position, header included
+        const margin = 40;
+        if (r.top < areaRect.top + margin || r.bottom > sheetTopY - 8) {
+          const targetY = areaRect.top + Math.max(margin, (band - r.height) / 2);
+          area.scrollTop = Math.max(0, area.scrollTop + (r.top - targetY));
+        }
+      });
+    }
+
+    /* drag the draft to move it, or its bottom edge to change the length */
+    function bindDraftDrag(el, col) {
+      // update the fields and the node itself — re-rendering mid-drag would
+      // destroy the element under the finger and drop pointer capture
+      const commit = (startMin, endMin) => {
+        const s = ((startMin % 1440) + 1440) % 1440;
+        const e = ((endMin % 1440) + 1440) % 1440;
+        els.eventStart.value = minToHHMM(s);
+        els.eventEnd.value = minToHHMM(e);
+        const dur = e > s ? e - s : (24 * 60 - s) + e;
+        el.style.top = ((s - START_HOUR * 60) / 60 * HOUR_HEIGHT) + "px";
+        el.style.height = Math.max(18, dur / 60 * HOUR_HEIGHT - 2) + "px";
+        const label = el.querySelector("span");
+        if (label) label.textContent = `${els.eventTitle.value || "Новое событие"} · ${formatTime(els.eventStart.value)}–${formatTime(els.eventEnd.value)}`;
+        syncDurationChips();
+      };
+
+      const startDrag = (e, mode) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const rect = col.getBoundingClientRect();
+        const s0 = timeToMinutes(els.eventStart.value || "0:00");
+        const e0 = timeToMinutes(els.eventEnd.value || "0:00");
+        const dur = e0 > s0 ? e0 - s0 : (24 * 60 - s0) + e0;
+        const y0 = e.clientY;
+        const target = e.currentTarget;
+        try { target.setPointerCapture(e.pointerId); } catch {}
+
+        const onMove = (ev) => {
+          ev.preventDefault();
+          const deltaMin = Math.round((ev.clientY - y0) / HOUR_HEIGHT * 60);
+          if (mode === "move") {
+            const ns = Math.max(0, Math.min(24 * 60 - dur, s0 + deltaMin));
+            commit(ns, ns + dur);
+          } else {
+            const ne = Math.max(s0 + 5, Math.min(24 * 60, e0 + deltaMin));
+            commit(s0, ne);
+          }
+        };
+        const onUp = () => {
+          document.removeEventListener("pointermove", onMove);
+          document.removeEventListener("pointerup", onUp);
+          document.removeEventListener("pointercancel", onUp);
+          renderDraft();
+        };
+        document.addEventListener("pointermove", onMove, { passive: false });
+        document.addEventListener("pointerup", onUp);
+        document.addEventListener("pointercancel", onUp);
+      };
+
+      el.addEventListener("pointerdown", (e) => {
+        if (e.target.closest(".draft-resize")) return;
+        startDrag(e, "move");
+      });
+      el.querySelector(".draft-resize").addEventListener("pointerdown", (e) => startDrag(e, "resize"));
+    }
+
     function openModal(data = {}) {
       state.editingId = data.id || null;
       state.editingInstanceDate = data.id ? (data.date || null) : null;
@@ -4354,12 +4731,10 @@
       els.eventDate.value = data.date || isoDate(state.selectedDate);
       els.eventEndDate.value = data.endDate && data.endDate !== (data.date || isoDate(state.selectedDate)) ? data.endDate : "";
       els.eventStart.value = data.start || "10:00";
-      els.eventEnd.value = data.end || "11:00";
-      els.eventCalendar.value = (data.calendarId === "holidays") ? "startup" : (data.calendarId || "startup");
+      els.eventEnd.value = data.end || addMinutesToTime(data.start || "10:00", state.defaultDuration);
       els.eventDescription.value = data.description || "";
       els.eventLocation.value = data.location || "";
       els.eventAttendees.value = Array.isArray(data.attendees) ? data.attendees.join(", ") : "";
-      els.eventPriority.value = data.priority || "";
       els.eventAllDay.checked = Boolean(data.allDay);
       els.eventIsTask.checked = Boolean(data.isTask);
       els.eventRepeat.value = data.repeat || "none";
@@ -4382,11 +4757,16 @@
       els.deleteEvent.classList.toggle("visible", Boolean(data.id));
       els.duplicateEvent.style.display = data.id ? "" : "none";
       els.modalBackdrop.classList.add("open");
+      state._modalOpenedAt = Date.now();
+      setSheet("half");
+      renderDraft();
       setTimeout(() => els.eventTitle.focus(), 30);
     }
 
     function closeModal() {
       els.modalBackdrop.classList.remove("open");
+      els.modalBackdrop.classList.remove("sheet-half", "sheet-full");
+      clearDraft();
       state.editingId = null;
       state.editingInstanceDate = null;
       els.eventForm.reset();
@@ -4401,10 +4781,11 @@
       let end = els.eventEnd.value || "23:59";
 
       if (allDay) { start = "00:00"; end = "23:59"; }
-      else if (timeToMinutes(end) <= timeToMinutes(start)) {
-        showToast("Время окончания должно быть позже начала");
+      else if (timeToMinutes(end) === timeToMinutes(start)) {
+        showToast("Начало и конец совпадают");
         return;
       }
+      // end earlier than start simply means the event runs into the next day
 
       // multi-day end date (all-day events only)
       let endDate = els.eventDate.value;
@@ -4442,11 +4823,9 @@
         repeat,
         rrule,
         reminders: getReminderChips(),
-        calendarId: els.eventCalendar.value,
         description: els.eventDescription.value.trim(),
         location: els.eventLocation.value.trim(),
         attendees,
-        priority: els.eventPriority.value,
         color: evColor || null
       };
 
@@ -4507,7 +4886,6 @@
 
     function getVisibleEvents() {
       return state.events.filter(ev => {
-        if (!state.visibleCalendars.has(ev.calendarId)) return false;
         if (!state.search) return true;
         return `${ev.title} ${ev.description}`.toLowerCase().includes(state.search);
       });
@@ -4583,7 +4961,7 @@
       });
 
       // holidays
-      if (state.showHolidays && state.visibleCalendars.has("holidays")) {
+      if (state.showHolidays) {
         for (let y = startD.getFullYear(); y <= endD.getFullYear(); y++) {
           RU_HOLIDAYS.forEach(h => {
             const iso = `${y}-${pad(h.m)}-${pad(h.d)}`;
@@ -4606,14 +4984,14 @@
       return ev.date <= iso && iso <= (ev.endDate || ev.date);
     }
 
+    const DEFAULT_CAL = { id: null, name: "Событие", color: "#7c6df2" };
     function getCalendar(id) {
-      return calendars.find(c => c.id === id) || calendars[0];
+      return calendars.find(c => c.id === id) || DEFAULT_CAL;
     }
 
     /* ---------------- STORAGE ---------------- */
     function normalizeEvent(ev) {
-      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], location: "", priority: "", color: null, attendees: [], meetingLink: "", endDate: null, calendarId: "startup", ...ev };
-      if (!out.calendarId) out.calendarId = "startup";
+      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], location: "", color: null, attendees: [], meetingLink: "", endDate: null, calendarId: null, ...ev };
       // migrate legacy single `reminder` -> reminders[]
       if (!Array.isArray(out.reminders)) out.reminders = [];
       if (ev.reminder !== undefined && ev.reminder !== "" && ev.reminder !== null) {
@@ -4633,14 +5011,24 @@
         return JSON.parse(saved).map(normalizeEvent);
       } catch { return demoEvents.map(normalizeEvent); }
     }
+    /* stores booleans, numbers and small arrays alike */
     function loadFlag(key, fallback) {
       try {
         const v = localStorage.getItem(key);
         if (v === null) return fallback;
-        return v === "true";
+        if (v === "true") return true;
+        if (v === "false") return false;
+        if (Array.isArray(fallback) || typeof fallback === "number") {
+          try { return JSON.parse(v); } catch { return fallback; }
+        }
+        return v;
       } catch { return fallback; }
     }
     function saveFlag(key, val) {
+      if (Array.isArray(val) || typeof val === "number") {
+        try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+        return;
+      }
       try { localStorage.setItem(key, String(val)); } catch {}
     }
     function saveEvents() {
@@ -4649,7 +5037,7 @@
     function loadView() {
       try {
         const v = localStorage.getItem("focusCalendar.view");
-        if (v) return v;
+        if (v) return v === "4day" ? "3day" : v;
       } catch {}
       return window.matchMedia("(max-width: 760px)").matches ? "day" : "week";
     }
