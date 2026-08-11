@@ -2122,9 +2122,8 @@
     .view-row .v { flex: 1; min-width: 0; word-break: normal; overflow-wrap: anywhere; }
     .view-actions { display: flex; gap: 8px; }
     .view-actions button { flex: 1; height: 42px; border-radius: 10px; font-weight: 700; }
-    /* when the card is showing, the form waits behind a disclosure */
-    .modal.viewing .form-fields { display: none; }
-    .modal.viewing .modal-actions { display: none; }
+    /* the card sits above the form — both live on the same screen */
+    .modal.viewing .form-fields { border-top: 1px solid var(--line-soft); padding-top: 12px; }
 
     /* optional fields tucked away */
     .extra-block { margin-top: 4px; }
@@ -3002,10 +3001,11 @@
       });
 
       // read-only card -> form
+      // the fields are already below; just open up and jump to them
       els.viewEdit.addEventListener("click", () => {
-        hideViewCard();
-        els.modalTitle.textContent = "Редактировать событие";
         setSheet("full");
+        requestAnimationFrame(() =>
+          els.eventTitle.scrollIntoView({ block: "start", behavior: "smooth" }));
       });
       els.viewDelete.addEventListener("click", () => els.deleteEvent.click());
 
