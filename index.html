@@ -6,6 +6,9 @@
   <meta name="theme-color" content="#7c6df2" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>AI Calendar MVP</title>
   <style>
     :root {
@@ -2587,6 +2590,8 @@
     const END_HOUR = 24;
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
+    /* bump on every deploy — shown in Settings so you can tell which build is live */
+    const BUILD_ID = "20260811-1713";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -4429,6 +4434,9 @@
 
         <h3 class="set-group">Прочее</h3>
         ${row("Спрашивать перед удалением", sw("stConfirmDelete", state.confirmDelete))}
+
+        <h3 class="set-group">Версия</h3>
+        <div class="set-hint">Сборка ${BUILD_ID}</div>
 
         <h3 class="set-group">Данные</h3>
         <div class="tools-list">
