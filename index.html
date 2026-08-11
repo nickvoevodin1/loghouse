@@ -787,12 +787,6 @@
     .event:active { cursor: grabbing; }
     .event.compact { padding: 2px 5px; }
 
-    /* an event overlapped by a task renders as a translucent background block */
-    .event.bg-block {
-      z-index: 3;
-      opacity: 0.5;
-      box-shadow: none;
-    }
     .event.is-task { z-index: 5; }
     /* an overnight event is drawn as two slices — flatten the joined edges */
     .event.seg-head { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
@@ -834,6 +828,36 @@
       transform: translateX(-50%);
     }
 
+    /* merged block for overlapping events */
+    .event.merged {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 3px 7px;
+      display: block;
+      cursor: pointer;
+    }
+    .merge-head {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .merge-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      height: 16px;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .merge-dot { width: 7px; height: 7px; border-radius: 2px; flex: 0 0 auto; }
+    .merge-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .merge-time { color: var(--muted); font-size: 10.5px; flex: 0 0 auto; }
+    .merge-more { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+
     .event.dragging { z-index: 20; opacity: .85; box-shadow: 0 6px 18px rgba(0,0,0,.35); cursor: grabbing; }
 
     .event-title {
@@ -844,7 +868,9 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      word-break: break-word;
+      /* clip a long word rather than break it mid-syllable */
+      word-break: normal;
+      overflow-wrap: normal;
       color: #fff;
     }
     .event.compact .event-title { -webkit-line-clamp: 1; }
@@ -957,13 +983,25 @@
     /* mobile compact month dots */
     .month-dot-row {
       display: none;
-      gap: 3px;
+      gap: 2px;
+      flex-wrap: wrap;
       justify-content: center;
-      margin-top: 2px;
+      margin-top: 3px;
     }
-    .month-dot {
-      width: 5px; height: 5px; border-radius: 50%;
+    /* a letter says which event it is; a bare dot said nothing */
+    .month-chip {
+      min-width: 15px;
+      height: 15px;
+      padding: 0 3px;
+      border-radius: 4px;
+      display: inline-grid;
+      place-items: center;
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
     }
+    .month-chip.more { background: var(--surface-3); color: var(--muted); }
 
     /* AGENDA / list view */
     .agenda-view {
@@ -2061,6 +2099,59 @@
       font-weight: 600;
     }
 
+    /* read-only event card shown before editing */
+    .view-card { margin-bottom: 6px; }
+    .view-card[hidden] { display: none; }
+    .view-title {
+      margin: 0 0 4px;
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 1.25;
+      word-break: normal;
+    }
+    .view-when { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+    .view-rows { display: grid; gap: 7px; margin-bottom: 14px; }
+    .view-row {
+      display: flex;
+      gap: 8px;
+      font-size: 14px;
+      line-height: 1.35;
+      color: var(--text);
+    }
+    .view-row .k { color: var(--muted); flex: 0 0 88px; }
+    .view-row .v { flex: 1; min-width: 0; word-break: normal; overflow-wrap: anywhere; }
+    .view-actions { display: flex; gap: 8px; }
+    .view-actions button { flex: 1; height: 42px; border-radius: 10px; font-weight: 700; }
+    /* when the card is showing, the form waits behind a disclosure */
+    .modal.viewing .form-fields { display: none; }
+    .modal.viewing .modal-actions { display: none; }
+
+    /* optional fields tucked away */
+    .extra-block { margin-top: 4px; }
+    .extra-summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 11px 0;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .extra-summary::-webkit-details-marker { display: none; }
+    .extra-summary::after {
+      content: "";
+      width: 7px; height: 7px;
+      border-right: 1.8px solid currentColor;
+      border-bottom: 1.8px solid currentColor;
+      transform: rotate(45deg) translate(-2px, -2px);
+      transition: transform .18s;
+    }
+    .extra-block[open] .extra-summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
+
     /* compact one-line toggles */
     .toggle-row { display: flex; gap: 8px; }
     .mini-toggle {
@@ -2295,9 +2386,25 @@
         <button type="button" class="close-btn" id="closeModal" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
       </div>
       <div class="modal-body">
+        <section class="view-card" id="viewCard" hidden>
+          <h3 class="view-title" id="viewTitle"></h3>
+          <div class="view-when" id="viewWhen"></div>
+          <div class="view-rows" id="viewRows"></div>
+          <div class="view-actions">
+            <button type="button" class="ghost-btn" id="viewEdit">Изменить</button>
+            <button type="button" class="danger-btn visible" id="viewDelete">Удалить</button>
+          </div>
+        </section>
+
+        <div class="form-fields" id="formFields">
         <div class="field">
           <label for="eventTitle">Название</label>
           <input id="eventTitle" required placeholder="Например: Созвон по MVP" />
+        </div>
+
+        <div class="field">
+          <label for="eventShort">Коротко — показывается в сетке</label>
+          <input id="eventShort" maxlength="18" placeholder="Созвон" />
         </div>
 
         <div class="toggle-row">
@@ -2340,6 +2447,8 @@
           </div>
         </div>
 
+        <details class="extra-block" id="extraBlock">
+          <summary class="extra-summary">Дополнительно</summary>
         <div class="field">
           <label for="eventRepeat">Повтор</label>
           <select id="eventRepeat">
@@ -2435,6 +2544,8 @@
         <div class="field">
           <label for="eventDescription">Описание</label>
           <textarea id="eventDescription" placeholder="Заметка, повестка..."></textarea>
+        </div>
+        </details>
         </div>
 
         <div class="modal-actions">
@@ -2651,6 +2762,12 @@
       eventLocation: document.getElementById("eventLocation"),
       eventColorRow: document.getElementById("eventColorRow"),
       sheetGrip: document.getElementById("sheetGrip"),
+      viewCard: document.getElementById("viewCard"),
+      viewTitle: document.getElementById("viewTitle"),
+      viewWhen: document.getElementById("viewWhen"),
+      viewRows: document.getElementById("viewRows"),
+      viewEdit: document.getElementById("viewEdit"),
+      viewDelete: document.getElementById("viewDelete"),
       colorPickBtn: document.getElementById("colorPickBtn"),
       colorPickDot: document.getElementById("colorPickDot"),
       colorPickName: document.getElementById("colorPickName"),
@@ -2677,6 +2794,7 @@
       choiceAll: document.getElementById("choiceAll"),
       choiceCancel: document.getElementById("choiceCancel"),
       eventTitle: document.getElementById("eventTitle"),
+      eventShort: document.getElementById("eventShort"),
       eventDate: document.getElementById("eventDate"),
       eventStart: document.getElementById("eventStart"),
       eventEnd: document.getElementById("eventEnd"),
@@ -2883,6 +3001,14 @@
         els.remindCustomVal.value = "";
       });
 
+      // read-only card -> form
+      els.viewEdit.addEventListener("click", () => {
+        hideViewCard();
+        els.modalTitle.textContent = "Редактировать событие";
+        setSheet("full");
+      });
+      els.viewDelete.addEventListener("click", () => els.deleteEvent.click());
+
       els.durRow.addEventListener("click", (e) => {
         const chip = e.target.closest(".dur-chip");
         if (chip) { applyDuration(Number(chip.dataset.dur)); renderDraft(); }
@@ -2890,7 +3016,15 @@
       els.eventStart.addEventListener("change", () => { syncDurationChips(); renderDraft(); });
       els.eventEnd.addEventListener("change", () => { syncDurationChips(); renderDraft(); });
       els.eventDate.addEventListener("change", renderDraft);
-      els.eventTitle.addEventListener("input", renderDraft);
+      els.eventTitle.addEventListener("input", () => {
+        // auto-fill the short name from the first word until it is touched by hand
+        if (!els.eventShort.dataset.touched) els.eventShort.value = firstWord(els.eventTitle.value);
+        renderDraft();
+      });
+      els.eventShort.addEventListener("input", () => {
+        els.eventShort.dataset.touched = "1";
+        renderDraft();
+      });
       els.eventAllDay.addEventListener("change", renderDraft);
       bindSheetGrip();
 
@@ -3369,6 +3503,17 @@
       return null;
     }
 
+    /* what a grid block shows: the short name if given, otherwise the first
+       whole word of the title — never a word broken in half */
+    function eventShortLabel(ev) {
+      const s = (ev.shortName || "").trim();
+      if (s) return s;
+      return (ev.title || "").trim().split(/\s+/)[0] || "Событие";
+    }
+    function firstWord(text) {
+      return (text || "").trim().split(/\s+/)[0] || "";
+    }
+
     function rangesOverlap(a, b) {
       const as = timeToMinutes(a._segStart || a.start), ae = a._segEndMin != null ? a._segEndMin : timeToMinutes(a.end);
       const bs = timeToMinutes(b._segStart || b.start), be = b._segEndMin != null ? b._segEndMin : timeToMinutes(b.end);
@@ -3379,35 +3524,57 @@
        Tasks float on top; any plain event that shares time with a task
        becomes a translucent full-width background block instead of being
        squeezed into a narrow column next to it. */
-    function layoutDayEvents(events) {
-      const tasks = events.filter(e => e.isTask);
-      const plain = events.filter(e => !e.isTask);
-
-      plain.forEach(ev => { ev._bg = tasks.some(t => rangesOverlap(t, ev)); });
-      const foreground = plain.filter(e => !e._bg);
-      const background = plain.filter(e => e._bg);
-
-      const sorted = [...foreground].sort((a, b) => timeToMinutes(a._segStart || a.start) - timeToMinutes(b._segStart || b.start));
-      const cols = [];
+    /* Group everything that overlaps in time into clusters. A lone event is
+       drawn as usual; a cluster is drawn as one merged block listing its
+       members, which opens a picker on tap. This replaces the old
+       squeeze-into-columns behaviour the user found unreadable. */
+    function clusterOverlaps(events) {
+      const sorted = [...events].sort((a, b) =>
+        timeToMinutes(a._segStart || a.start) - timeToMinutes(b._segStart || b.start));
+      const clusters = [];
       sorted.forEach(ev => {
-        let placed = false;
-        for (const col of cols) {
-          const last = col[col.length - 1];
-          if (timeToMinutes(ev.start) >= timeToMinutes(last.end)) { col.push(ev); ev._col = cols.indexOf(col); placed = true; break; }
-        }
-        if (!placed) { ev._col = cols.length; cols.push([ev]); }
+        const last = clusters[clusters.length - 1];
+        if (last && last.some(x => rangesOverlap(x, ev))) last.push(ev);
+        else clusters.push([ev]);
       });
-      const total = Math.max(1, cols.length);
+      return clusters;
+    }
 
-      const bgHtml   = background.map(ev => eventMarkup(ev, 0, 1)).join("");
-      const fgHtml   = sorted.map(ev => eventMarkup(ev, ev._col || 0, total)).join("");
-      const taskHtml = tasks.map(ev => eventMarkup(ev, 0, 1)).join("");
-      return bgHtml + fgHtml + taskHtml;
+    function layoutDayEvents(events) {
+      return clusterOverlaps(events)
+        .map(c => (c.length === 1 ? eventMarkup(c[0]) : mergedMarkup(c)))
+        .join("");
+    }
+
+    function mergedMarkup(cluster) {
+      const startMin = Math.min(...cluster.map(e => timeToMinutes(e._segStart || e.start)));
+      const endMin = Math.max(...cluster.map(e => e._segEndMin != null ? e._segEndMin : timeToMinutes(e.end)));
+      const top = (startMin - START_HOUR * 60) / 60 * HOUR_HEIGHT;
+      const height = Math.max(26, (endMin - startMin) / 60 * HOUR_HEIGHT - 2);
+
+      const fits = Math.max(1, Math.floor((height - 20) / 17));
+      const shown = cluster.slice(0, fits);
+      const hidden = cluster.length - shown.length;
+      const rows = shown.map(ev => {
+        const color = ev.color || getCalendar(ev.calendarId).color;
+        return `<div class="merge-item"><span class="merge-dot" style="background:${color}"></span>` +
+               `<span class="merge-name">${escapeHtml(eventShortLabel(ev))}</span>` +
+               `<span class="merge-time">${formatTime(ev.start)}</span></div>`;
+      }).join("");
+
+      return `
+        <div class="event merged" data-merged="${cluster.map(e => e.id).join(",")}" data-date="${cluster[0].date}"
+             style="top:${top}px;height:${height}px;">
+          <div class="merge-head">${cluster.length} события</div>
+          ${rows}
+          ${hidden > 0 ? `<div class="merge-more">+ ещё ${hidden}</div>` : ""}
+        </div>
+      `;
     }
 
     const CHECK_SVG = '<svg viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-    function eventMarkup(ev, col = 0, total = 1) {
+    function eventMarkup(ev) {
       const cal = getCalendar(ev.calendarId);
       const color = ev.color || cal.color;
       // geometry follows the slice shown on this day (overnight events are split)
@@ -3416,13 +3583,9 @@
       const top = (segStartMin - START_HOUR * 60) / 60 * HOUR_HEIGHT;
       const height = Math.max(22, (segEndMin - segStartMin) / 60 * HOUR_HEIGHT - 2);
       const compact = height < 40 ? "compact" : "";
-      const gap = 3;
-      const widthPct = 100 / total;
-      const leftStyle = total > 1
-        ? `left:calc(${col * widthPct}% + 3px);width:calc(${widthPct}% - ${gap + 3}px);right:auto;`
-        : "";
+      const leftStyle = "";
       const overnight = isOvernight(ev);
-      const classes = ["event", compact, ev.isTask ? "is-task" : "", ev._bg ? "bg-block" : "",
+      const classes = ["event", compact, ev.isTask ? "is-task" : "",
                        ev.done ? "done" : "", ev._tail ? "seg-tail" : "", (overnight && !ev._tail) ? "seg-head" : ""].filter(Boolean).join(" ");
       const draggable = isMobile() ? "false" : "true";
       const check = ev.isTask
@@ -3436,7 +3599,7 @@
           <div class="event-head">
             ${check}
             <div style="min-width:0;flex:1">
-              <div class="event-title">${escapeHtml(ev.title)}${repeatBadge}</div>
+              <div class="event-title">${escapeHtml(height < 56 ? eventShortLabel(ev) : ev.title)}${repeatBadge}</div>
               ${height > 34 ? `<div class="event-time">${formatTime(ev.start)} — ${formatTime(ev.end)}${overnight ? " ⤍" : ""}</div>` : ""}
               ${height > 62 && ev.description ? `<div class="event-desc">${escapeHtml(ev.description)}</div>` : ""}
               ${locationLine}
@@ -3683,6 +3846,27 @@
       });
     }
 
+    /* pick one event out of a merged block */
+    function openEventPicker(ids, date) {
+      const items = ids.map(id => state.events.find(e => e.id === id)).filter(Boolean);
+      const rows = items.map(ev => {
+        const color = ev.color || getCalendar(ev.calendarId).color;
+        const when = ev.allDay ? "Весь день" : `${formatTime(ev.start)}–${formatTime(ev.end)}`;
+        return `<button type="button" class="slot-item" data-pick="${ev.id}" style="width:100%;text-align:left;cursor:pointer">
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${color};margin-right:8px"></span>${escapeHtml(ev.title)}</span>
+          <span style="color:var(--muted);font-size:13px">${when}</span>
+        </button>`;
+      }).join("");
+      openToolModal("Несколько событий", rows);
+      els.toolModalBody.querySelectorAll("[data-pick]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const ev = state.events.find(x => x.id === btn.dataset.pick);
+          closeToolModal();
+          if (ev) openModal({ ...ev, date: date || ev.date });
+        });
+      });
+    }
+
     function openByElement(el) {
       const id = el.dataset.eventId;
       const date = el.dataset.date;
@@ -3720,6 +3904,13 @@
       });
 
       els.calendarShell.querySelectorAll("[data-resize]").forEach(bindResize);
+
+      // a merged block asks which of its events you meant
+      els.calendarShell.querySelectorAll(".event.merged").forEach(el => {
+        el.addEventListener("click", () => {
+          openEventPicker(el.dataset.merged.split(","), el.dataset.date);
+        });
+      });
 
       els.calendarShell.querySelectorAll(".event[data-event-id], .allday-chip[data-event-id]").forEach(el => {
         el.addEventListener("click", (e) => {
@@ -3952,10 +4143,11 @@
                 sameDay(day, new Date()) ? "today" : ""
               ].filter(Boolean).join(" ");
 
-              const dots = events.slice(0, 4).map(ev => {
-                const cal = getCalendar(ev.calendarId);
-                return `<span class="month-dot" style="background:${cal.color}"></span>`;
-              }).join("");
+              const dots = events.slice(0, 3).map(ev => {
+                const color = ev.color || getCalendar(ev.calendarId).color;
+                const letter = (eventShortLabel(ev)[0] || "•").toUpperCase();
+                return `<span class="month-chip" style="background:${color}" title="${escapeHtml(ev.title)}">${letter}</span>`;
+              }).join("") + (events.length > 3 ? `<span class="month-chip more">+${events.length - 3}</span>` : "");
 
               return `
                 <div class="${classes}" data-date="${dateStr}">
@@ -4844,11 +5036,45 @@
       el.querySelector(".draft-resize").addEventListener("pointerdown", (e) => startDrag(e, "resize"));
     }
 
+    /* show an existing event read-only first; editing is one tap away */
+    function showViewCard(ev) {
+      const day = parseDate(ev.date);
+      const when = ev.allDay
+        ? "Весь день"
+        : `${formatTime(ev.start)} — ${formatTime(ev.end)}${isOvernight(ev) ? " (следующий день)" : ""}`;
+      els.viewTitle.textContent = ev.title || "Без названия";
+      els.viewWhen.textContent = `${day.getDate()} ${MONTHS_TITLE[day.getMonth()]} · ${when}`;
+
+      const row = (k, v) => `<div class="view-row"><span class="k">${k}</span><span class="v">${escapeHtml(v)}</span></div>`;
+      const parts = [];
+      if (ev.description) parts.push(row("Описание", ev.description));
+      if (ev.location) parts.push(row("Место", ev.location));
+      if ((ev.attendees || []).length) parts.push(row("Участники", ev.attendees.join(", ")));
+      if (ev.repeat && ev.repeat !== "none") parts.push(row("Повтор", REPEAT_LABELS[ev.repeat] || "Настроенный"));
+      if ((ev.reminders || []).length) parts.push(row("Напоминания", ev.reminders.map(reminderLabel).join(", ")));
+      if (ev.isTask) parts.push(row("Тип", "Задача"));
+      els.viewRows.innerHTML = parts.join("") || `<div class="view-row"><span class="v" style="color:var(--muted)">Без описания</span></div>`;
+
+      els.viewCard.hidden = false;
+      els.eventForm.classList.add("viewing");
+    }
+
+    function hideViewCard() {
+      els.viewCard.hidden = true;
+      els.eventForm.classList.remove("viewing");
+    }
+
+    const REPEAT_LABELS = {
+      daily: "Каждый день", weekly: "Каждую неделю", biweekly: "Каждые 2 недели",
+      monthly: "Каждый месяц", yearly: "Каждый год", custom: "Настроенный"
+    };
+
     function openModal(data = {}) {
       state.editingId = data.id || null;
       state.editingInstanceDate = data.id ? (data.date || null) : null;
       els.modalTitle.textContent = data.id ? "Редактировать событие" : "Новое событие";
       els.eventTitle.value = data.title || "";
+      els.eventShort.value = data.shortName || "";
       els.eventDate.value = data.date || isoDate(state.selectedDate);
       els.eventEndDate.value = data.endDate && data.endDate !== (data.date || isoDate(state.selectedDate)) ? data.endDate : "";
       els.eventStart.value = data.start || "10:00";
@@ -4877,6 +5103,13 @@
       syncDurationChips();
       els.deleteEvent.classList.toggle("visible", Boolean(data.id));
       els.duplicateEvent.style.display = data.id ? "" : "none";
+      // existing events open read-only; new ones go straight to the form
+      if (data.id && !data._edit) {
+        els.modalTitle.textContent = "Событие";
+        showViewCard(data);
+      } else {
+        hideViewCard();
+      }
       els.modalBackdrop.classList.add("open");
       state._modalOpenedAt = Date.now();
       setSheet("half");
@@ -4885,12 +5118,14 @@
     }
 
     function closeModal() {
+      hideViewCard();
       els.modalBackdrop.classList.remove("open");
       els.modalBackdrop.classList.remove("sheet-half", "sheet-full");
       clearDraft();
       state.editingId = null;
       state.editingInstanceDate = null;
       els.eventForm.reset();
+      delete els.eventShort.dataset.touched;
       setReminderChips([]);
       els.timeFields.style.display = "block";
       renderColorSwatches("");
@@ -4936,6 +5171,7 @@
       const evColor = getSelectedColor();
       const payload = {
         title: els.eventTitle.value.trim(),
+        shortName: els.eventShort.value.trim(),
         date: els.eventDate.value,
         endDate,
         start, end,
@@ -5112,7 +5348,7 @@
 
     /* ---------------- STORAGE ---------------- */
     function normalizeEvent(ev) {
-      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], location: "", color: null, attendees: [], meetingLink: "", endDate: null, calendarId: null, ...ev };
+      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], shortName: "", location: "", color: null, attendees: [], meetingLink: "", endDate: null, calendarId: null, ...ev };
       // migrate legacy single `reminder` -> reminders[]
       if (!Array.isArray(out.reminders)) out.reminders = [];
       if (ev.reminder !== undefined && ev.reminder !== "" && ev.reminder !== null) {
