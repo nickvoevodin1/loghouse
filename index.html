@@ -155,8 +155,8 @@
     }
 
     .icon-btn {
-      width: 40px;
-      height: 40px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
       display: grid;
       place-items: center;
@@ -171,8 +171,8 @@
     /* close buttons: the old "×" glyph rendered at body size and was a
        tiny target — these are a full 44px with a crisp icon */
     .close-btn {
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       flex: 0 0 auto;
       border-radius: 50%;
       display: grid;
@@ -181,7 +181,7 @@
       border: 1px solid var(--line);
       color: var(--muted);
     }
-    .close-btn svg { width: 21px; height: 21px; display: block; }
+    .close-btn svg { width: 23px; height: 23px; display: block; }
     .close-btn:hover { background: var(--hover); color: var(--text); }
     .close-btn:active { transform: scale(.93); }
 
@@ -285,27 +285,6 @@
     .drawer-head { display: none; }
 
     .sidebar-search { display: none; }
-
-    .create-btn {
-      width: 100%;
-      height: 40px;
-      border-radius: 24px;
-      background: var(--surface);
-      color: var(--text);
-      font-weight: 500;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      border: 1px solid var(--line);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06);
-    }
-
-    .create-btn:hover {
-      background: var(--hover);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.08);
-    }
 
     .sidebar-section {
       margin-top: 8px;
@@ -808,12 +787,6 @@
     .event:active { cursor: grabbing; }
     .event.compact { padding: 2px 5px; }
 
-    /* an event overlapped by a task renders as a translucent background block */
-    .event.bg-block {
-      z-index: 3;
-      opacity: 0.5;
-      box-shadow: none;
-    }
     .event.is-task { z-index: 5; }
     /* an overnight event is drawn as two slices — flatten the joined edges */
     .event.seg-head { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
@@ -855,6 +828,36 @@
       transform: translateX(-50%);
     }
 
+    /* merged block for overlapping events */
+    .event.merged {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 3px 7px;
+      display: block;
+      cursor: pointer;
+    }
+    .merge-head {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .merge-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      height: 16px;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .merge-dot { width: 7px; height: 7px; border-radius: 2px; flex: 0 0 auto; }
+    .merge-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .merge-time { color: var(--muted); font-size: 10.5px; flex: 0 0 auto; }
+    .merge-more { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+
     .event.dragging { z-index: 20; opacity: .85; box-shadow: 0 6px 18px rgba(0,0,0,.35); cursor: grabbing; }
 
     .event-title {
@@ -865,7 +868,9 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      word-break: break-word;
+      /* clip a long word rather than break it mid-syllable */
+      word-break: normal;
+      overflow-wrap: normal;
       color: #fff;
     }
     .event.compact .event-title { -webkit-line-clamp: 1; }
@@ -978,13 +983,25 @@
     /* mobile compact month dots */
     .month-dot-row {
       display: none;
-      gap: 3px;
+      gap: 2px;
+      flex-wrap: wrap;
       justify-content: center;
-      margin-top: 2px;
+      margin-top: 3px;
     }
-    .month-dot {
-      width: 5px; height: 5px; border-radius: 50%;
+    /* a letter says which event it is; a bare dot said nothing */
+    .month-chip {
+      min-width: 15px;
+      height: 15px;
+      padding: 0 3px;
+      border-radius: 4px;
+      display: inline-grid;
+      place-items: center;
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
     }
+    .month-chip.more { background: var(--surface-3); color: var(--muted); }
 
     /* AGENDA / list view */
     .agenda-view {
@@ -1609,41 +1626,66 @@
         filter: blur(9px);
         pointer-events: none;
       }
-      .mobile-views button[data-view] {
-        flex: 1;
-        min-width: 0;
-        height: 44px;
-        border-radius: 18px;
-        color: var(--muted);
-        font-weight: 600;
-        font-size: 12px;
-        background: var(--surface-2);
+      /* left: current view (opens a list upward). right: create */
+      .mobile-views .bb-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        height: 52px;
+        border-radius: 20px;
         border: 1px solid var(--line);
+        background: var(--surface-2);
+        color: var(--text);
+        font-weight: 700;
+        font-size: 15px;
       }
-      .mobile-views button[data-view].active {
-        background: var(--accent);
-        border-color: var(--accent);
-        color: #fff;
-      }
-      /* centre add button — same square-with-rounded-corners language */
+      .mobile-views #bbViews { flex: 1; min-width: 0; padding: 0 18px; }
+      .mobile-views .bb-caret { width: 16px; height: 16px; flex: 0 0 auto; opacity: .7; transition: transform .18s; }
+      .mobile-views #bbViews[aria-expanded="true"] .bb-caret { transform: rotate(180deg); }
       .mobile-views .bb-add {
         flex: 0 0 auto;
-        width: 52px;
-        height: 44px;
-        border-radius: 18px;
+        width: 62px;
         background: var(--accent);
+        border-color: var(--accent);
         color: var(--accent-text);
-        font-size: 24px;
-        font-weight: 400;
-        line-height: 1;
-        display: grid;
-        place-items: center;
         box-shadow: 0 0 16px -2px rgba(124, 109, 242, .7);
       }
-      .mobile-views .bb-add:active { transform: scale(.94); }
+      .mobile-views .bb-add svg { width: 24px; height: 24px; }
+      .mobile-views .bb-btn:active { transform: scale(.96); }
+
+      /* popups slide up out of the bar */
+      .bb-pop {
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 10px;
+        display: grid;
+        gap: 4px;
+        min-width: 190px;
+        padding: 8px;
+        border-radius: 18px;
+        background: var(--bar-bg);
+        border: 1px solid var(--line);
+        box-shadow: 0 -6px 30px -6px rgba(124,109,242,.5), 0 8px 24px rgba(0,0,0,.45);
+        animation: bbPop .16s ease-out;
+      }
+      .bb-pop[hidden] { display: none; }
+      .bb-pop-right { left: auto; right: 10px; }
+      .bb-pop button {
+        height: 46px;
+        padding: 0 16px;
+        border-radius: 14px;
+        text-align: left;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        background: transparent;
+      }
+      .bb-pop button.active { background: var(--accent); color: #fff; }
+      @keyframes bbPop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
       /* keep calendar content clear of the bar */
-      .main { padding-bottom: calc(78px + var(--safe-bottom)); }
+      .main { padding-bottom: calc(86px + var(--safe-bottom)); }
 
       /* sidebar becomes drawer */
       .sidebar {
@@ -1742,6 +1784,13 @@
         box-shadow: 0 -6px 24px rgba(0,0,0,.35);
       }
       .modal-backdrop.dragging .modal { animation: none; transition: none; }
+      /* the sheet is a fixed panel: no sideways travel, no rubber band */
+      .modal {
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+      }
+      .modal-body { overflow-x: hidden; }
       .sheet-grip {
         display: block;
         width: 100%;
@@ -1787,43 +1836,6 @@
     /* ---------- ADDED FEATURES ---------- */
 
     /* natural-language quick add */
-    .quick-add-row {
-      display: flex;
-      gap: 5px;
-      margin-bottom: 8px;
-    }
-    .quick-add {
-      flex: 1;
-      height: 34px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: var(--surface-2);
-      padding: 0 10px;
-      color: var(--text);
-      font-size: 13px;
-      outline: none;
-    }
-    .quick-add:focus { border-color: var(--accent); }
-    .quick-add-hint {
-      font-size: 11px;
-      color: var(--muted-2);
-      margin: -2px 0 8px;
-      line-height: 1.35;
-    }
-    .voice-btn {
-      width: 34px;
-      height: 34px;
-      border-radius: 6px;
-      border: 1px solid var(--line);
-      background: var(--surface-2);
-      color: var(--muted);
-      display: grid;
-      place-items: center;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .voice-btn:hover { background: var(--hover); color: var(--accent); }
-    .voice-btn.listening { background: var(--accent); color: white; border-color: var(--accent); }
 
     /* multiple reminders as chips */
     .reminders-group { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -2087,6 +2099,59 @@
       font-weight: 600;
     }
 
+    /* read-only event card shown before editing */
+    .view-card { margin-bottom: 6px; }
+    .view-card[hidden] { display: none; }
+    .view-title {
+      margin: 0 0 4px;
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 1.25;
+      word-break: normal;
+    }
+    .view-when { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+    .view-rows { display: grid; gap: 7px; margin-bottom: 14px; }
+    .view-row {
+      display: flex;
+      gap: 8px;
+      font-size: 14px;
+      line-height: 1.35;
+      color: var(--text);
+    }
+    .view-row .k { color: var(--muted); flex: 0 0 88px; }
+    .view-row .v { flex: 1; min-width: 0; word-break: normal; overflow-wrap: anywhere; }
+    .view-actions { display: flex; gap: 8px; }
+    .view-actions button { flex: 1; height: 42px; border-radius: 10px; font-weight: 700; }
+    /* when the card is showing, the form waits behind a disclosure */
+    .modal.viewing .form-fields { display: none; }
+    .modal.viewing .modal-actions { display: none; }
+
+    /* optional fields tucked away */
+    .extra-block { margin-top: 4px; }
+    .extra-summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 11px 0;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .extra-summary::-webkit-details-marker { display: none; }
+    .extra-summary::after {
+      content: "";
+      width: 7px; height: 7px;
+      border-right: 1.8px solid currentColor;
+      border-bottom: 1.8px solid currentColor;
+      transform: rotate(45deg) translate(-2px, -2px);
+      transition: transform .18s;
+    }
+    .extra-block[open] .extra-summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
+
     /* compact one-line toggles */
     .toggle-row { display: flex; gap: 8px; }
     .mini-toggle {
@@ -2198,7 +2263,7 @@
   <div class="app">
     <header class="topbar">
       <button class="icon-btn menu-btn" id="menuBtn" aria-label="Меню" title="Меню">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg width="25" height="25" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>
       </button>
 
       <div class="brand">
@@ -2215,14 +2280,10 @@
 
       <div class="nav-group">
         <button class="today-btn" id="todayBtn">Сегодня</button>
-        <button class="icon-btn" id="prevBtn" title="Назад">‹</button>
-        <button class="icon-btn" id="nextBtn" title="Вперёд">›</button>
       </div>
 
-      <div class="range-title" id="rangeTitle"></div>
-
       <button class="icon-btn" id="tasksBtn" title="Задачник" aria-label="Задачник">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <svg width="25" height="25" viewBox="0 0 20 20" fill="none">
           <path d="M3 5.5l1.6 1.6L7.6 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M3 13.5l1.6 1.6L7.6 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M10 6h7M10 14h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
@@ -2243,11 +2304,25 @@
     </header>
 
     <nav class="mobile-views" id="viewSwitchMobile">
-      <button data-view="day">День</button>
-      <button data-view="3day">3 дня</button>
-      <button type="button" class="bb-add" id="bbAdd" aria-label="Создать событие">＋</button>
-      <button data-view="week" class="active">Неделя</button>
-      <button data-view="month">Месяц</button>
+      <button type="button" class="bb-btn" id="bbViews" aria-haspopup="true" aria-expanded="false">
+        <span id="bbViewLabel">Неделя</span>
+        <svg class="bb-caret" viewBox="0 0 20 20" fill="none"><path d="M5 12l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button type="button" class="bb-btn bb-add" id="bbAdd" aria-haspopup="true" aria-expanded="false" aria-label="Создать">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+
+      <div class="bb-pop" id="bbViewPop" hidden>
+        <button type="button" data-view="day">День</button>
+        <button type="button" data-view="3day">3 дня</button>
+        <button type="button" data-view="week">Неделя</button>
+        <button type="button" data-view="month">Месяц</button>
+        <button type="button" data-view="agenda">Список</button>
+      </div>
+      <div class="bb-pop bb-pop-right" id="bbAddPop" hidden>
+        <button type="button" data-create="event">Событие</button>
+        <button type="button" data-create="task">Задача</button>
+      </div>
     </nav>
 
     <aside class="sidebar" id="sidebar">
@@ -2265,20 +2340,6 @@
       </div>
 
       <input class="sidebar-search" id="searchInputMobile" placeholder="Поиск по событиям" />
-
-      <div class="quick-add-row">
-        <input class="quick-add" id="quickAdd" placeholder="Завтра в 15 созвон на час…" />
-        <button type="button" class="voice-btn" id="voiceBtn" title="Голосовой ввод">
-          <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-            <rect x="7" y="1" width="6" height="10" rx="3" fill="currentColor"/>
-            <path d="M4 10a6 6 0 0012 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <line x1="10" y1="16" x2="10" y2="19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div class="quick-add-hint">Например: «завтра в 15:30 встреча на 2 часа»</div>
-
-      <button class="create-btn" id="createBtn">＋ Создать событие</button>
 
       <section class="sidebar-section">
         <div class="mini-month">
@@ -2325,9 +2386,25 @@
         <button type="button" class="close-btn" id="closeModal" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
       </div>
       <div class="modal-body">
+        <section class="view-card" id="viewCard" hidden>
+          <h3 class="view-title" id="viewTitle"></h3>
+          <div class="view-when" id="viewWhen"></div>
+          <div class="view-rows" id="viewRows"></div>
+          <div class="view-actions">
+            <button type="button" class="ghost-btn" id="viewEdit">Изменить</button>
+            <button type="button" class="danger-btn visible" id="viewDelete">Удалить</button>
+          </div>
+        </section>
+
+        <div class="form-fields" id="formFields">
         <div class="field">
           <label for="eventTitle">Название</label>
           <input id="eventTitle" required placeholder="Например: Созвон по MVP" />
+        </div>
+
+        <div class="field">
+          <label for="eventShort">Коротко — показывается в сетке</label>
+          <input id="eventShort" maxlength="18" placeholder="Созвон" />
         </div>
 
         <div class="toggle-row">
@@ -2370,6 +2447,8 @@
           </div>
         </div>
 
+        <details class="extra-block" id="extraBlock">
+          <summary class="extra-summary">Дополнительно</summary>
         <div class="field">
           <label for="eventRepeat">Повтор</label>
           <select id="eventRepeat">
@@ -2465,6 +2544,8 @@
         <div class="field">
           <label for="eventDescription">Описание</label>
           <textarea id="eventDescription" placeholder="Заметка, повестка..."></textarea>
+        </div>
+        </details>
         </div>
 
         <div class="modal-actions">
@@ -2646,15 +2727,15 @@
     };
 
     const els = {
-      rangeTitle: document.getElementById("rangeTitle"),
       calendarShell: document.getElementById("calendarShell"),
       viewSwitch: document.getElementById("viewSwitch"),
       viewSwitchMobile: document.getElementById("viewSwitchMobile"),
+      bbViews: document.getElementById("bbViews"),
+      bbViewLabel: document.getElementById("bbViewLabel"),
+      bbViewPop: document.getElementById("bbViewPop"),
+      bbAddPop: document.getElementById("bbAddPop"),
       bbAdd: document.getElementById("bbAdd"),
       todayBtn: document.getElementById("todayBtn"),
-      prevBtn: document.getElementById("prevBtn"),
-      nextBtn: document.getElementById("nextBtn"),
-      createBtn: document.getElementById("createBtn"),
       miniGrid: document.getElementById("miniGrid"),
       miniTitle: document.getElementById("miniTitle"),
       miniPrev: document.getElementById("miniPrev"),
@@ -2672,17 +2753,21 @@
       eventIsTask: document.getElementById("eventIsTask"),
       eventRepeat: document.getElementById("eventRepeat"),
       remindersGroup: document.getElementById("remindersGroup"),
-      quickAdd: document.getElementById("quickAdd"),
       settingsBtn: document.getElementById("settingsBtn"),
       tasksBtn: document.getElementById("tasksBtn"),
       findTimeBtn: document.getElementById("findTimeBtn"),
       analyticsBtn: document.getElementById("analyticsBtn"),
       carryTasksBtn: document.getElementById("carryTasksBtn"),
       importFile: document.getElementById("importFile"),
-      voiceBtn: document.getElementById("voiceBtn"),
       eventLocation: document.getElementById("eventLocation"),
       eventColorRow: document.getElementById("eventColorRow"),
       sheetGrip: document.getElementById("sheetGrip"),
+      viewCard: document.getElementById("viewCard"),
+      viewTitle: document.getElementById("viewTitle"),
+      viewWhen: document.getElementById("viewWhen"),
+      viewRows: document.getElementById("viewRows"),
+      viewEdit: document.getElementById("viewEdit"),
+      viewDelete: document.getElementById("viewDelete"),
       colorPickBtn: document.getElementById("colorPickBtn"),
       colorPickDot: document.getElementById("colorPickDot"),
       colorPickName: document.getElementById("colorPickName"),
@@ -2709,6 +2794,7 @@
       choiceAll: document.getElementById("choiceAll"),
       choiceCancel: document.getElementById("choiceCancel"),
       eventTitle: document.getElementById("eventTitle"),
+      eventShort: document.getElementById("eventShort"),
       eventDate: document.getElementById("eventDate"),
       eventStart: document.getElementById("eventStart"),
       eventEnd: document.getElementById("eventEnd"),
@@ -2817,35 +2903,50 @@
         openModal({ date, start: nextRoundedTime(), end: addMinutesToTime(nextRoundedTime(), 60) });
       });
 
-      els.prevBtn.addEventListener("click", () => navigate(-1));
-      els.nextBtn.addEventListener("click", () => navigate(1));
 
       els.menuBtn.addEventListener("click", openDrawer);
       els.drawerClose.addEventListener("click", closeDrawer);
       els.scrim.addEventListener("click", closeDrawer);
 
-      [els.viewSwitch, els.viewSwitchMobile].forEach(sw => {
-        sw.addEventListener("click", (e) => {
-          const btn = e.target.closest("button[data-view]");
-          if (!btn) return;
-          state.view = btn.dataset.view;
-          saveView();
-          syncViewButtons();
-          renderAll();
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-view]");
+        if (!btn) return;
+        state.view = btn.dataset.view;
+        saveView();
+        closeBarPops();
+        syncViewButtons();
+        renderAll();
+      });
+
+      // bottom bar popups
+      els.bbViews.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = els.bbViewPop.hidden;
+        closeBarPops();
+        els.bbViewPop.hidden = !open;
+        els.bbViews.setAttribute("aria-expanded", String(open));
+      });
+      els.bbAdd.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = els.bbAddPop.hidden;
+        closeBarPops();
+        els.bbAddPop.hidden = !open;
+        els.bbAdd.setAttribute("aria-expanded", String(open));
+      });
+      els.bbAddPop.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-create]");
+        if (!btn) return;
+        closeBarPops();
+        const start = nextRoundedTime();
+        openModal({
+          date: isoDate(state.selectedDate),
+          start,
+          end: addMinutesToTime(start, state.defaultDuration),
+          isTask: btn.dataset.create === "task"
         });
       });
-
-      els.createBtn.addEventListener("click", () => {
-        if (isMobile()) closeDrawer();
-        const date = isoDate(state.selectedDate);
-        openModal({ date, start: nextRoundedTime(), end: addMinutesToTime(nextRoundedTime(), 60) });
-      });
-
-      // "+" in the mobile bottom bar
-      els.bbAdd.addEventListener("click", () => {
-        closeDrawer();
-        const date = isoDate(state.selectedDate);
-        openModal({ date, start: nextRoundedTime(), end: addMinutesToTime(nextRoundedTime(), 60) });
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".mobile-views")) closeBarPops();
       });
 
       els.miniPrev.addEventListener("click", () => {
@@ -2900,6 +3001,14 @@
         els.remindCustomVal.value = "";
       });
 
+      // read-only card -> form
+      els.viewEdit.addEventListener("click", () => {
+        hideViewCard();
+        els.modalTitle.textContent = "Редактировать событие";
+        setSheet("full");
+      });
+      els.viewDelete.addEventListener("click", () => els.deleteEvent.click());
+
       els.durRow.addEventListener("click", (e) => {
         const chip = e.target.closest(".dur-chip");
         if (chip) { applyDuration(Number(chip.dataset.dur)); renderDraft(); }
@@ -2907,7 +3016,15 @@
       els.eventStart.addEventListener("change", () => { syncDurationChips(); renderDraft(); });
       els.eventEnd.addEventListener("change", () => { syncDurationChips(); renderDraft(); });
       els.eventDate.addEventListener("change", renderDraft);
-      els.eventTitle.addEventListener("input", renderDraft);
+      els.eventTitle.addEventListener("input", () => {
+        // auto-fill the short name from the first word until it is touched by hand
+        if (!els.eventShort.dataset.touched) els.eventShort.value = firstWord(els.eventTitle.value);
+        renderDraft();
+      });
+      els.eventShort.addEventListener("input", () => {
+        els.eventShort.dataset.touched = "1";
+        renderDraft();
+      });
       els.eventAllDay.addEventListener("change", renderDraft);
       bindSheetGrip();
 
@@ -2970,20 +3087,6 @@
       els.settingsBtn.addEventListener("click", openSettings);
       els.tasksBtn.addEventListener("click", openTasks);
 
-      // natural-language quick add
-      els.quickAdd.addEventListener("keydown", (e) => {
-        if (e.key !== "Enter") return;
-        const text = els.quickAdd.value.trim();
-        if (!text) return;
-        const parsed = parseNaturalLanguage(text);
-        els.quickAdd.value = "";
-        if (isMobile()) closeDrawer();
-        openModal(parsed);
-      });
-
-      // voice input
-      els.voiceBtn.addEventListener("click", startVoiceInput);
-
       // recurring chooser backdrop close on outside click
       els.choiceBackdrop.addEventListener("click", (e) => {
         if (e.target === els.choiceBackdrop && els.choiceCancel.onclick) els.choiceCancel.onclick();
@@ -2996,6 +3099,7 @@
       });
 
       bindKeyboardShortcuts();
+      bindScrollGuards();
       bindSwipe();
     }
 
@@ -3052,89 +3156,43 @@
       showToast(`🔔 ${ev.title} — ${when}`);
     }
 
-    /* ---------------- VOICE INPUT ---------------- */
-    function startVoiceInput() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) { showToast("Голосовой ввод не поддерживается в этом браузере"); return; }
-      const recognition = new SR();
-      recognition.lang = "ru-RU";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-      els.voiceBtn.classList.add("listening");
-      showToast("Говорите...");
-      recognition.onresult = (e) => {
-        const text = e.results[0][0].transcript;
-        els.quickAdd.value = text;
-        const parsed = parseNaturalLanguage(text);
-        els.quickAdd.value = "";
-        if (isMobile()) closeDrawer();
-        openModal(parsed);
-      };
-      recognition.onerror = () => showToast("Не удалось распознать голос");
-      recognition.onend = () => els.voiceBtn.classList.remove("listening");
-      recognition.start();
-    }
+    /* iOS/WKWebView ignores overscroll-behavior, so the rubber band still
+       reaches Telegram and drags the whole mini app. Clamp it ourselves: when
+       a scroller is already at an edge and the finger pushes further, cancel
+       the gesture. Nudging off the exact edge stops the scroll from chaining. */
+    function bindScrollGuards() {
+      let startY = 0, target = null;
 
-    /* ---------------- NATURAL LANGUAGE QUICK ADD ---------------- */
-    /* NB: JS \b word boundaries don't work with Cyrillic, so we use
-       whitespace boundaries + explicit [а-яё] classes for declensions. */
-    function parseNaturalLanguage(text) {
-      let rest = " " + text + " ";
-      const today = new Date();
-      let date = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
-      // relative days
-      if (/\sпослезавтра\s/i.test(rest)) { date = addDays(date, 2); rest = rest.replace(/\sпослезавтра\s/i, " "); }
-      else if (/\sзавтра\s/i.test(rest)) { date = addDays(date, 1); rest = rest.replace(/\sзавтра\s/i, " "); }
-      else if (/\sсегодня\s/i.test(rest)) { rest = rest.replace(/\sсегодня\s/i, " "); }
-
-      // weekday ("в понедельник", "во вторник", "в среду" ...) -> next matching weekday
-      const weekdays = [
-        { re: /\s(?:во?\s+)?воскресень[а-яё]*\s/i, dow: 0 },
-        { re: /\s(?:во?\s+)?понедельник[а-яё]*\s/i, dow: 1 },
-        { re: /\s(?:во?\s+)?вторник[а-яё]*\s/i, dow: 2 },
-        { re: /\s(?:во?\s+)?сред[ауы][а-яё]*\s/i, dow: 3 },
-        { re: /\s(?:во?\s+)?четверг[а-яё]*\s/i, dow: 4 },
-        { re: /\s(?:во?\s+)?пятниц[ауы][а-яё]*\s/i, dow: 5 },
-        { re: /\s(?:во?\s+)?суббот[ауы][а-яё]*\s/i, dow: 6 }
-      ];
-      for (const wd of weekdays) {
-        if (wd.re.test(rest)) {
-          let d = new Date(date);
-          for (let i = 0; i < 8; i++) { if (d.getDay() === wd.dow && d > date) break; d = addDays(d, 1); }
-          date = d;
-          rest = rest.replace(wd.re, " ");
-          break;
+      const scrollerFor = (node) => {
+        for (let el = node; el && el !== document.body; el = el.parentElement) {
+          const st = getComputedStyle(el);
+          if (/(auto|scroll)/.test(st.overflowY) && el.scrollHeight > el.clientHeight) return el;
         }
-      }
+        return null;
+      };
 
-      // time "в 15:30" / "15:30" (with minutes)
-      let start = null;
-      let tm = rest.match(/\s(?:в\s*)?(\d{1,2})[:.](\d{2})(?=\s)/i);
-      if (tm) {
-        start = `${pad(Math.min(23, +tm[1]))}:${pad(Math.min(59, +tm[2]))}`;
-        rest = rest.replace(tm[0], " ");
-      } else {
-        // hour-only time requires the "в" preposition ("в 15") to avoid eating durations
-        tm = rest.match(/\sв\s*(\d{1,2})(?:\s*(?:час[а-яё]*|ч))?(?=\s)/i);
-        if (tm) { start = `${pad(Math.min(23, +tm[1]))}:00`; rest = rest.replace(tm[0], " "); }
-      }
+      document.addEventListener("touchstart", (e) => {
+        if (e.touches.length !== 1) { target = null; return; }
+        startY = e.touches[0].clientY;
+        target = scrollerFor(e.target);
+        if (!target) return;
+        // never sit exactly on an edge — that is what lets the scroll chain out
+        const max = target.scrollHeight - target.clientHeight;
+        if (target.scrollTop <= 0) target.scrollTop = 1;
+        else if (target.scrollTop >= max) target.scrollTop = max - 1;
+      }, { passive: true });
 
-      // duration "на час", "на полчаса", "на 2 часа", "на 30 минут", "на 90 мин"
-      let durMin = 60;
-      let dm = rest.match(/\sна\s*(\d+)\s*(?:минут[а-яё]*|мин)(?=\s)/i);
-      if (dm) { durMin = +dm[1]; rest = rest.replace(dm[0], " "); }
-      else if ((dm = rest.match(/\sна\s*(\d+)\s*(?:час[а-яё]*|ч)(?=\s)/i))) { durMin = +dm[1] * 60; rest = rest.replace(dm[0], " "); }
-      else if (/\sна\s+полчаса(?=\s)/i.test(rest)) { durMin = 30; rest = rest.replace(/\sна\s+полчаса(?=\s)/i, " "); }
-      else if (/\sна\s+час(?=\s)/i.test(rest)) { durMin = 60; rest = rest.replace(/\sна\s+час(?=\s)/i, " "); }
-
-      const title = rest.replace(/\s+/g, " ").trim() || "Новое событие";
-      if (!start) start = nextRoundedTime();
-      const end = addMinutesToTime(start, durMin);
-      return { title: title.charAt(0).toUpperCase() + title.slice(1), date: isoDate(date), start, end, calendarId: "startup" };
+      document.addEventListener("touchmove", (e) => {
+        if (e.touches.length !== 1) return;
+        const dy = e.touches[0].clientY - startY;
+        if (!target) { e.preventDefault(); return; }   // nothing scrollable: no bounce
+        const max = target.scrollHeight - target.clientHeight;
+        const atTop = target.scrollTop <= 0 && dy > 0;
+        const atBottom = target.scrollTop >= max && dy < 0;
+        if (atTop || atBottom) e.preventDefault();
+      }, { passive: false });
     }
 
-    /* keyboard shortcuts (Google-Calendar style) */
     function bindKeyboardShortcuts() {
       document.addEventListener("keydown", (e) => {
         const tag = (e.target.tagName || "").toLowerCase();
@@ -3200,10 +3258,20 @@
       renderAll();
     }
 
+    const VIEW_LABELS = { day: "День", "3day": "3 дня", week: "Неделя", month: "Месяц", agenda: "Список" };
+
     function syncViewButtons() {
-      [...els.viewSwitch.children, ...els.viewSwitchMobile.children].forEach(b => {
+      document.querySelectorAll("button[data-view]").forEach(b => {
         b.classList.toggle("active", b.dataset.view === state.view);
       });
+      els.bbViewLabel.textContent = VIEW_LABELS[state.view] || "Вид";
+    }
+
+    function closeBarPops() {
+      els.bbViewPop.hidden = true;
+      els.bbAddPop.hidden = true;
+      els.bbViews.setAttribute("aria-expanded", "false");
+      els.bbAdd.setAttribute("aria-expanded", "false");
     }
 
     function navigate(step) {
@@ -3218,7 +3286,6 @@
     }
 
     function renderAll() {
-      renderTitle();
       renderMiniMonth();
       renderCalendar();
       renderUpcoming();
@@ -3228,27 +3295,6 @@
         void els.calendarShell.offsetWidth; // reflow
         els.calendarShell.classList.add(cls);
         state._navDir = null;
-      }
-    }
-
-    function renderTitle() {
-      if (state.view === "day") {
-        els.rangeTitle.textContent = `${state.selectedDate.getDate()} ${MONTHS_TITLE[state.selectedDate.getMonth()]} ${state.selectedDate.getFullYear()}`;
-      } else if (state.view === "3day") {
-        const end = addDays(state.selectedDate, 2);
-        const sameMonth = state.selectedDate.getMonth() === end.getMonth();
-        const left = sameMonth ? state.selectedDate.getDate() : `${state.selectedDate.getDate()} ${MONTHS_TITLE[state.selectedDate.getMonth()]}`;
-        els.rangeTitle.textContent = `${left} — ${end.getDate()} ${MONTHS_TITLE[end.getMonth()]} ${end.getFullYear()}`;
-      } else if (state.view === "week") {
-        const start = startOfWeek(state.selectedDate);
-        const end = addDays(start, 6);
-        const sameMonth = start.getMonth() === end.getMonth();
-        const left = sameMonth ? start.getDate() : `${start.getDate()} ${MONTHS_TITLE[start.getMonth()]}`;
-        els.rangeTitle.textContent = `${left} — ${end.getDate()} ${MONTHS_TITLE[end.getMonth()]} ${end.getFullYear()}`;
-      } else if (state.view === "agenda") {
-        els.rangeTitle.textContent = "Предстоящие события";
-      } else {
-        els.rangeTitle.textContent = `${capitalize(MONTHS[state.selectedDate.getMonth()])} ${state.selectedDate.getFullYear()}`;
       }
     }
 
@@ -3457,6 +3503,17 @@
       return null;
     }
 
+    /* what a grid block shows: the short name if given, otherwise the first
+       whole word of the title — never a word broken in half */
+    function eventShortLabel(ev) {
+      const s = (ev.shortName || "").trim();
+      if (s) return s;
+      return (ev.title || "").trim().split(/\s+/)[0] || "Событие";
+    }
+    function firstWord(text) {
+      return (text || "").trim().split(/\s+/)[0] || "";
+    }
+
     function rangesOverlap(a, b) {
       const as = timeToMinutes(a._segStart || a.start), ae = a._segEndMin != null ? a._segEndMin : timeToMinutes(a.end);
       const bs = timeToMinutes(b._segStart || b.start), be = b._segEndMin != null ? b._segEndMin : timeToMinutes(b.end);
@@ -3467,35 +3524,57 @@
        Tasks float on top; any plain event that shares time with a task
        becomes a translucent full-width background block instead of being
        squeezed into a narrow column next to it. */
-    function layoutDayEvents(events) {
-      const tasks = events.filter(e => e.isTask);
-      const plain = events.filter(e => !e.isTask);
-
-      plain.forEach(ev => { ev._bg = tasks.some(t => rangesOverlap(t, ev)); });
-      const foreground = plain.filter(e => !e._bg);
-      const background = plain.filter(e => e._bg);
-
-      const sorted = [...foreground].sort((a, b) => timeToMinutes(a._segStart || a.start) - timeToMinutes(b._segStart || b.start));
-      const cols = [];
+    /* Group everything that overlaps in time into clusters. A lone event is
+       drawn as usual; a cluster is drawn as one merged block listing its
+       members, which opens a picker on tap. This replaces the old
+       squeeze-into-columns behaviour the user found unreadable. */
+    function clusterOverlaps(events) {
+      const sorted = [...events].sort((a, b) =>
+        timeToMinutes(a._segStart || a.start) - timeToMinutes(b._segStart || b.start));
+      const clusters = [];
       sorted.forEach(ev => {
-        let placed = false;
-        for (const col of cols) {
-          const last = col[col.length - 1];
-          if (timeToMinutes(ev.start) >= timeToMinutes(last.end)) { col.push(ev); ev._col = cols.indexOf(col); placed = true; break; }
-        }
-        if (!placed) { ev._col = cols.length; cols.push([ev]); }
+        const last = clusters[clusters.length - 1];
+        if (last && last.some(x => rangesOverlap(x, ev))) last.push(ev);
+        else clusters.push([ev]);
       });
-      const total = Math.max(1, cols.length);
+      return clusters;
+    }
 
-      const bgHtml   = background.map(ev => eventMarkup(ev, 0, 1)).join("");
-      const fgHtml   = sorted.map(ev => eventMarkup(ev, ev._col || 0, total)).join("");
-      const taskHtml = tasks.map(ev => eventMarkup(ev, 0, 1)).join("");
-      return bgHtml + fgHtml + taskHtml;
+    function layoutDayEvents(events) {
+      return clusterOverlaps(events)
+        .map(c => (c.length === 1 ? eventMarkup(c[0]) : mergedMarkup(c)))
+        .join("");
+    }
+
+    function mergedMarkup(cluster) {
+      const startMin = Math.min(...cluster.map(e => timeToMinutes(e._segStart || e.start)));
+      const endMin = Math.max(...cluster.map(e => e._segEndMin != null ? e._segEndMin : timeToMinutes(e.end)));
+      const top = (startMin - START_HOUR * 60) / 60 * HOUR_HEIGHT;
+      const height = Math.max(26, (endMin - startMin) / 60 * HOUR_HEIGHT - 2);
+
+      const fits = Math.max(1, Math.floor((height - 20) / 17));
+      const shown = cluster.slice(0, fits);
+      const hidden = cluster.length - shown.length;
+      const rows = shown.map(ev => {
+        const color = ev.color || getCalendar(ev.calendarId).color;
+        return `<div class="merge-item"><span class="merge-dot" style="background:${color}"></span>` +
+               `<span class="merge-name">${escapeHtml(eventShortLabel(ev))}</span>` +
+               `<span class="merge-time">${formatTime(ev.start)}</span></div>`;
+      }).join("");
+
+      return `
+        <div class="event merged" data-merged="${cluster.map(e => e.id).join(",")}" data-date="${cluster[0].date}"
+             style="top:${top}px;height:${height}px;">
+          <div class="merge-head">${cluster.length} события</div>
+          ${rows}
+          ${hidden > 0 ? `<div class="merge-more">+ ещё ${hidden}</div>` : ""}
+        </div>
+      `;
     }
 
     const CHECK_SVG = '<svg viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-    function eventMarkup(ev, col = 0, total = 1) {
+    function eventMarkup(ev) {
       const cal = getCalendar(ev.calendarId);
       const color = ev.color || cal.color;
       // geometry follows the slice shown on this day (overnight events are split)
@@ -3504,13 +3583,9 @@
       const top = (segStartMin - START_HOUR * 60) / 60 * HOUR_HEIGHT;
       const height = Math.max(22, (segEndMin - segStartMin) / 60 * HOUR_HEIGHT - 2);
       const compact = height < 40 ? "compact" : "";
-      const gap = 3;
-      const widthPct = 100 / total;
-      const leftStyle = total > 1
-        ? `left:calc(${col * widthPct}% + 3px);width:calc(${widthPct}% - ${gap + 3}px);right:auto;`
-        : "";
+      const leftStyle = "";
       const overnight = isOvernight(ev);
-      const classes = ["event", compact, ev.isTask ? "is-task" : "", ev._bg ? "bg-block" : "",
+      const classes = ["event", compact, ev.isTask ? "is-task" : "",
                        ev.done ? "done" : "", ev._tail ? "seg-tail" : "", (overnight && !ev._tail) ? "seg-head" : ""].filter(Boolean).join(" ");
       const draggable = isMobile() ? "false" : "true";
       const check = ev.isTask
@@ -3524,7 +3599,7 @@
           <div class="event-head">
             ${check}
             <div style="min-width:0;flex:1">
-              <div class="event-title">${escapeHtml(ev.title)}${repeatBadge}</div>
+              <div class="event-title">${escapeHtml(height < 56 ? eventShortLabel(ev) : ev.title)}${repeatBadge}</div>
               ${height > 34 ? `<div class="event-time">${formatTime(ev.start)} — ${formatTime(ev.end)}${overnight ? " ⤍" : ""}</div>` : ""}
               ${height > 62 && ev.description ? `<div class="event-desc">${escapeHtml(ev.description)}</div>` : ""}
               ${locationLine}
@@ -3771,6 +3846,27 @@
       });
     }
 
+    /* pick one event out of a merged block */
+    function openEventPicker(ids, date) {
+      const items = ids.map(id => state.events.find(e => e.id === id)).filter(Boolean);
+      const rows = items.map(ev => {
+        const color = ev.color || getCalendar(ev.calendarId).color;
+        const when = ev.allDay ? "Весь день" : `${formatTime(ev.start)}–${formatTime(ev.end)}`;
+        return `<button type="button" class="slot-item" data-pick="${ev.id}" style="width:100%;text-align:left;cursor:pointer">
+          <span><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${color};margin-right:8px"></span>${escapeHtml(ev.title)}</span>
+          <span style="color:var(--muted);font-size:13px">${when}</span>
+        </button>`;
+      }).join("");
+      openToolModal("Несколько событий", rows);
+      els.toolModalBody.querySelectorAll("[data-pick]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const ev = state.events.find(x => x.id === btn.dataset.pick);
+          closeToolModal();
+          if (ev) openModal({ ...ev, date: date || ev.date });
+        });
+      });
+    }
+
     function openByElement(el) {
       const id = el.dataset.eventId;
       const date = el.dataset.date;
@@ -3808,6 +3904,13 @@
       });
 
       els.calendarShell.querySelectorAll("[data-resize]").forEach(bindResize);
+
+      // a merged block asks which of its events you meant
+      els.calendarShell.querySelectorAll(".event.merged").forEach(el => {
+        el.addEventListener("click", () => {
+          openEventPicker(el.dataset.merged.split(","), el.dataset.date);
+        });
+      });
 
       els.calendarShell.querySelectorAll(".event[data-event-id], .allday-chip[data-event-id]").forEach(el => {
         el.addEventListener("click", (e) => {
@@ -4040,10 +4143,11 @@
                 sameDay(day, new Date()) ? "today" : ""
               ].filter(Boolean).join(" ");
 
-              const dots = events.slice(0, 4).map(ev => {
-                const cal = getCalendar(ev.calendarId);
-                return `<span class="month-dot" style="background:${cal.color}"></span>`;
-              }).join("");
+              const dots = events.slice(0, 3).map(ev => {
+                const color = ev.color || getCalendar(ev.calendarId).color;
+                const letter = (eventShortLabel(ev)[0] || "•").toUpperCase();
+                return `<span class="month-chip" style="background:${color}" title="${escapeHtml(ev.title)}">${letter}</span>`;
+              }).join("") + (events.length > 3 ? `<span class="month-chip more">+${events.length - 3}</span>` : "");
 
               return `
                 <div class="${classes}" data-date="${dateStr}">
@@ -4932,11 +5036,45 @@
       el.querySelector(".draft-resize").addEventListener("pointerdown", (e) => startDrag(e, "resize"));
     }
 
+    /* show an existing event read-only first; editing is one tap away */
+    function showViewCard(ev) {
+      const day = parseDate(ev.date);
+      const when = ev.allDay
+        ? "Весь день"
+        : `${formatTime(ev.start)} — ${formatTime(ev.end)}${isOvernight(ev) ? " (следующий день)" : ""}`;
+      els.viewTitle.textContent = ev.title || "Без названия";
+      els.viewWhen.textContent = `${day.getDate()} ${MONTHS_TITLE[day.getMonth()]} · ${when}`;
+
+      const row = (k, v) => `<div class="view-row"><span class="k">${k}</span><span class="v">${escapeHtml(v)}</span></div>`;
+      const parts = [];
+      if (ev.description) parts.push(row("Описание", ev.description));
+      if (ev.location) parts.push(row("Место", ev.location));
+      if ((ev.attendees || []).length) parts.push(row("Участники", ev.attendees.join(", ")));
+      if (ev.repeat && ev.repeat !== "none") parts.push(row("Повтор", REPEAT_LABELS[ev.repeat] || "Настроенный"));
+      if ((ev.reminders || []).length) parts.push(row("Напоминания", ev.reminders.map(reminderLabel).join(", ")));
+      if (ev.isTask) parts.push(row("Тип", "Задача"));
+      els.viewRows.innerHTML = parts.join("") || `<div class="view-row"><span class="v" style="color:var(--muted)">Без описания</span></div>`;
+
+      els.viewCard.hidden = false;
+      els.eventForm.classList.add("viewing");
+    }
+
+    function hideViewCard() {
+      els.viewCard.hidden = true;
+      els.eventForm.classList.remove("viewing");
+    }
+
+    const REPEAT_LABELS = {
+      daily: "Каждый день", weekly: "Каждую неделю", biweekly: "Каждые 2 недели",
+      monthly: "Каждый месяц", yearly: "Каждый год", custom: "Настроенный"
+    };
+
     function openModal(data = {}) {
       state.editingId = data.id || null;
       state.editingInstanceDate = data.id ? (data.date || null) : null;
       els.modalTitle.textContent = data.id ? "Редактировать событие" : "Новое событие";
       els.eventTitle.value = data.title || "";
+      els.eventShort.value = data.shortName || "";
       els.eventDate.value = data.date || isoDate(state.selectedDate);
       els.eventEndDate.value = data.endDate && data.endDate !== (data.date || isoDate(state.selectedDate)) ? data.endDate : "";
       els.eventStart.value = data.start || "10:00";
@@ -4965,6 +5103,13 @@
       syncDurationChips();
       els.deleteEvent.classList.toggle("visible", Boolean(data.id));
       els.duplicateEvent.style.display = data.id ? "" : "none";
+      // existing events open read-only; new ones go straight to the form
+      if (data.id && !data._edit) {
+        els.modalTitle.textContent = "Событие";
+        showViewCard(data);
+      } else {
+        hideViewCard();
+      }
       els.modalBackdrop.classList.add("open");
       state._modalOpenedAt = Date.now();
       setSheet("half");
@@ -4973,12 +5118,14 @@
     }
 
     function closeModal() {
+      hideViewCard();
       els.modalBackdrop.classList.remove("open");
       els.modalBackdrop.classList.remove("sheet-half", "sheet-full");
       clearDraft();
       state.editingId = null;
       state.editingInstanceDate = null;
       els.eventForm.reset();
+      delete els.eventShort.dataset.touched;
       setReminderChips([]);
       els.timeFields.style.display = "block";
       renderColorSwatches("");
@@ -5024,6 +5171,7 @@
       const evColor = getSelectedColor();
       const payload = {
         title: els.eventTitle.value.trim(),
+        shortName: els.eventShort.value.trim(),
         date: els.eventDate.value,
         endDate,
         start, end,
@@ -5200,7 +5348,7 @@
 
     /* ---------------- STORAGE ---------------- */
     function normalizeEvent(ev) {
-      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], location: "", color: null, attendees: [], meetingLink: "", endDate: null, calendarId: null, ...ev };
+      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], shortName: "", location: "", color: null, attendees: [], meetingLink: "", endDate: null, calendarId: null, ...ev };
       // migrate legacy single `reminder` -> reminders[]
       if (!Array.isArray(out.reminders)) out.reminders = [];
       if (ev.reminder !== undefined && ev.reminder !== "" && ev.reminder !== null) {
