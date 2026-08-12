@@ -838,41 +838,34 @@
     }
 
     /* merged block for overlapping events */
-    /* every member is a filled band in its own colour, so the block reads as
-       busy at a glance instead of looking like an empty slot */
     .event.merged {
-      background: none;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 3px 7px;
+      display: block;
       cursor: pointer;
-      overflow: hidden;
-      box-shadow: none;
+    }
+    .merge-head {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+      margin-bottom: 2px;
     }
     .merge-item {
-      flex: 1 1 0;
-      min-height: 18px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      padding: 2px 7px;
-      border-radius: 5px;
-      color: #fff;
-      font-size: 12px;
-      font-weight: 650;
-      overflow: hidden;
+      gap: 5px;
+      height: 16px;
+      font-size: 11.5px;
+      font-weight: 600;
     }
-    .merge-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .merge-time { color: rgba(255,255,255,.8); font-size: 11px; flex: 0 0 auto; }
-    .merge-more {
-      flex: 0 0 auto;
-      font-size: 10.5px;
-      font-weight: 700;
-      color: var(--muted);
-      padding: 1px 7px;
-    }
+    .merge-dot { width: 7px; height: 7px; border-radius: 2px; flex: 0 0 auto; }
+    .merge-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .merge-time { color: var(--muted); font-size: 10.5px; flex: 0 0 auto; }
+    .merge-more { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
 
     .event.dragging { z-index: 20; opacity: .85; box-shadow: 0 6px 18px rgba(0,0,0,.35); cursor: grabbing; }
 
@@ -1381,8 +1374,9 @@
 
     .modal-body {
       padding: 12px 16px 14px;
-      display: grid;
-      gap: 10px;
+      display: block;
+      flex: 1 1 auto;
+      min-height: 0;
       overflow: auto;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: auto;
@@ -1506,11 +1500,16 @@
 
     .allday-toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
 
+    /* sheet footer: sits below the scroll area, never on top of it */
     .modal-actions {
       display: flex;
+      align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding-top: 4px;
+      flex: 0 0 auto;
+      padding: 10px 16px calc(10px + var(--safe-bottom));
+      border-top: 1px solid var(--line-soft);
+      background: var(--surface);
     }
 
     .right-actions {
@@ -1820,7 +1819,6 @@
         max-height: 94vh;
         border-radius: 14px 14px 0 0;
         animation: sheetUp .3s cubic-bezier(.4,0,.2,1);
-        padding-bottom: var(--safe-bottom);
         box-shadow: 0 -6px 24px rgba(0,0,0,.35);
       }
       .modal-backdrop.dragging .modal { animation: none; transition: none; }
@@ -1847,8 +1845,7 @@
         border-radius: 3px;
         background: var(--muted-2);
       }
-      .modal-body { padding-bottom: 20px; }
-      .modal-actions { position: sticky; bottom: 0; background: var(--surface); padding: 10px 0 4px; }
+      .modal-body { padding-bottom: 14px; }
     }
 
     @keyframes sheetUp {
@@ -2635,13 +2632,14 @@
         </details>
         </div>
 
-        <div class="modal-actions">
-          <button type="button" class="danger-btn" id="deleteEvent">Удалить</button>
-          <button type="button" class="ghost-btn" id="duplicateEvent" style="display:none">Дублировать</button>
-          <div class="right-actions">
-            <button type="button" class="cancel-btn" id="cancelModal">Отмена</button>
-            <button type="submit" class="save-btn">Сохранить</button>
-          </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="danger-btn" id="deleteEvent">Удалить</button>
+        <button type="button" class="ghost-btn" id="duplicateEvent" style="display:none">Дублировать</button>
+        <div class="right-actions">
+          <button type="button" class="cancel-btn" id="cancelModal">Отмена</button>
+          <button type="submit" class="save-btn">Сохранить</button>
         </div>
       </div>
     </form>
@@ -2676,7 +2674,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260812-1233";
+    const BUILD_ID = "20260812-1244";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -3673,12 +3671,12 @@
       const top = (startMin - START_HOUR * 60) / 60 * HOUR_HEIGHT;
       const height = Math.max(26, (endMin - startMin) / 60 * HOUR_HEIGHT - 2);
 
-      const fits = Math.max(1, Math.floor(height / 24));
+      const fits = Math.max(1, Math.floor((height - 20) / 17));
       const shown = cluster.slice(0, fits);
       const hidden = cluster.length - shown.length;
       const rows = shown.map(ev => {
         const color = ev.color || getCalendar(ev.calendarId).color;
-        return `<div class="merge-item" style="background:${color}">` +
+        return `<div class="merge-item"><span class="merge-dot" style="background:${color}"></span>` +
                `<span class="merge-name">${escapeHtml(eventShortLabel(ev))}</span>` +
                `<span class="merge-time">${formatTime(ev.start)}</span></div>`;
       }).join("");
@@ -3686,6 +3684,7 @@
       return `
         <div class="event merged" data-merged="${cluster.map(e => e.id).join(",")}" data-date="${cluster[0].date}"
              style="top:${top}px;height:${height}px;">
+          <div class="merge-head">${cluster.length} события</div>
           ${rows}
           ${hidden > 0 ? `<div class="merge-more">+ ещё ${hidden}</div>` : ""}
         </div>
