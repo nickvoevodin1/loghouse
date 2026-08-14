@@ -869,6 +869,36 @@
     .merge-time { color: var(--muted); font-size: 10.5px; flex: 0 0 auto; }
     .merge-more { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
 
+    /* bands variant: each member filled with its own colour */
+    .event.merged.bands {
+      background: none;
+      background-image: none;
+      border: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      box-shadow: none;
+    }
+    .band-item {
+      flex: 1 1 0;
+      min-height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 650;
+      overflow: hidden;
+    }
+    .band-item .merge-time { color: rgba(255,255,255,.8); }
+
+    /* cascade variant: offset cards keep a visible edge each */
+    .event.cascade { box-shadow: -2px 0 6px rgba(0,0,0,.35); }
+
     .event.dragging { z-index: 20; opacity: .85; box-shadow: 0 6px 18px rgba(0,0,0,.35); cursor: grabbing; }
 
     .event-title {
@@ -1360,19 +1390,36 @@
     .stat-cap { font-size: 12px; color: var(--muted); }
 
     .modal-head {
-      padding: 14px 16px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--line-soft);
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 10px;
       flex-shrink: 0;
     }
 
     .modal-head h2 {
       margin: 0;
-      font-size: 15px;
+      flex: 1;
+      text-align: center;
+      font-size: 17px;
       font-weight: 700;
     }
+
+    /* round confirm button mirroring the close button */
+    .save-round {
+      width: 54px;
+      height: 54px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+    }
+    .save-round svg { width: 26px; height: 26px; display: block; }
+    .save-round:active { transform: scale(.93); }
 
     .modal-body {
       padding: 12px 16px 14px;
@@ -1502,17 +1549,18 @@
 
     .allday-toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
 
-    /* sheet footer: sits below the scroll area, never on top of it */
+    /* sheet footer: only destructive/secondary actions live here now */
     .modal-actions {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 8px;
       flex: 0 0 auto;
-      padding: 10px 16px calc(10px + var(--safe-bottom));
+      padding: 8px 16px calc(8px + var(--safe-bottom));
       border-top: 1px solid var(--line-soft);
       background: var(--surface);
     }
+    .modal-actions:not(.has-content) { display: none; }
+    .modal-actions button { flex: 1; height: 40px; border-radius: 10px; font-weight: 650; }
 
     .right-actions {
       display: flex;
@@ -2472,8 +2520,9 @@
     <form class="modal" id="eventForm">
       <button type="button" class="sheet-grip" id="sheetGrip" aria-label="Развернуть"></button>
       <div class="modal-head">
-        <h2 id="modalTitle">Новое событие</h2>
         <button type="button" class="close-btn" id="closeModal" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+        <h2 id="modalTitle">Новое событие</h2>
+        <button type="submit" class="save-round" id="saveTop" aria-label="Сохранить"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
       <div class="modal-body">
         <section class="view-card" id="viewCard" hidden>
@@ -2642,13 +2691,9 @@
 
       </div>
 
-      <div class="modal-actions">
+      <div class="modal-actions" id="modalActions">
         <button type="button" class="danger-btn" id="deleteEvent">Удалить</button>
         <button type="button" class="ghost-btn" id="duplicateEvent" style="display:none">Дублировать</button>
-        <div class="right-actions">
-          <button type="button" class="cancel-btn" id="cancelModal">Отмена</button>
-          <button type="submit" class="save-btn">Сохранить</button>
-        </div>
       </div>
     </form>
   </div>
@@ -2682,7 +2727,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260812-1526";
+    const BUILD_ID = "20260814-1619";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -2817,6 +2862,7 @@
       upCount: Number(loadFlag("focusCalendar.upCount", 3)),
       upDays: Number(loadFlag("focusCalendar.upDays", 30)),
       defaultDuration: Number(loadFlag("focusCalendar.defaultDuration", 60)),
+      overlapStyle: loadFlag("focusCalendar.overlapStyle", "columns"),
       confirmDelete: loadFlag("focusCalendar.confirmDelete", true),
       history: []
     };
@@ -2842,9 +2888,9 @@
       eventForm: document.getElementById("eventForm"),
       modalTitle: document.getElementById("modalTitle"),
       closeModal: document.getElementById("closeModal"),
-      cancelModal: document.getElementById("cancelModal"),
       deleteEvent: document.getElementById("deleteEvent"),
       duplicateEvent: document.getElementById("duplicateEvent"),
+      modalActions: document.getElementById("modalActions"),
       eventIsTask: document.getElementById("eventIsTask"),
       eventRepeat: document.getElementById("eventRepeat"),
       remindersGroup: document.getElementById("remindersGroup"),
@@ -2927,8 +2973,13 @@
       const applyInsets = () => {
         const safe = tg.safeAreaInset || {};
         const content = tg.contentSafeAreaInset || {};
-        const top = (safe.top || 0) + (content.top || 0);
-        const bottom = Math.max(safe.bottom || 0, content.bottom || 0);
+        // contentSafeAreaInset already describes how much of the page Telegram's
+        // own header covers. Opened from the attachment button the client puts
+        // the webview *below* its header, so adding the device inset on top
+        // produced the huge empty strip; only fullscreen needs that extra.
+        const extra = tg.isFullscreen ? (safe.top || 0) : 0;
+        const top = Math.max(0, Math.min((content.top || 0) + extra, 140));
+        const bottom = Math.max(0, Math.min(Math.max(safe.bottom || 0, content.bottom || 0), 60));
         document.documentElement.style.setProperty("--safe-top", top + "px");
         document.documentElement.style.setProperty("--safe-bottom", bottom + "px");
       };
@@ -2937,6 +2988,9 @@
         tg.onEvent("safeAreaChanged", applyInsets);
         tg.onEvent("contentSafeAreaChanged", applyInsets);
         tg.onEvent("viewportChanged", applyInsets);
+        tg.onEvent("fullscreenChanged", applyInsets);
+        // some clients report their insets a beat after ready()
+        [120, 400, 1000].forEach(ms => setTimeout(applyInsets, ms));
       } catch {}
     }
 
@@ -3064,7 +3118,6 @@
       els.searchInputMobile.addEventListener("input", () => onSearch(els.searchInputMobile.value));
 
       els.closeModal.addEventListener("click", closeModal);
-      els.cancelModal.addEventListener("click", closeModal);
       els.modalBackdrop.addEventListener("click", (e) => {
         // the tap that opened the sheet also fires a click here — ignore it
         if (Date.now() - (state._modalOpenedAt || 0) < 400) return;
@@ -3668,9 +3721,71 @@
     }
 
     function layoutDayEvents(events) {
-      return clusterOverlaps(events)
-        .map(c => (c.length === 1 ? eventMarkup(c[0]) : mergedMarkup(c)))
-        .join("");
+      const style = state.overlapStyle || "columns";
+      return clusterOverlaps(events).map(c => {
+        if (c.length === 1) return eventMarkup(c[0]);
+        if (style === "list") return mergedMarkup(c);
+        if (style === "bands") return bandsMarkup(c);
+        if (style === "cascade") return cascadeMarkup(c);
+        return columnsMarkup(c);
+      }).join("");
+    }
+
+    /* Google-style: greedy columns, then every block widens to the right for
+       as long as no later column holds something overlapping it. Two events on
+       the same hours end up as equal halves; a partial overlap lets the first
+       stay wide until the second one starts beside it. */
+    function columnsMarkup(cluster) {
+      const cols = [];
+      cluster.forEach(ev => {
+        let placed = false;
+        for (let i = 0; i < cols.length; i++) {
+          if (!cols[i].some(x => rangesOverlap(x, ev))) { cols[i].push(ev); ev._col = i; placed = true; break; }
+        }
+        if (!placed) { ev._col = cols.length; cols.push([ev]); }
+      });
+      const total = cols.length;
+      return cluster.map(ev => {
+        let span = 1;
+        for (let i = ev._col + 1; i < total; i++) {
+          if (cols[i].some(x => rangesOverlap(x, ev))) break;
+          span++;
+        }
+        return eventMarkup(ev, ev._col, total, span);
+      }).join("");
+    }
+
+    /* stacked cards, each nudged right so every colour stays visible */
+    function cascadeMarkup(cluster) {
+      const step = 14;
+      return cluster.map((ev, i) => eventMarkup(ev, 0, 1, 1, {
+        inset: i * step,
+        z: 4 + i
+      })).join("");
+    }
+
+    /* one block, each member a filled band in its own colour */
+    function bandsMarkup(cluster) {
+      const startMin = Math.min(...cluster.map(e => timeToMinutes(e._segStart || e.start)));
+      const endMin = Math.max(...cluster.map(e => e._segEndMin != null ? e._segEndMin : timeToMinutes(e.end)));
+      const top = (startMin - START_HOUR * 60) / 60 * HOUR_HEIGHT;
+      const height = Math.max(26, (endMin - startMin) / 60 * HOUR_HEIGHT - 2);
+      const fits = Math.max(1, Math.floor(height / 22));
+      const shown = cluster.slice(0, fits);
+      const hidden = cluster.length - shown.length;
+      const rows = shown.map(ev => {
+        const c = ev.color || getCalendar(ev.calendarId).color;
+        return `<div class="band-item" style="background:${c}">` +
+               `<span class="merge-name">${escapeHtml(eventShortLabel(ev))}</span>` +
+               `<span class="merge-time">${formatTime(ev.start)}</span></div>`;
+      }).join("");
+      return `
+        <div class="event merged bands" data-merged="${cluster.map(e => e.id).join(",")}" data-date="${cluster[0].date}"
+             style="top:${top}px;height:${height}px;">
+          ${rows}
+          ${hidden > 0 ? `<div class="merge-more">+ ещё ${hidden}</div>` : ""}
+        </div>
+      `;
     }
 
     function mergedMarkup(cluster) {
@@ -3707,7 +3822,7 @@
 
     const CHECK_SVG = '<svg viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-    function eventMarkup(ev) {
+    function eventMarkup(ev, col = 0, total = 1, span = 1, opts = {}) {
       const cal = getCalendar(ev.calendarId);
       const color = ev.color || cal.color;
       // geometry follows the slice shown on this day (overnight events are split)
@@ -3716,7 +3831,16 @@
       const top = (segStartMin - START_HOUR * 60) / 60 * HOUR_HEIGHT;
       const height = Math.max(22, (segEndMin - segStartMin) / 60 * HOUR_HEIGHT - 2);
       const compact = height < 40 ? "compact" : "";
-      const leftStyle = "";
+      // horizontal placement: a column slice, or a cascade inset
+      let leftStyle = "";
+      if (total > 1) {
+        const gap = 2;
+        const w = 100 / total;
+        leftStyle = `left:calc(${col * w}% + 2px);width:calc(${span * w}% - ${gap + 2}px);right:auto;`;
+      } else if (opts.inset) {
+        leftStyle = `left:${2 + opts.inset}px;right:2px;`;
+      }
+      const zStyle = opts.z ? `z-index:${opts.z};` : "";
       const overnight = isOvernight(ev);
       const classes = ["event", compact, ev.isTask ? "is-task" : "",
                        ev.done ? "done" : "", ev._tail ? "seg-tail" : "", (overnight && !ev._tail) ? "seg-head" : ""].filter(Boolean).join(" ");
@@ -3728,7 +3852,7 @@
       const locationLine = (ev.location && height > 56) ? `<div class="event-location">📍 ${escapeHtml(ev.location)}</div>` : "";
       return `
         <div class="${classes}" draggable="${draggable}" data-event-id="${ev.id}" data-date="${ev.date}"
-             style="top:${top}px;height:${height}px;background:${color};${leftStyle}">
+             style="top:${top}px;height:${height}px;background:${color};${leftStyle}${zStyle}">
           <div class="event-head">
             ${check}
             <div style="min-width:0;flex:1">
@@ -4538,6 +4662,10 @@
             <select id="stWorkStart" class="mini-select">${hourOpts(state.workStart)}</select><span>–</span>
             <select id="stWorkEnd" class="mini-select">${hourOpts(state.workEnd)}</select>
           </span>`)}
+        ${row("Пересечения", `<select id="stOverlap" class="mini-select">
+            ${[["columns","Колонки"],["cascade","Каскад"],["list","Списком"],["bands","Полосами"]]
+              .map(([v,t]) => `<option value="${v}"${state.overlapStyle === v ? " selected" : ""}>${t}</option>`).join("")}
+          </select>`)}
         ${row("Длительность по умолчанию", `<select id="stDefDur" class="mini-select">
             ${[15, 30, 45, 60, 90, 120].map(m => `<option value="${m}"${state.defaultDuration === m ? " selected" : ""}>${m < 60 ? m + " мин" : (m / 60) + " ч"}</option>`).join("")}
           </select>`)}
@@ -4602,6 +4730,11 @@
       onPick("stWorkStart", "focusCalendar.workStart", v => state.workStart = v);
       onPick("stWorkEnd", "focusCalendar.workEnd", v => state.workEnd = v);
       onPick("stDefDur", "focusCalendar.defaultDuration", v => state.defaultDuration = v);
+      $("stOverlap").addEventListener("change", (e) => {
+        state.overlapStyle = e.target.value;
+        saveFlag("focusCalendar.overlapStyle", state.overlapStyle);
+        renderAll();
+      });
       onPick("stUpCount", "focusCalendar.upCount", v => state.upCount = v);
       onPick("stUpDays", "focusCalendar.upDays", v => state.upDays = v);
 
@@ -5239,6 +5372,7 @@
       syncDurationChips();
       els.deleteEvent.classList.toggle("visible", Boolean(data.id));
       els.duplicateEvent.style.display = data.id ? "" : "none";
+      els.modalActions.classList.toggle("has-content", Boolean(data.id));
       // existing events open read-only; new ones go straight to the form
       if (data.id && !data._edit) {
         els.modalTitle.textContent = "Событие";
