@@ -1478,7 +1478,6 @@
     }
     .form-fields > .field,
     .form-fields > .form-grid,
-    .form-fields > #timeFields { margin-bottom: 10px; }
 
     /* time inputs: consistent, left-aligned, taller touch target */
     .field input[type="time"],
@@ -2244,6 +2243,145 @@
     }
     .extra-block[open] .extra-summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
 
+    /* iOS-style grouped inputs: one rounded card, hairline between rows */
+    .ios-group {
+      border-radius: 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .ios-input {
+      display: block;
+      width: 100%;
+      border: 0;
+      background: none;
+      color: var(--text);
+      padding: 13px 14px;
+      font-size: 16px;
+      outline: none;
+      resize: none;
+    }
+    .ios-group .ios-input + .ios-input { border-top: 1px solid var(--line); }
+    .ios-input::placeholder { color: var(--muted-2); }
+
+    /* start / end panels */
+    .when-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .when-panel {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+      text-align: left;
+      padding: 9px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+    .when-panel[aria-expanded="true"] { border-color: var(--accent); }
+    .when-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+    }
+    .when-value { font-size: 15px; font-weight: 650; color: var(--text); }
+    .when-edit {
+      display: flex;
+      gap: 8px;
+      margin: -2px 0 10px;
+    }
+    .when-edit[hidden] { display: none; }
+    .when-edit input {
+      flex: 1;
+      min-width: 0;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0 10px;
+      font-size: 16px;
+    }
+
+    /* tappable option rows that reveal their controls */
+    .opt-list {
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .opt-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 13px 14px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      text-align: left;
+    }
+    .opt-row + .opt-row, .opt-body + .opt-row { border-top: 1px solid var(--line); }
+    .opt-state { color: var(--muted); font-size: 14px; font-weight: 500; }
+    .opt-row[aria-expanded="true"] .opt-state { color: var(--accent); }
+    .opt-body {
+      padding: 12px 14px;
+      background: var(--surface-3);
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 10px;
+    }
+    .opt-body[hidden] { display: none; }
+    .opt-body select,
+    .opt-body input[type="number"] {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0 10px;
+      font-size: 16px;
+    }
+
+    .travel-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .travel-custom { display: flex; gap: 8px; }
+    .travel-custom input { flex: 1; }
+    .travel-custom button {
+      padding: 0 14px;
+      height: 42px;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 650;
+    }
+    .travel-addr { display: grid; gap: 8px; }
+    .travel-addr input {
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0 10px;
+      font-size: 16px;
+    }
+    .travel-modes { display: flex; gap: 6px; }
+    .mode-chip {
+      flex: 1;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .mode-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
     /* compact one-line toggles */
     .toggle-row { display: flex; gap: 18px; padding: 2px 0 4px; }
     .mini-toggle {
@@ -2536,111 +2674,143 @@
         </section>
 
         <div class="form-fields" id="formFields">
-        <div class="field">
-          <label for="eventTitle">Название</label>
-          <input id="eventTitle" required placeholder="Например: Созвон по MVP" />
+        <div class="ios-group">
+          <input id="eventTitle" class="ios-input" required placeholder="Название" />
+          <textarea id="eventDescription" class="ios-input" rows="2" placeholder="Описание"></textarea>
         </div>
 
-        <div class="field">
-          <label for="eventShort">Коротко
-            <button type="button" class="info-dot" id="shortInfo" aria-label="Что это">i</button>
-          </label>
-          <input id="eventShort" maxlength="18" placeholder="Созвон" />
+        <div class="when-row">
+          <button type="button" class="when-panel" id="startPanel" aria-expanded="false">
+            <span class="when-label">Начало</span>
+            <span class="when-value" id="startValue">—</span>
+          </button>
+          <button type="button" class="when-panel" id="endPanel" aria-expanded="false">
+            <span class="when-label">Конец</span>
+            <span class="when-value" id="endValue">—</span>
+          </button>
         </div>
 
-        <div class="toggle-row">
-          <label class="mini-toggle" for="eventAllDay">
-            <input type="checkbox" id="eventAllDay" />
-            <span>Весь день</span>
-          </label>
-          <label class="mini-toggle" for="eventIsTask">
-            <input type="checkbox" id="eventIsTask" />
-            <span>Задача</span>
-          </label>
-        </div>
-
-        <div class="field">
-          <label for="eventDate">Дата</label>
+        <div class="when-edit" id="whenEditStart" hidden>
           <input id="eventDate" type="date" required />
+          <input id="eventStart" type="time" step="60" />
         </div>
-
-        <div class="field" id="endDateField" style="display:none">
-          <label for="eventEndDate">Дата окончания (многодневное)</label>
+        <div class="when-edit" id="whenEditEnd" hidden>
           <input id="eventEndDate" type="date" />
+          <input id="eventEnd" type="time" step="60" />
         </div>
 
-        <div id="timeFields">
-          <div class="form-grid">
-            <div class="field">
-              <label for="eventStart">Начало</label>
-              <input id="eventStart" type="time" step="60" />
-            </div>
-            <div class="field">
-              <label for="eventEnd">Конец</label>
-              <input id="eventEnd" type="time" step="60" />
+        <div class="dur-row" id="durRow">
+          <button type="button" class="dur-chip" data-dur="15">15м</button>
+          <button type="button" class="dur-chip" data-dur="30">30м</button>
+          <button type="button" class="dur-chip" data-dur="60">1ч</button>
+          <button type="button" class="dur-chip" data-dur="120">2ч</button>
+        </div>
+
+        <div class="opt-list">
+          <button type="button" class="opt-row" data-opt="allday" aria-expanded="false">
+            <span>Весь день</span><span class="opt-state" id="stateAllday">Выкл</span>
+          </button>
+          <div class="opt-body" id="optAllday" hidden>
+            <label class="mini-toggle" for="eventAllDay">
+              <input type="checkbox" id="eventAllDay" />
+              <span>Занимает весь день</span>
+            </label>
+            <label class="mini-toggle" for="eventIsTask">
+              <input type="checkbox" id="eventIsTask" />
+              <span>Это задача</span>
+            </label>
+          </div>
+
+          <button type="button" class="opt-row" data-opt="repeat" aria-expanded="false">
+            <span>Повторять</span><span class="opt-state" id="stateRepeat">Не повторять</span>
+          </button>
+          <div class="opt-body" id="optRepeat" hidden>
+            <select id="eventRepeat">
+              <option value="none">Не повторять</option>
+              <option value="daily">Каждый день</option>
+              <option value="weekly">Каждую неделю</option>
+              <option value="biweekly">Каждые 2 недели</option>
+              <option value="monthly">Каждый месяц</option>
+              <option value="yearly">Каждый год</option>
+              <option value="custom">Настроить…</option>
+            </select>
+            <div id="customRepeat" style="display:none">
+              <div class="form-grid">
+                <div class="field">
+                  <label for="rruleFreq">Частота</label>
+                  <select id="rruleFreq">
+                    <option value="daily">Дней</option>
+                    <option value="weekly" selected>Недель</option>
+                    <option value="monthly">Месяцев</option>
+                    <option value="yearly">Лет</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="rruleInterval">Каждые</label>
+                  <input id="rruleInterval" type="number" min="1" max="99" value="1" />
+                </div>
+              </div>
+              <div class="field" id="rruleBydayField">
+                <label>По дням недели</label>
+                <div class="byday-row" id="bydayRow"></div>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="rruleEndType">Окончание</label>
+                  <select id="rruleEndType">
+                    <option value="never">Никогда</option>
+                    <option value="until">До даты</option>
+                    <option value="count">После N раз</option>
+                  </select>
+                </div>
+                <div class="field" id="rruleUntilField" style="display:none">
+                  <label for="rruleUntil">До</label>
+                  <input id="rruleUntil" type="date" />
+                </div>
+                <div class="field" id="rruleCountField" style="display:none">
+                  <label for="rruleCount">Повторов</label>
+                  <input id="rruleCount" type="number" min="1" max="365" value="10" />
+                </div>
+              </div>
             </div>
           </div>
-          <div class="dur-row" id="durRow">
-            <button type="button" class="dur-chip" data-dur="15">15м</button>
-            <button type="button" class="dur-chip" data-dur="30">30м</button>
-            <button type="button" class="dur-chip" data-dur="60">1ч</button>
-            <button type="button" class="dur-chip" data-dur="120">2ч</button>
+
+          <button type="button" class="opt-row" data-opt="travel" aria-expanded="false">
+            <span>Время на путь</span><span class="opt-state" id="stateTravel">Нет</span>
+          </button>
+          <div class="opt-body" id="optTravel" hidden>
+            <div class="travel-chips" id="travelChips">
+              <button type="button" class="dur-chip" data-travel="0">Нет</button>
+              <button type="button" class="dur-chip" data-travel="15">15м</button>
+              <button type="button" class="dur-chip" data-travel="30">30м</button>
+              <button type="button" class="dur-chip" data-travel="45">45м</button>
+              <button type="button" class="dur-chip" data-travel="60">1ч</button>
+            </div>
+            <div class="travel-custom">
+              <input id="travelOther" type="number" min="1" max="600" placeholder="Другое, мин" />
+              <button type="button" id="travelOtherApply">Задать</button>
+            </div>
+            <div class="travel-addr">
+              <input id="travelAddress" placeholder="Адрес — посчитаем дорогу" />
+              <div class="travel-modes" id="travelModes">
+                <button type="button" class="mode-chip" data-mode="walk">🚶 Пешком</button>
+                <button type="button" class="mode-chip" data-mode="drive">🚗 Авто</button>
+                <button type="button" class="mode-chip" data-mode="transit">🚌 Транспорт</button>
+              </div>
+              <button type="button" class="tool-btn" id="travelCalc">Рассчитать время в пути</button>
+              <div class="set-hint">Маршрут считается на сервере — пока задайте время вручную.</div>
+            </div>
           </div>
         </div>
 
         <details class="extra-block" id="extraBlock">
           <summary class="extra-summary">Дополнительно</summary>
-        <div class="field">
-          <label for="eventRepeat">Повтор</label>
-          <select id="eventRepeat">
-            <option value="none">Не повторять</option>
-            <option value="daily">Каждый день</option>
-            <option value="weekly">Каждую неделю</option>
-            <option value="biweekly">Каждые 2 недели</option>
-            <option value="monthly">Каждый месяц</option>
-            <option value="yearly">Каждый год</option>
-            <option value="custom">Настроить…</option>
-          </select>
-        </div>
 
-        <div id="customRepeat" style="display:none">
-          <div class="form-grid">
-            <div class="field">
-              <label for="rruleFreq">Частота</label>
-              <select id="rruleFreq">
-                <option value="daily">Дней</option>
-                <option value="weekly" selected>Недель</option>
-                <option value="monthly">Месяцев</option>
-                <option value="yearly">Лет</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="rruleInterval">Каждые</label>
-              <input id="rruleInterval" type="number" min="1" max="99" value="1" />
-            </div>
-          </div>
-          <div class="field" id="rruleBydayField">
-            <label>По дням недели</label>
-            <div class="byday-row" id="bydayRow"></div>
-          </div>
-          <div class="form-grid">
-            <div class="field">
-              <label for="rruleEndType">Окончание</label>
-              <select id="rruleEndType">
-                <option value="never">Никогда</option>
-                <option value="until">До даты</option>
-                <option value="count">После N раз</option>
-              </select>
-            </div>
-            <div class="field" id="rruleUntilField" style="display:none">
-              <label for="rruleUntil">До</label>
-              <input id="rruleUntil" type="date" />
-            </div>
-            <div class="field" id="rruleCountField" style="display:none">
-              <label for="rruleCount">Повторов</label>
-              <input id="rruleCount" type="number" min="1" max="365" value="10" />
-            </div>
-          </div>
+        <div class="field">
+          <label for="eventShort">Коротко
+            <button type="button" class="info-dot" id="shortInfo" aria-label="Что это">i</button>
+          </label>
+          <input id="eventShort" maxlength="18" placeholder="Зал" />
         </div>
 
         <div class="field">
@@ -2680,11 +2850,6 @@
         <div class="field">
           <label for="eventAttendees">Участники</label>
           <input id="eventAttendees" placeholder="Имена или @ник через запятую" />
-        </div>
-
-        <div class="field">
-          <label for="eventDescription">Описание</label>
-          <textarea id="eventDescription" placeholder="Заметка, повестка..."></textarea>
         </div>
         </details>
         </div>
@@ -2727,7 +2892,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260814-1619";
+    const BUILD_ID = "20260815-1448";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -2903,6 +3068,19 @@
       eventLocation: document.getElementById("eventLocation"),
       eventColorRow: document.getElementById("eventColorRow"),
       sheetGrip: document.getElementById("sheetGrip"),
+      startPanel: document.getElementById("startPanel"),
+      endPanel: document.getElementById("endPanel"),
+      startValue: document.getElementById("startValue"),
+      endValue: document.getElementById("endValue"),
+      whenEditStart: document.getElementById("whenEditStart"),
+      whenEditEnd: document.getElementById("whenEditEnd"),
+      stateAllday: document.getElementById("stateAllday"),
+      stateRepeat: document.getElementById("stateRepeat"),
+      stateTravel: document.getElementById("stateTravel"),
+      travelChips: document.getElementById("travelChips"),
+      travelOther: document.getElementById("travelOther"),
+      travelAddress: document.getElementById("travelAddress"),
+      travelModes: document.getElementById("travelModes"),
       viewCard: document.getElementById("viewCard"),
       viewTitle: document.getElementById("viewTitle"),
       viewWhen: document.getElementById("viewWhen"),
@@ -2916,7 +3094,6 @@
       remindCustomUnit: document.getElementById("remindCustomUnit"),
       remindCustomAdd: document.getElementById("remindCustomAdd"),
       eventEndDate: document.getElementById("eventEndDate"),
-      endDateField: document.getElementById("endDateField"),
       eventAttendees: document.getElementById("eventAttendees"),
       customRepeat: document.getElementById("customRepeat"),
       rruleFreq: document.getElementById("rruleFreq"),
@@ -2941,7 +3118,6 @@
       eventEnd: document.getElementById("eventEnd"),
       eventDescription: document.getElementById("eventDescription"),
       eventAllDay: document.getElementById("eventAllDay"),
-      timeFields: document.getElementById("timeFields"),
       durRow: document.getElementById("durRow"),
       toast: document.getElementById("toast"),
       sidebar: document.getElementById("sidebar"),
@@ -3124,9 +3300,58 @@
         if (e.target === els.modalBackdrop) closeModal();
       });
 
-      els.eventAllDay.addEventListener("change", () => {
-        els.timeFields.style.display = els.eventAllDay.checked ? "none" : "block";
-        els.endDateField.style.display = els.eventAllDay.checked ? "block" : "none";
+      els.eventAllDay.addEventListener("change", () => { syncWhenPanels(); renderDraft(); });
+      els.eventIsTask.addEventListener("change", syncWhenPanels);
+
+      // start / end panels reveal their pickers
+      els.startPanel.addEventListener("click", () => {
+        const open = els.whenEditStart.hidden;
+        els.whenEditStart.hidden = !open;
+        els.whenEditEnd.hidden = true;
+        els.startPanel.setAttribute("aria-expanded", String(open));
+        els.endPanel.setAttribute("aria-expanded", "false");
+      });
+      els.endPanel.addEventListener("click", () => {
+        const open = els.whenEditEnd.hidden;
+        els.whenEditEnd.hidden = !open;
+        els.whenEditStart.hidden = true;
+        els.endPanel.setAttribute("aria-expanded", String(open));
+        els.startPanel.setAttribute("aria-expanded", "false");
+      });
+
+      // option rows
+      document.querySelectorAll(".opt-row[data-opt]").forEach(row => {
+        row.addEventListener("click", () => toggleOpt(row.dataset.opt));
+      });
+
+      // travel time
+      els.travelChips.addEventListener("click", (e) => {
+        const chip = e.target.closest("[data-travel]");
+        if (!chip) return;
+        state._travelMin = Number(chip.dataset.travel) || 0;
+        syncTravelChips();
+        syncWhenPanels();
+      });
+      document.getElementById("travelOtherApply").addEventListener("click", () => {
+        const n = Number(els.travelOther.value);
+        if (!n || n < 1) { showToast("Укажи минуты"); return; }
+        state._travelMin = n;
+        els.travelOther.value = "";
+        syncTravelChips();
+        syncWhenPanels();
+      });
+      els.travelModes.addEventListener("click", (e) => {
+        const chip = e.target.closest("[data-mode]");
+        if (!chip) return;
+        const on = chip.classList.contains("on");
+        els.travelModes.querySelectorAll(".mode-chip").forEach(c => c.classList.remove("on"));
+        if (!on) chip.classList.add("on");
+        state._travelMode = on ? null : chip.dataset.mode;
+      });
+      document.getElementById("travelCalc").addEventListener("click", () => {
+        if (!els.travelAddress.value.trim()) { showToast("Введите адрес"); return; }
+        if (!state._travelMode) { showToast("Выберите транспорт"); return; }
+        showToast("Расчёт маршрута появится вместе с сервером — пока задайте время вручную");
       });
 
       // colour picker toggles the palette open
@@ -3160,11 +3385,12 @@
 
       els.durRow.addEventListener("click", (e) => {
         const chip = e.target.closest(".dur-chip");
-        if (chip) { applyDuration(Number(chip.dataset.dur)); renderDraft(); }
+        if (chip) { applyDuration(Number(chip.dataset.dur)); syncWhenPanels(); renderDraft(); }
       });
-      els.eventStart.addEventListener("change", () => { syncDurationChips(); renderDraft(); });
-      els.eventEnd.addEventListener("change", () => { syncDurationChips(); renderDraft(); });
-      els.eventDate.addEventListener("change", renderDraft);
+      els.eventStart.addEventListener("change", () => { syncDurationChips(); syncWhenPanels(); renderDraft(); });
+      els.eventEnd.addEventListener("change", () => { syncDurationChips(); syncWhenPanels(); renderDraft(); });
+      els.eventDate.addEventListener("change", () => { syncWhenPanels(); renderDraft(); });
+      els.eventEndDate.addEventListener("change", syncWhenPanels);
       els.eventTitle.addEventListener("input", () => {
         // auto-fill the short name from the first word until it is touched by hand
         if (!els.eventShort.dataset.touched) els.eventShort.value = firstWord(els.eventTitle.value);
@@ -3182,7 +3408,7 @@
       bindSheetGrip();
 
       // custom recurrence UI toggles
-      els.eventRepeat.addEventListener("change", syncRepeatUI);
+      els.eventRepeat.addEventListener("change", () => { syncRepeatUI(); syncWhenPanels(); });
       els.rruleFreq.addEventListener("change", syncRepeatUI);
       els.rruleEndType.addEventListener("change", syncRepeatUI);
 
@@ -5321,6 +5547,11 @@
       if ((ev.attendees || []).length) parts.push(row("Участники", ev.attendees.join(", ")));
       if (ev.repeat && ev.repeat !== "none") parts.push(row("Повтор", REPEAT_LABELS[ev.repeat] || "Настроенный"));
       if ((ev.reminders || []).length) parts.push(row("Напоминания", ev.reminders.map(reminderLabel).join(", ")));
+      if (ev.travel && ev.travel.minutes) {
+        const modes = { walk: "пешком", drive: "на авто", transit: "на транспорте" };
+        const extra = [ev.travel.address, modes[ev.travel.mode]].filter(Boolean).join(", ");
+        parts.push(row("Время на путь", `${ev.travel.minutes} мин${extra ? " — " + extra : ""}`));
+      }
       if (ev.isTask) parts.push(row("Тип", "Задача"));
       els.viewRows.innerHTML = parts.join("") || `<div class="view-row"><span class="v" style="color:var(--muted)">Без описания</span></div>`;
 
@@ -5337,6 +5568,50 @@
       daily: "Каждый день", weekly: "Каждую неделю", biweekly: "Каждые 2 недели",
       monthly: "Каждый месяц", yearly: "Каждый год", custom: "Настроенный"
     };
+
+    /* ---------------- WHEN PANELS + OPTION ROWS ---------------- */
+    function humanWhen(iso, hhmm, allDay) {
+      if (!iso) return "—";
+      const d = parseDate(iso);
+      const day = `${d.getDate()} ${MONTHS_TITLE[d.getMonth()]}`;
+      return allDay ? day : `${day}, ${formatTime(hhmm)}`;
+    }
+
+    /* the end panel shows the following day when the event runs past midnight */
+    function endDateForDisplay() {
+      const startIso = els.eventDate.value;
+      if (els.eventAllDay.checked) return els.eventEndDate.value || startIso;
+      const s = timeToMinutes(els.eventStart.value || "0:00");
+      const e = timeToMinutes(els.eventEnd.value || "0:00");
+      return (e <= s && startIso) ? isoDate(addDays(parseDate(startIso), 1)) : startIso;
+    }
+
+    function syncWhenPanels() {
+      const allDay = els.eventAllDay.checked;
+      els.startValue.textContent = humanWhen(els.eventDate.value, els.eventStart.value, allDay);
+      els.endValue.textContent = humanWhen(endDateForDisplay(), els.eventEnd.value, allDay);
+      els.stateAllday.textContent = allDay ? "Вкл" : (els.eventIsTask.checked ? "Задача" : "Выкл");
+      els.stateRepeat.textContent = els.eventRepeat.value === "none"
+        ? "Не повторять" : (REPEAT_LABELS[els.eventRepeat.value] || "Настроенный");
+      els.stateTravel.textContent = state._travelMin ? `${state._travelMin} мин` : "Нет";
+      els.durRow.style.display = allDay ? "none" : "";
+      els.whenEditStart.querySelector("#eventStart").style.display = allDay ? "none" : "";
+      els.whenEditEnd.querySelector("#eventEnd").style.display = allDay ? "none" : "";
+    }
+
+    function toggleOpt(key, force) {
+      const row = document.querySelector(`.opt-row[data-opt="${key}"]`);
+      const body = document.getElementById("opt" + key.charAt(0).toUpperCase() + key.slice(1));
+      if (!row || !body) return;
+      const open = force !== undefined ? force : body.hidden;
+      body.hidden = !open;
+      row.setAttribute("aria-expanded", String(open));
+    }
+
+    function syncTravelChips() {
+      els.travelChips.querySelectorAll("[data-travel]").forEach(c =>
+        c.classList.toggle("active", Number(c.dataset.travel) === (state._travelMin || 0)));
+    }
 
     function openModal(data = {}) {
       state.editingId = data.id || null;
@@ -5367,9 +5642,18 @@
 
       setReminderChips(Array.isArray(data.reminders) ? data.reminders : []);
       renderColorSwatches(data.color || "");
-      els.timeFields.style.display = els.eventAllDay.checked ? "none" : "block";
-      els.endDateField.style.display = els.eventAllDay.checked ? "block" : "none";
+      state._travelMin = (data.travel && data.travel.minutes) || 0;
+      state._travelMode = (data.travel && data.travel.mode) || null;
+      els.travelAddress.value = (data.travel && data.travel.address) || "";
+      els.travelModes.querySelectorAll(".mode-chip").forEach(c =>
+        c.classList.toggle("on", c.dataset.mode === state._travelMode));
+      syncTravelChips();
+      ["allday", "repeat", "travel"].forEach(k => toggleOpt(k, false));
+      els.whenEditStart.hidden = els.whenEditEnd.hidden = true;
+      els.startPanel.setAttribute("aria-expanded", "false");
+      els.endPanel.setAttribute("aria-expanded", "false");
       syncDurationChips();
+      syncWhenPanels();
       els.deleteEvent.classList.toggle("visible", Boolean(data.id));
       els.duplicateEvent.style.display = data.id ? "" : "none";
       els.modalActions.classList.toggle("has-content", Boolean(data.id));
@@ -5397,7 +5681,6 @@
       els.eventForm.reset();
       delete els.eventShort.dataset.touched;
       setReminderChips([]);
-      els.timeFields.style.display = "block";
       renderColorSwatches("");
     }
 
@@ -5453,7 +5736,10 @@
         description: els.eventDescription.value.trim(),
         location: els.eventLocation.value.trim(),
         attendees,
-        color: evColor || null
+        color: evColor || null,
+        travel: state._travelMin
+          ? { minutes: state._travelMin, address: els.travelAddress.value.trim(), mode: state._travelMode }
+          : null
       };
 
       if (!payload.title) { showToast("Добавь название события"); return; }
@@ -5618,7 +5904,7 @@
 
     /* ---------------- STORAGE ---------------- */
     function normalizeEvent(ev) {
-      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], shortName: "", location: "", color: null, attendees: [], meetingLink: "", endDate: null, calendarId: null, ...ev };
+      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], shortName: "", location: "", color: null, travel: null, attendees: [], meetingLink: "", endDate: null, calendarId: null, ...ev };
       // migrate legacy single `reminder` -> reminders[]
       if (!Array.isArray(out.reminders)) out.reminders = [];
       if (ev.reminder !== undefined && ev.reminder !== "" && ev.reminder !== null) {
