@@ -779,8 +779,11 @@
       left: 2px;
       right: 2px;
       border-radius: 6px;
-      padding: 4px 8px;
-      color: rgba(255,255,255,0.95);
+      /* the left bar carries the calendar colour; the tinted body carries the
+         event's own label, and being translucent it blends where blocks meet */
+      padding: 4px 8px 4px 10px;
+      border-left: 3px solid transparent;
+      color: var(--text);
       overflow: hidden;
       cursor: grab;
       z-index: 4;
@@ -789,10 +792,9 @@
       -webkit-user-select: none;
       -webkit-user-drag: none;
       -webkit-touch-callout: none;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
 
-    .event:hover { filter: brightness(1.1); box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+    .event:hover { filter: brightness(1.14); }
     .event:active { cursor: grabbing; }
     .event.compact { padding: 2px 5px; }
 
@@ -810,8 +812,9 @@
       position: absolute;
       left: 2px; right: 2px;
       border-radius: 6px;
-      padding: 3px 7px;
-      color: #fff;
+      padding: 3px 7px 3px 9px;
+      border-left: 3px solid transparent;
+      color: var(--text);
       font-size: 12px;
       font-weight: 600;
       z-index: 12;
@@ -912,14 +915,14 @@
       /* clip a long word rather than break it mid-syllable */
       word-break: normal;
       overflow-wrap: normal;
-      color: #fff;
+      color: var(--text);
     }
     .event.compact .event-title { -webkit-line-clamp: 1; }
 
     .event-time {
       margin-top: 1px;
       font-size: 11px;
-      color: rgba(255,255,255,0.72);
+      color: var(--muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -928,7 +931,7 @@
     .event-desc {
       margin-top: 3px;
       font-size: 11px;
-      color: rgba(255,255,255,0.62);
+      color: var(--muted);
       line-height: 1.25;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -1013,7 +1016,7 @@
       width: 100%;
       border-radius: 4px;
       padding: 2px 6px;
-      color: rgba(255,255,255,0.95);
+      color: var(--text);
       margin-bottom: 2px;
       font-size: 11px;
       font-weight: 500;
@@ -2462,12 +2465,13 @@
       position: relative;
       overflow: hidden;
     }
+    .cp-block { color: var(--text); }
     .cp-block::before {
       content: "";
       position: absolute;
       left: 0; top: 0; bottom: 0;
       width: 4px;
-      background: rgba(255,255,255,.85);
+      background: var(--cp-bar, var(--accent));
     }
     .color-name {
       text-align: center;
@@ -2668,7 +2672,7 @@
     .allday-chip {
       border-radius: 4px;
       padding: 2px 6px;
-      color: rgba(255,255,255,0.95);
+      color: var(--text);
       font-size: 11px;
       font-weight: 600;
       white-space: nowrap;
@@ -2888,22 +2892,14 @@
           <input id="eventEnd" type="time" step="60" />
         </div>
 
-        <div class="dur-row" id="durRow">
-          <button type="button" class="dur-chip" data-dur="15">15м</button>
-          <button type="button" class="dur-chip" data-dur="30">30м</button>
-          <button type="button" class="dur-chip" data-dur="60">1ч</button>
-          <button type="button" class="dur-chip" data-dur="120">2ч</button>
-        </div>
-
         <div class="opt-card" id="optCard" hidden>
           <div class="opt-item" id="itemAllday" hidden>
             <span class="opt-name">Весь день</span>
             <label class="switch"><input type="checkbox" id="eventAllDay" /><span></span></label>
           </div>
-          <div class="opt-item" id="itemTask" hidden>
-            <span class="opt-name">Задача</span>
-            <label class="switch"><input type="checkbox" id="eventIsTask" /><span></span></label>
-          </div>
+          <label class="opt-item" id="itemTask" hidden style="display:none">
+            <input type="checkbox" id="eventIsTask" />
+          </label>
 
           <button type="button" class="opt-item opt-tap" id="itemRepeat" hidden aria-expanded="false">
             <span class="opt-col"><span class="opt-cap">Повторять</span><span class="opt-val" id="stateRepeat">Не повторять</span></span>
@@ -2991,10 +2987,8 @@
 
         <div class="opt-words" id="optWords">
           <button type="button" data-word="allday">Весь день</button>
-          <button type="button" data-word="task">Задача</button>
           <button type="button" data-word="repeat">Повторять</button>
           <button type="button" data-word="travel">Время на путь</button>
-          <span class="opt-tz">🌐 GMT+<span id="optTzValue">0</span></span>
         </div>
 
         <div class="opt-card meta-card">
@@ -3101,7 +3095,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260816-1257";
+    const BUILD_ID = "20260816-1304";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -3115,6 +3109,13 @@
       ["#0ea5e9", "Небесная метка"], ["#14b8a6", "Мятная метка"], ["#a78bfa", "Сиреневая метка"],
       ["#be123c", "Гранатовая метка"]
     ];
+    /* a translucent wash of the colour, so overlapping blocks blend */
+    function tint(hex, a) {
+      const h = String(hex || "#7c6df2").replace("#", "");
+      const n = parseInt(h.length === 3 ? h.split("").map(x => x + x).join("") : h, 16);
+      return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+    }
+
     const colorTitle = (c) => (COLOR_LABELS.find(x => x[0] === c) || [null, "Своя метка"])[1];
 
     const EVENT_COLORS = [
@@ -3301,7 +3302,6 @@
       cpTitle: document.getElementById("cpTitle"),
       remindList: document.getElementById("remindList"),
       optWords: document.getElementById("optWords"),
-      optTzValue: document.getElementById("optTzValue"),
       startPanel: document.getElementById("startPanel"),
       endPanel: document.getElementById("endPanel"),
       startValue: document.getElementById("startValue"),
@@ -3345,7 +3345,6 @@
       eventEnd: document.getElementById("eventEnd"),
       eventDescription: document.getElementById("eventDescription"),
       eventAllDay: document.getElementById("eventAllDay"),
-      durRow: document.getElementById("durRow"),
       toast: document.getElementById("toast"),
       sidebar: document.getElementById("sidebar"),
       scrim: document.getElementById("scrim"),
@@ -3551,7 +3550,6 @@
         if (!w) return;
         activateOpt(w.dataset.word, true);
         if (w.dataset.word === "allday") { els.eventAllDay.checked = true; els.eventAllDay.dispatchEvent(new Event("change")); }
-        if (w.dataset.word === "task") { els.eventIsTask.checked = true; els.eventIsTask.dispatchEvent(new Event("change")); }
         if (w.dataset.word === "repeat" || w.dataset.word === "travel") toggleOptBody(w.dataset.word, true);
         syncWhenPanels();
       });
@@ -3635,10 +3633,6 @@
         renderRemindList();
       });
 
-      els.durRow.addEventListener("click", (e) => {
-        const chip = e.target.closest(".dur-chip");
-        if (chip) { applyDuration(Number(chip.dataset.dur)); syncWhenPanels(); renderDraft(); }
-      });
       els.eventStart.addEventListener("change", () => { syncDurationChips(); syncWhenPanels(); renderDraft(); });
       els.eventEnd.addEventListener("change", () => { syncDurationChips(); syncWhenPanels(); renderDraft(); });
       els.eventDate.addEventListener("change", () => { syncWhenPanels(); renderDraft(); });
@@ -4064,7 +4058,8 @@
               const multi = (ev._spanDays || 0) > 0;
               const contd = multi && ev.date !== iso ? " ↩" : "";
               const cls = "allday-chip" + (ev._holiday ? " holiday" : "") + (multi ? " multi" : "");
-              return `<button class="${cls}" data-event-id="${ev.id}" data-date="${ev.date}" style="background:${color}">${escapeHtml(ev.title)}${contd}</button>`;
+              const bar = getCalendar(ev.calendarId).color;
+              return `<button class="${cls}" data-event-id="${ev.id}" data-date="${ev.date}" style="background:${tint(color, 0.3)};border-left:3px solid ${bar}">${escapeHtml(ev.title)}${contd}</button>`;
             }).join("")}</div>`;
           }).join("")}
         </div>
@@ -4297,7 +4292,8 @@
 
     function eventMarkup(ev, col = 0, total = 1, span = 1, opts = {}) {
       const cal = getCalendar(ev.calendarId);
-      const color = ev.color || cal.color;
+      const color = ev.color || cal.color;   // the label fills the body
+      const barColor = cal.color;            // the calendar shows on the edge
       // geometry follows the slice shown on this day (overnight events are split)
       const segStartMin = timeToMinutes(ev._segStart || ev.start);
       const segEndMin = ev._segEndMin != null ? ev._segEndMin : timeToMinutes(ev.end);
@@ -4325,7 +4321,7 @@
       const locationLine = (ev.location && height > 56) ? `<div class="event-location">📍 ${escapeHtml(ev.location)}</div>` : "";
       return `
         <div class="${classes}" draggable="${draggable}" data-event-id="${ev.id}" data-date="${ev.date}"
-             style="top:${top}px;height:${height}px;background:${color};${leftStyle}${zStyle}">
+             style="top:${top}px;height:${height}px;background:${tint(color, 0.26)};border-left-color:${barColor};${leftStyle}${zStyle}">
           <div class="event-head">
             ${check}
             <div style="min-width:0;flex:1">
@@ -4887,7 +4883,8 @@
                     const cal = getCalendar(ev.calendarId);
                     const color = ev.color || cal.color;
                     const label = ev.allDay ? escapeHtml(ev.title) : `${formatTime(ev.start)} ${escapeHtml(ev.title)}`;
-                    return `<button class="month-event" data-event-id="${ev.id}" data-date="${ev.date}" style="background:${color}">${label}</button>`;
+                    const bar = getCalendar(ev.calendarId).color;
+                    return `<button class="month-event" data-event-id="${ev.id}" data-date="${ev.date}" style="background:${tint(color, 0.3)};border-left:3px solid ${bar}">${label}</button>`;
                   }).join("")}
                   ${hidden > 0 ? `<button class="more-label" data-peek-date="${dateStr}" style="color:var(--muted);font-size:12px;font-weight:700;text-align:left;">+ ещё ${hidden}</button>` : ""}
                 </div>
@@ -5652,7 +5649,8 @@
       el.className = "draft-event";
       el.style.top = ((s - START_HOUR * 60) / 60 * HOUR_HEIGHT) + "px";
       el.style.height = Math.max(18, dur / 60 * HOUR_HEIGHT - 2) + "px";
-      el.style.background = draftColor();
+      el.style.background = tint(draftColor(), 0.26);
+      el.style.borderLeftColor = (calendars.find(c => c.id === state._calendarId) || {}).color || draftColor();
       el.innerHTML = `<span>${escapeHtml(els.eventTitle.value || "Новое событие")} · ${formatTime(els.eventStart.value)}–${formatTime(els.eventEnd.value)}</span><div class="draft-resize"></div>`;
       col.appendChild(el);
       const area = document.getElementById("scrollArea");
@@ -5799,13 +5797,11 @@
       els.stateRepeat.textContent = els.eventRepeat.value === "none"
         ? "Не повторять" : (REPEAT_LABELS[els.eventRepeat.value] || "Настроенный");
       els.stateTravel.textContent = state._travelMin ? `${state._travelMin} мин` : "Нет";
-      els.durRow.style.display = allDay ? "none" : "";
       els.whenEditStart.querySelector("#eventStart").style.display = allDay ? "none" : "";
       els.whenEditEnd.querySelector("#eventEnd").style.display = allDay ? "none" : "";
-      els.optTzValue.textContent = timezoneOffsetHours();
     }
 
-    const OPT_KEYS = ["allday", "task", "repeat", "travel"];
+    const OPT_KEYS = ["allday", "repeat", "travel"];
     const cap = (k) => k.charAt(0).toUpperCase() + k.slice(1);
 
     /* a word leaves the row and its control appears inside the card */
@@ -5825,7 +5821,6 @@
     function resetOpts(ev) {
       OPT_KEYS.forEach(k => activateOpt(k, false));
       if (ev.allDay) activateOpt("allday", true);
-      if (ev.isTask) activateOpt("task", true);
       if (ev.repeat && ev.repeat !== "none") activateOpt("repeat", true);
       if (ev.travel && ev.travel.minutes) activateOpt("travel", true);
     }
@@ -5879,7 +5874,9 @@
       els.colorGrid.innerHTML = COLOR_LABELS.map(([c]) =>
         `<button type="button" class="color-cell${c === cur ? " on" : ""}" data-c="${c}" style="color:${c}"><i style="background:${c}"></i></button>`).join("");
       els.colorName.textContent = colorTitle(cur);
-      els.cpBlock.style.background = cur;
+      els.cpBlock.style.background = tint(cur, 0.26);
+      els.cpBlock.style.setProperty("--cp-bar",
+        (calendars.find(c => c.id === state._calendarId) || {}).color || cur);
       els.cpTitle.textContent = els.eventTitle.value.trim() || "Без названия";
     }
 
