@@ -2384,6 +2384,78 @@
     }
 
     .meta-card { margin-top: 10px; }
+
+    /* iOS row: bold label left, value + chevron right */
+    .ios-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 14px;
+    }
+    .ios-row + .ios-row { border-top: 1px solid var(--line); }
+    .ios-label { font-size: 16px; font-weight: 700; color: var(--text); }
+    .ios-value {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      padding: 0;
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .chev-ud { width: 12px; height: 18px; flex: 0 0 auto; opacity: .7; display: block; }
+    /* miniature of the block as it appears on the grid */
+    .mini-block {
+      width: 46px;
+      height: 22px;
+      border-radius: 6px;
+      border-left: 3px solid var(--accent);
+      background: rgba(124,109,242,.26);
+    }
+
+    /* floating menu, iOS context-menu flavour */
+    .pop-backdrop { position: fixed; inset: 0; z-index: 70; }
+    .pop-backdrop[hidden] { display: none; }
+    .pop-menu {
+      position: absolute;
+      min-width: 218px;
+      max-width: 78vw;
+      padding: 6px;
+      border-radius: 16px;
+      background: var(--surface-3);
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 40px rgba(0,0,0,.55);
+      backdrop-filter: blur(18px);
+      animation: popIn .14s ease-out;
+    }
+    @keyframes popIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+    .pop-cap {
+      padding: 7px 12px 5px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .pop-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      background: none;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 650;
+      text-align: left;
+    }
+    .pop-item:active { background: var(--hover); }
+    .pop-tick { width: 16px; flex: 0 0 auto; opacity: 0; }
+    .pop-item.on .pop-tick { opacity: 1; }
+    .pop-dot { width: 14px; height: 14px; border-radius: 50%; flex: 0 0 auto; }
+    .pop-label { flex: 1; min-width: 0; }
+
     .opt-body.no-pad { padding: 0; }
 
     /* calendar list, Apple style: dot, name, tick on the chosen one */
@@ -2906,7 +2978,7 @@
             <span class="opt-caret"></span>
           </button>
           <div class="opt-body" id="optRepeat" hidden>
-            <select id="eventRepeat">
+            <select id="eventRepeat" hidden>
               <option value="none">Не повторять</option>
               <option value="daily">Каждый день</option>
               <option value="weekly">Каждую неделю</option>
@@ -2992,18 +3064,21 @@
         </div>
 
         <div class="opt-card meta-card">
-          <button type="button" class="opt-item opt-tap" id="itemCalendar" aria-expanded="false">
-            <span class="opt-col"><span class="opt-cap">Календарь</span><span class="opt-val" id="calValue">—</span></span>
-            <span class="opt-caret"></span>
-          </button>
-          <div class="opt-body no-pad" id="optCalendar" hidden>
-            <div class="cal-list" id="calList"></div>
+          <div class="ios-row">
+            <span class="ios-label">Календарь</span>
+            <button type="button" class="ios-value" id="calBtn">
+              <span class="cal-dot" id="calDot"></span>
+              <span id="calValue">—</span>
+              <svg class="chev-ud" viewBox="0 0 12 18" fill="none" aria-hidden="true"><path d="M3 7l3-3.5L9 7M3 11l3 3.5L9 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </div>
-
-          <button type="button" class="opt-item" id="itemColor">
-            <span class="opt-col"><span class="opt-cap">Цветная метка</span><span class="opt-val" id="colorValue">Как календарь</span></span>
-            <span class="color-dot-lg" id="colorDotLg"></span>
-          </button>
+          <div class="ios-row">
+            <span class="ios-label">Цветная метка</span>
+            <button type="button" class="ios-value" id="colorBtn">
+              <span class="mini-block" id="miniBlock"></span>
+              <svg class="chev-ud" viewBox="0 0 12 18" fill="none" aria-hidden="true"><path d="M3 7l3-3.5L9 7M3 11l3 3.5L9 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
         </div>
 
         <div class="field remind-field">
@@ -3053,6 +3128,10 @@
     </div>
   </div>
 
+  <div class="pop-backdrop" id="popBackdrop" hidden>
+    <div class="pop-menu" id="popMenu"></div>
+  </div>
+
   <div class="color-sheet-backdrop" id="colorSheetBackdrop">
     <div class="color-sheet">
       <div class="modal-head">
@@ -3095,7 +3174,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260816-1304";
+    const BUILD_ID = "20260816-1348";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -3288,13 +3367,13 @@
       eventLocation: document.getElementById("eventLocation"),
       sheetGrip: document.getElementById("sheetGrip"),
       optCard: document.getElementById("optCard"),
-      itemCalendar: document.getElementById("itemCalendar"),
-      optCalendar: document.getElementById("optCalendar"),
-      calList: document.getElementById("calList"),
+      calBtn: document.getElementById("calBtn"),
+      calDot: document.getElementById("calDot"),
+      colorBtn: document.getElementById("colorBtn"),
+      miniBlock: document.getElementById("miniBlock"),
+      popBackdrop: document.getElementById("popBackdrop"),
+      popMenu: document.getElementById("popMenu"),
       calValue: document.getElementById("calValue"),
-      itemColor: document.getElementById("itemColor"),
-      colorValue: document.getElementById("colorValue"),
-      colorDotLg: document.getElementById("colorDotLg"),
       colorSheetBackdrop: document.getElementById("colorSheetBackdrop"),
       colorGrid: document.getElementById("colorGrid"),
       colorName: document.getElementById("colorName"),
@@ -3492,7 +3571,8 @@
           date: isoDate(state.selectedDate),
           start,
           end: addMinutesToTime(start, state.defaultDuration),
-          isTask: btn.dataset.create === "task"
+          isTask: btn.dataset.create === "task",
+          _full: true
         });
       });
       document.addEventListener("click", (e) => {
@@ -3550,13 +3630,13 @@
         if (!w) return;
         activateOpt(w.dataset.word, true);
         if (w.dataset.word === "allday") { els.eventAllDay.checked = true; els.eventAllDay.dispatchEvent(new Event("change")); }
-        if (w.dataset.word === "repeat" || w.dataset.word === "travel") toggleOptBody(w.dataset.word, true);
+        if (w.dataset.word === "repeat") { activateOpt("repeat", false); pickRepeat(w); }
+        else if (w.dataset.word === "travel") toggleOptBody("travel", true);
         syncWhenPanels();
       });
       // rows with a body expand on tap
-      ["repeat", "travel"].forEach(k => {
-        document.getElementById("item" + cap(k)).addEventListener("click", () => toggleOptBody(k));
-      });
+      document.getElementById("itemRepeat").addEventListener("click", (e) => pickRepeat(e.currentTarget));
+      document.getElementById("itemTravel").addEventListener("click", () => toggleOptBody("travel"));
 
       // travel time
       els.travelChips.addEventListener("click", (e) => {
@@ -3589,24 +3669,13 @@
       });
 
       // colour picker toggles the palette open
-      // calendar list expands in place
-      els.itemCalendar.addEventListener("click", () => {
-        const open = els.optCalendar.hidden;
-        els.optCalendar.hidden = !open;
-        els.itemCalendar.setAttribute("aria-expanded", String(open));
-      });
-      els.calList.addEventListener("click", (e) => {
-        const b = e.target.closest("[data-cal]");
-        if (!b) return;
-        state._calendarId = b.dataset.cal;
-        renderCalList();
-        els.optCalendar.hidden = true;
-        els.itemCalendar.setAttribute("aria-expanded", "false");
-        renderDraft();
+      els.calBtn.addEventListener("click", pickCalendar);
+      els.popBackdrop.addEventListener("click", (e) => {
+        if (e.target === els.popBackdrop) closePopMenu();
       });
 
       // colour label sheet
-      els.itemColor.addEventListener("click", openColorSheet);
+      els.colorBtn.addEventListener("click", openColorSheet);
       document.getElementById("colorSheetClose").addEventListener("click", closeColorSheet);
       els.colorSheetBackdrop.addEventListener("click", (e) => {
         if (e.target === els.colorSheetBackdrop) closeColorSheet();
@@ -5840,26 +5909,85 @@
         c.classList.toggle("active", Number(c.dataset.travel) === (state._travelMin || 0)));
     }
 
+    /* ---------------- FLOATING MENU ---------------- */
+    const POP_TICK = '<svg class="pop-tick" viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    function openPopMenu(anchor, items, onPick, caption) {
+      els.popMenu.innerHTML = (caption ? `<div class="pop-cap">${escapeHtml(caption)}</div>` : "") +
+        items.map((it, i) => `<button type="button" class="pop-item${it.on ? " on" : ""}" data-i="${i}">
+            ${POP_TICK}${it.color ? `<span class="pop-dot" style="background:${it.color}"></span>` : ""}
+            <span class="pop-label">${escapeHtml(it.label)}</span>
+          </button>`).join("");
+      els.popBackdrop.hidden = false;
+
+      // place it under the trigger, nudged inside the viewport
+      const r = anchor.getBoundingClientRect();
+      const m = els.popMenu;
+      m.style.top = "0px"; m.style.left = "0px";
+      const mr = m.getBoundingClientRect();
+      let left = Math.min(Math.max(8, r.right - mr.width), window.innerWidth - mr.width - 8);
+      let top = r.bottom + 6;
+      if (top + mr.height > window.innerHeight - 8) top = Math.max(8, r.top - mr.height - 6);
+      m.style.left = left + "px";
+      m.style.top = top + "px";
+
+      m.querySelectorAll("[data-i]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          closePopMenu();
+          onPick(items[Number(btn.dataset.i)]);
+        });
+      });
+    }
+    function closePopMenu() { els.popBackdrop.hidden = true; }
+
     /* ---------------- CALENDAR + COLOUR LABEL ---------------- */
     const TICK = '<svg class="cal-tick" viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
     function renderCalList() {
-      const picked = state._calendarId;
-      els.calList.innerHTML = calendars.filter(c => !c.readonly).map(c =>
-        `<button type="button" class="cal-opt${c.id === picked ? " on" : ""}" data-cal="${c.id}">
-           <span class="cal-dot" style="background:${c.color}"></span>
-           <span class="cal-name">${escapeHtml(c.name)}</span>${TICK}
-         </button>`).join("");
-      const cal = calendars.find(c => c.id === picked);
+      const cal = calendars.find(c => c.id === state._calendarId);
       els.calValue.textContent = cal ? cal.name : "Без календаря";
+      els.calDot.style.background = cal ? cal.color : "transparent";
       syncColorRow();
     }
 
+    function pickCalendar() {
+      const items = calendars.filter(c => !c.readonly).map(c => ({
+        label: c.name, color: c.color, id: c.id, on: c.id === state._calendarId
+      }));
+      openPopMenu(els.calBtn, items, (it) => {
+        state._calendarId = it.id;
+        renderCalList();
+        renderDraft();
+      }, "Календари");
+    }
+
+    const REPEAT_OPTS = [
+      ["none", "Не повторять"], ["daily", "Каждый день"], ["weekly", "Каждую неделю"],
+      ["biweekly", "Каждые 2 недели"], ["monthly", "Каждый месяц"], ["yearly", "Каждый год"],
+      ["custom", "Настроить…"]
+    ];
+
+    function pickRepeat(anchor) {
+      const cur = els.eventRepeat.value;
+      const items = REPEAT_OPTS.map(([v, t]) => ({ label: t, value: v, on: v === cur }));
+      openPopMenu(anchor, items, (it) => {
+        els.eventRepeat.value = it.value;
+        syncRepeatUI();
+        syncWhenPanels();
+        if (it.value === "none") {
+          activateOpt("repeat", false);          // back to being just a word
+        } else {
+          activateOpt("repeat", true);
+          toggleOptBody("repeat", it.value === "custom");
+        }
+      }, "Повтор");
+    }
+
     function syncColorRow() {
-      const own = state._color;
       const cal = calendars.find(c => c.id === state._calendarId);
-      els.colorDotLg.style.background = own || (cal ? cal.color : "#7c6df2");
-      els.colorValue.textContent = own ? colorTitle(own) : "Как календарь";
+      const body = state._color || (cal ? cal.color : "#7c6df2");
+      els.miniBlock.style.background = tint(body, 0.26);
+      els.miniBlock.style.borderLeftColor = cal ? cal.color : body;
     }
 
     function openColorSheet() {
@@ -5973,7 +6101,7 @@
       }
       els.modalBackdrop.classList.add("open");
       state._modalOpenedAt = Date.now();
-      setSheet("half");
+      setSheet(data._full ? "full" : "half");
       renderDraft();
       setTimeout(() => els.eventTitle.focus(), 30);
     }
