@@ -2380,6 +2380,163 @@
       font-size: 16px;
     }
 
+    .meta-card { margin-top: 10px; }
+    .opt-body.no-pad { padding: 0; }
+
+    /* calendar list, Apple style: dot, name, tick on the chosen one */
+    .cal-list { display: block; }
+    .cal-opt {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 12px 14px;
+      background: none;
+      text-align: left;
+      color: var(--text);
+      font-size: 16px;
+    }
+    .cal-opt + .cal-opt { border-top: 1px solid var(--line); }
+    .cal-dot { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; }
+    .cal-name { flex: 1; min-width: 0; }
+    .cal-tick { width: 18px; height: 18px; color: var(--accent); opacity: 0; }
+    .cal-opt.on .cal-tick { opacity: 1; }
+
+    .color-dot-lg {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+      border: 2px solid var(--line);
+    }
+
+    /* colour label sheet */
+    .color-sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,20,.5);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 60;
+    }
+    .color-sheet-backdrop.open { display: flex; }
+    .color-sheet {
+      width: min(520px, 100%);
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-radius: 16px 16px 0 0;
+      border: 1px solid var(--line);
+      animation: sheetUp .28s cubic-bezier(.4,0,.2,1);
+    }
+    .color-sheet .modal-head h2 { font-size: 18px; }
+    .color-sheet-body { padding: 6px 18px 12px; overflow: auto; overscroll-behavior: contain; }
+    .color-sheet-foot { padding: 10px 18px calc(14px + var(--safe-bottom)); }
+    .color-save {
+      width: 100%;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    /* live preview of the block as it will look on the grid */
+    .color-preview {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: grid;
+      gap: 6px;
+    }
+    .cp-time { font-size: 13px; color: var(--muted); }
+    .cp-time-2 { border-top: 1px solid var(--line-soft); padding-top: 8px; }
+    .cp-block {
+      border-radius: 8px;
+      padding: 12px 12px 12px 14px;
+      font-size: 15px;
+      font-weight: 650;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .cp-block::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: rgba(255,255,255,.85);
+    }
+    .color-name {
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      margin: 14px 0 16px;
+    }
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 12px 10px;
+      justify-items: center;
+    }
+    .color-cell {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      display: grid;
+      place-items: center;
+      background: none;
+      padding: 0;
+    }
+    .color-cell i {
+      display: block;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+    }
+    .color-cell.on { border-color: currentColor; }
+    .color-hint {
+      text-align: center;
+      color: var(--muted-2);
+      font-size: 13px;
+      margin-top: 18px;
+    }
+
+    /* reminders list from the sketch */
+    .remind-list { display: grid; gap: 6px; }
+    .remind-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .remind-item .rm-x {
+      margin-left: auto;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1;
+      background: none;
+    }
+    .add-remind {
+      margin-top: 8px;
+      width: 100%;
+      height: 42px;
+      border-radius: 10px;
+      border: 1px dashed var(--line);
+      background: none;
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 650;
+    }
+
     .travel-chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .travel-custom { display: flex; gap: 8px; }
     .travel-custom input { flex: 1; }
@@ -2840,6 +2997,27 @@
           <span class="opt-tz">🌐 GMT+<span id="optTzValue">0</span></span>
         </div>
 
+        <div class="opt-card meta-card">
+          <button type="button" class="opt-item opt-tap" id="itemCalendar" aria-expanded="false">
+            <span class="opt-col"><span class="opt-cap">Календарь</span><span class="opt-val" id="calValue">—</span></span>
+            <span class="opt-caret"></span>
+          </button>
+          <div class="opt-body no-pad" id="optCalendar" hidden>
+            <div class="cal-list" id="calList"></div>
+          </div>
+
+          <button type="button" class="opt-item" id="itemColor">
+            <span class="opt-col"><span class="opt-cap">Цветная метка</span><span class="opt-val" id="colorValue">Как календарь</span></span>
+            <span class="color-dot-lg" id="colorDotLg"></span>
+          </button>
+        </div>
+
+        <div class="field remind-field">
+          <label>Напоминания</label>
+          <div class="remind-list" id="remindList"></div>
+          <button type="button" class="add-remind" id="addRemind">+ добавить</button>
+        </div>
+
         <details class="extra-block" id="extraBlock">
           <summary class="extra-summary">Дополнительно</summary>
 
@@ -2851,37 +3029,8 @@
         </div>
 
         <div class="field">
-          <label>Напоминания</label>
-          <div class="reminders-group" id="remindersGroup">
-            <label class="reminder-chip"><input type="checkbox" value="0" /><span>В момент</span></label>
-            <label class="reminder-chip"><input type="checkbox" value="10" /><span>За 10 мин</span></label>
-            <label class="reminder-chip"><input type="checkbox" value="30" /><span>За 30 мин</span></label>
-            <label class="reminder-chip"><input type="checkbox" value="60" /><span>За 1 час</span></label>
-            <label class="reminder-chip"><input type="checkbox" value="1440" /><span>За 1 день</span></label>
-          </div>
-          <div class="custom-remind">
-            <input id="remindCustomVal" type="number" min="1" max="999" placeholder="15" />
-            <select id="remindCustomUnit">
-              <option value="1">минут</option>
-              <option value="60">часов</option>
-              <option value="1440">дней</option>
-            </select>
-            <button type="button" id="remindCustomAdd">Добавить</button>
-          </div>
-        </div>
-
-        <div class="field">
           <label for="eventLocation">Место / ссылка на встречу</label>
           <input id="eventLocation" placeholder="Адрес или https://meet.google.com/..." />
-        </div>
-
-        <div class="field">
-          <label>Цвет события</label>
-          <button type="button" class="color-pick-btn" id="colorPickBtn">
-            <span class="color-pick-dot" id="colorPickDot"></span>
-            <span id="colorPickName">Выбрать цвет</span>
-          </button>
-          <div class="color-row" id="eventColorRow" hidden></div>
         </div>
 
         <div class="field">
@@ -2910,6 +3059,29 @@
     </div>
   </div>
 
+  <div class="color-sheet-backdrop" id="colorSheetBackdrop">
+    <div class="color-sheet">
+      <div class="modal-head">
+        <button type="button" class="close-btn" id="colorSheetClose" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+        <h2>Цветная метка</h2>
+        <span style="width:54px"></span>
+      </div>
+      <div class="color-sheet-body">
+        <div class="color-preview">
+          <div class="cp-time">18:00</div>
+          <div class="cp-block" id="cpBlock"><span id="cpTitle">Без названия</span></div>
+          <div class="cp-time cp-time-2">19:00</div>
+        </div>
+        <div class="color-name" id="colorName">Синяя метка</div>
+        <div class="color-grid" id="colorGrid"></div>
+        <div class="color-hint">Метку будете видеть только вы</div>
+      </div>
+      <div class="color-sheet-foot">
+        <button type="button" class="color-save" id="colorSheetSave">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
   <div class="tool-modal-backdrop" id="toolModalBackdrop">
     <div class="tool-modal">
       <div class="modal-head">
@@ -2929,10 +3101,21 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260816-1252";
+    const BUILD_ID = "20260816-1257";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
+
+    /* named palette for the colour-label sheet */
+    const COLOR_LABELS = [
+      ["#7c6df2", "Лавандовая метка"], ["#3b82f6", "Синяя метка"], ["#06b6d4", "Бирюзовая метка"],
+      ["#10b981", "Зелёная метка"], ["#84cc16", "Лаймовая метка"], ["#b45309", "Коричневая метка"],
+      ["#f59e0b", "Янтарная метка"], ["#ef4444", "Красная метка"], ["#ec4899", "Розовая метка"],
+      ["#8b5cf6", "Фиолетовая метка"], ["#64748b", "Серая метка"], ["#f97316", "Оранжевая метка"],
+      ["#0ea5e9", "Небесная метка"], ["#14b8a6", "Мятная метка"], ["#a78bfa", "Сиреневая метка"],
+      ["#be123c", "Гранатовая метка"]
+    ];
+    const colorTitle = (c) => (COLOR_LABELS.find(x => x[0] === c) || [null, "Своя метка"])[1];
 
     const EVENT_COLORS = [
       /* purple */  "#7c6df2", "#a78bfa", "#5b4bd6", "#c4b5fd",
@@ -3095,7 +3278,6 @@
       modalActions: document.getElementById("modalActions"),
       eventIsTask: document.getElementById("eventIsTask"),
       eventRepeat: document.getElementById("eventRepeat"),
-      remindersGroup: document.getElementById("remindersGroup"),
       settingsBtn: document.getElementById("settingsBtn"),
       tasksBtn: document.getElementById("tasksBtn"),
       findTimeBtn: document.getElementById("findTimeBtn"),
@@ -3103,9 +3285,21 @@
       carryTasksBtn: document.getElementById("carryTasksBtn"),
       importFile: document.getElementById("importFile"),
       eventLocation: document.getElementById("eventLocation"),
-      eventColorRow: document.getElementById("eventColorRow"),
       sheetGrip: document.getElementById("sheetGrip"),
       optCard: document.getElementById("optCard"),
+      itemCalendar: document.getElementById("itemCalendar"),
+      optCalendar: document.getElementById("optCalendar"),
+      calList: document.getElementById("calList"),
+      calValue: document.getElementById("calValue"),
+      itemColor: document.getElementById("itemColor"),
+      colorValue: document.getElementById("colorValue"),
+      colorDotLg: document.getElementById("colorDotLg"),
+      colorSheetBackdrop: document.getElementById("colorSheetBackdrop"),
+      colorGrid: document.getElementById("colorGrid"),
+      colorName: document.getElementById("colorName"),
+      cpBlock: document.getElementById("cpBlock"),
+      cpTitle: document.getElementById("cpTitle"),
+      remindList: document.getElementById("remindList"),
       optWords: document.getElementById("optWords"),
       optTzValue: document.getElementById("optTzValue"),
       startPanel: document.getElementById("startPanel"),
@@ -3126,12 +3320,6 @@
       viewRows: document.getElementById("viewRows"),
       viewEdit: document.getElementById("viewEdit"),
       viewDelete: document.getElementById("viewDelete"),
-      colorPickBtn: document.getElementById("colorPickBtn"),
-      colorPickDot: document.getElementById("colorPickDot"),
-      colorPickName: document.getElementById("colorPickName"),
-      remindCustomVal: document.getElementById("remindCustomVal"),
-      remindCustomUnit: document.getElementById("remindCustomUnit"),
-      remindCustomAdd: document.getElementById("remindCustomAdd"),
       eventEndDate: document.getElementById("eventEndDate"),
       eventAttendees: document.getElementById("eventAttendees"),
       customRepeat: document.getElementById("customRepeat"),
@@ -3213,7 +3401,6 @@
       initTelegram();
       applyTheme(loadTheme());
       syncViewButtons();
-      renderColorSwatches("");
       bindEvents();
       renderAll();
       scheduleNotifications();
@@ -3404,33 +3591,49 @@
       });
 
       // colour picker toggles the palette open
-      els.colorPickBtn.addEventListener("click", () => {
-        els.eventColorRow.hidden = !els.eventColorRow.hidden;
+      // calendar list expands in place
+      els.itemCalendar.addEventListener("click", () => {
+        const open = els.optCalendar.hidden;
+        els.optCalendar.hidden = !open;
+        els.itemCalendar.setAttribute("aria-expanded", String(open));
+      });
+      els.calList.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-cal]");
+        if (!b) return;
+        state._calendarId = b.dataset.cal;
+        renderCalList();
+        els.optCalendar.hidden = true;
+        els.itemCalendar.setAttribute("aria-expanded", "false");
+        renderDraft();
       });
 
-      // add a reminder at an arbitrary offset
-      els.remindCustomAdd.addEventListener("click", () => {
-        const n = Number(els.remindCustomVal.value);
-        if (!n || n < 1) { showToast("Укажи число"); return; }
-        const minutes = n * Number(els.remindCustomUnit.value);
-        if (minutes > 60 * 24 * 30) { showToast("Слишком большой интервал"); return; }
-        if (PRESET_REMINDERS.includes(minutes)) {
-          const preset = els.remindersGroup.querySelector(`.reminder-chip input[value="${minutes}"]`);
-          if (preset) { preset.checked = true; preset.closest(".reminder-chip").classList.add("on"); }
-        } else {
-          addCustomReminderChip(minutes);
-        }
-        els.remindCustomVal.value = "";
+      // colour label sheet
+      els.itemColor.addEventListener("click", openColorSheet);
+      document.getElementById("colorSheetClose").addEventListener("click", closeColorSheet);
+      els.colorSheetBackdrop.addEventListener("click", (e) => {
+        if (e.target === els.colorSheetBackdrop) closeColorSheet();
+      });
+      els.colorGrid.addEventListener("click", (e) => {
+        const c = e.target.closest("[data-c]");
+        if (!c) return;
+        state._colorDraft = c.dataset.c;
+        renderColorGrid();
+      });
+      document.getElementById("colorSheetSave").addEventListener("click", () => {
+        state._color = state._colorDraft;
+        syncColorRow();
+        closeColorSheet();
+        renderDraft();
       });
 
-      // read-only card -> form
-      // the fields are already below; just open up and jump to them
-      els.viewEdit.addEventListener("click", () => {
-        setSheet("full");
-        requestAnimationFrame(() =>
-          els.eventTitle.scrollIntoView({ block: "start", behavior: "smooth" }));
+      // reminders list
+      document.getElementById("addRemind").addEventListener("click", () => openRemindPicker());
+      els.remindList.addEventListener("click", (e) => {
+        const x = e.target.closest("[data-rm]");
+        if (!x) return;
+        state._reminders.splice(Number(x.dataset.rm), 1);
+        renderRemindList();
       });
-      els.viewDelete.addEventListener("click", () => els.deleteEvent.click());
 
       els.durRow.addEventListener("click", (e) => {
         const chip = e.target.closest(".dur-chip");
@@ -3460,11 +3663,6 @@
       els.eventRepeat.addEventListener("change", () => { syncRepeatUI(); syncWhenPanels(); });
       els.rruleFreq.addEventListener("change", syncRepeatUI);
       els.rruleEndType.addEventListener("change", syncRepeatUI);
-
-      els.remindersGroup.addEventListener("change", (e) => {
-        const chip = e.target.closest(".reminder-chip");
-        if (chip) chip.classList.toggle("on", chip.querySelector("input").checked);
-      });
 
       els.deleteEvent.addEventListener("click", () => {
         if (!state.editingId) return;
@@ -4817,57 +5015,10 @@
     }
 
     function setReminderChips(reminders) {
-      els.remindersGroup.querySelectorAll(".reminder-chip.custom").forEach(c => c.remove());
-      els.remindersGroup.querySelectorAll(".reminder-chip").forEach(chip => {
-        const input = chip.querySelector("input");
-        const on = reminders.includes(Number(input.value));
-        input.checked = on;
-        chip.classList.toggle("on", on);
-      });
-      // anything that is not a preset becomes its own removable chip
-      reminders.filter(m => !PRESET_REMINDERS.includes(m)).forEach(addCustomReminderChip);
+      state._reminders = [...new Set(reminders || [])].sort((x, y) => x - y);
+      renderRemindList();
     }
-
-    function addCustomReminderChip(minutes) {
-      if (getReminderChips().includes(minutes)) return;
-      const chip = document.createElement("label");
-      chip.className = "reminder-chip custom on";
-      chip.innerHTML = `<input type="checkbox" value="${minutes}" checked /><span>${reminderLabel(minutes)}</span>`;
-      els.remindersGroup.appendChild(chip);
-    }
-
-    function getReminderChips() {
-      return [...els.remindersGroup.querySelectorAll(".reminder-chip input:checked")].map(i => Number(i.value));
-    }
-
-    function renderColorSwatches(selectedColor) {
-      els.eventColorRow.innerHTML = EVENT_COLORS.map(c => `
-        <button type="button" class="color-swatch${selectedColor === c ? " selected" : ""}"
-          style="background:${c}" data-color="${c}" title="${c}"></button>
-      `).join("");
-      els.eventColorRow.hidden = true;
-      els.eventColorRow.querySelectorAll(".color-swatch").forEach(sw => {
-        sw.addEventListener("click", () => {
-          els.eventColorRow.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("selected"));
-          sw.classList.add("selected");
-          els.eventColorRow.hidden = true;
-          syncColorButton();
-          renderDraft();
-        });
-      });
-      syncColorButton();
-    }
-
-    function syncColorButton() {
-      const c = getSelectedColor() || EVENT_COLORS[0];
-      els.colorPickDot.style.background = c;
-      els.colorPickName.textContent = getSelectedColor() ? "Цвет выбран" : "Выбрать цвет";
-    }
-
-    function getSelectedColor() {
-      const sel = els.eventColorRow.querySelector(".color-swatch.selected");
-      return sel ? sel.dataset.color : "";
-    }
+    function getReminderChips() { return state._reminders || []; }
 
     /* highlight the duration chip matching the current start→end span */
     function syncDurationChips() {
@@ -5479,6 +5630,12 @@
       if (area) area.classList.remove("sheet-space");
     }
 
+    function draftColor() {
+      if (state._color) return state._color;
+      const cal = calendars.find(c => c.id === state._calendarId);
+      return (cal && cal.color) || EVENT_COLORS[0];
+    }
+
     function renderDraft() {
       clearDraft();
       if (!isMobile()) return;
@@ -5495,7 +5652,7 @@
       el.className = "draft-event";
       el.style.top = ((s - START_HOUR * 60) / 60 * HOUR_HEIGHT) + "px";
       el.style.height = Math.max(18, dur / 60 * HOUR_HEIGHT - 2) + "px";
-      el.style.background = getSelectedColor() || EVENT_COLORS[0];
+      el.style.background = draftColor();
       el.innerHTML = `<span>${escapeHtml(els.eventTitle.value || "Новое событие")} · ${formatTime(els.eventStart.value)}–${formatTime(els.eventEnd.value)}</span><div class="draft-resize"></div>`;
       col.appendChild(el);
       const area = document.getElementById("scrollArea");
@@ -5688,6 +5845,81 @@
         c.classList.toggle("active", Number(c.dataset.travel) === (state._travelMin || 0)));
     }
 
+    /* ---------------- CALENDAR + COLOUR LABEL ---------------- */
+    const TICK = '<svg class="cal-tick" viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    function renderCalList() {
+      const picked = state._calendarId;
+      els.calList.innerHTML = calendars.filter(c => !c.readonly).map(c =>
+        `<button type="button" class="cal-opt${c.id === picked ? " on" : ""}" data-cal="${c.id}">
+           <span class="cal-dot" style="background:${c.color}"></span>
+           <span class="cal-name">${escapeHtml(c.name)}</span>${TICK}
+         </button>`).join("");
+      const cal = calendars.find(c => c.id === picked);
+      els.calValue.textContent = cal ? cal.name : "Без календаря";
+      syncColorRow();
+    }
+
+    function syncColorRow() {
+      const own = state._color;
+      const cal = calendars.find(c => c.id === state._calendarId);
+      els.colorDotLg.style.background = own || (cal ? cal.color : "#7c6df2");
+      els.colorValue.textContent = own ? colorTitle(own) : "Как календарь";
+    }
+
+    function openColorSheet() {
+      state._colorDraft = state._color || (calendars.find(c => c.id === state._calendarId) || {}).color || EVENT_COLORS[0];
+      renderColorGrid();
+      els.colorSheetBackdrop.classList.add("open");
+    }
+    function closeColorSheet() { els.colorSheetBackdrop.classList.remove("open"); }
+
+    function renderColorGrid() {
+      const cur = state._colorDraft;
+      els.colorGrid.innerHTML = COLOR_LABELS.map(([c]) =>
+        `<button type="button" class="color-cell${c === cur ? " on" : ""}" data-c="${c}" style="color:${c}"><i style="background:${c}"></i></button>`).join("");
+      els.colorName.textContent = colorTitle(cur);
+      els.cpBlock.style.background = cur;
+      els.cpTitle.textContent = els.eventTitle.value.trim() || "Без названия";
+    }
+
+    /* ---------------- REMINDERS ---------------- */
+    function renderRemindList() {
+      const list = state._reminders || [];
+      els.remindList.innerHTML = list.length
+        ? list.map((m, i) => `<div class="remind-item">🔔 <span>${reminderLabel(m)}</span>
+             <button type="button" class="rm-x" data-rm="${i}" aria-label="Убрать">×</button></div>`).join("")
+        : `<div class="set-hint">Без напоминаний</div>`;
+    }
+
+    function openRemindPicker() {
+      const opts = [0, 5, 10, 15, 30, 60, 120, 1440];
+      const rows = opts.map(m => `<button type="button" class="slot-item" data-rmadd="${m}" style="width:100%;cursor:pointer">
+          <span>${reminderLabel(m)}</span></button>`).join("");
+      openToolModal("Напоминание", rows + `
+        <div class="custom-remind" style="margin-top:10px">
+          <input id="rmOtherVal" type="number" min="1" max="999" placeholder="15" />
+          <select id="rmOtherUnit">
+            <option value="1">минут</option>
+            <option value="60">часов</option>
+            <option value="1440">дней</option>
+          </select>
+          <button type="button" id="rmOtherAdd">Добавить</button>
+        </div>`);
+      const add = (m) => {
+        state._reminders = [...new Set([...(state._reminders || []), m])].sort((a, b) => a - b);
+        renderRemindList();
+        closeToolModal();
+      };
+      els.toolModalBody.querySelectorAll("[data-rmadd]").forEach(b =>
+        b.addEventListener("click", () => add(Number(b.dataset.rmadd))));
+      document.getElementById("rmOtherAdd").addEventListener("click", () => {
+        const n = Number(document.getElementById("rmOtherVal").value);
+        if (!n || n < 1) { showToast("Укажи число"); return; }
+        add(n * Number(document.getElementById("rmOtherUnit").value));
+      });
+    }
+
     function openModal(data = {}) {
       state.editingId = data.id || null;
       state.editingInstanceDate = data.id ? (data.date || null) : null;
@@ -5716,7 +5948,9 @@
       syncRepeatUI();
 
       setReminderChips(Array.isArray(data.reminders) ? data.reminders : []);
-      renderColorSwatches(data.color || "");
+      state._color = data.color || null;
+      state._calendarId = data.calendarId || calendars[0].id;
+      renderCalList();
       state._travelMin = (data.travel && data.travel.minutes) || 0;
       state._travelMode = (data.travel && data.travel.mode) || null;
       els.travelAddress.value = (data.travel && data.travel.address) || "";
@@ -5757,7 +5991,6 @@
       els.eventForm.reset();
       delete els.eventShort.dataset.touched;
       setReminderChips([]);
-      renderColorSwatches("");
     }
 
     function saveEventFromForm() {
@@ -5797,7 +6030,7 @@
 
       const attendees = els.eventAttendees.value.split(",").map(s => s.trim()).filter(Boolean);
 
-      const evColor = getSelectedColor();
+      const evColor = state._color;
       const payload = {
         title: els.eventTitle.value.trim(),
         shortName: els.eventShort.value.trim(),
@@ -5813,6 +6046,7 @@
         location: els.eventLocation.value.trim(),
         attendees,
         color: evColor || null,
+        calendarId: state._calendarId || null,
         travel: state._travelMin
           ? { minutes: state._travelMin, address: els.travelAddress.value.trim(), mode: state._travelMode }
           : null
