@@ -1394,19 +1394,10 @@
 
     .modal-head {
       padding: 12px 14px;
-      border-bottom: 1px solid var(--line-soft);
       display: flex;
       align-items: center;
       gap: 10px;
       flex-shrink: 0;
-    }
-
-    .modal-head h2 {
-      margin: 0;
-      flex: 1;
-      text-align: center;
-      font-size: 17px;
-      font-weight: 700;
     }
 
     /* round confirm button mirroring the close button */
@@ -1874,7 +1865,7 @@
       .modal {
         width: 100%;
         height: var(--sheet-h, 62vh);
-        max-height: 94vh;
+        max-height: calc(100vh - var(--safe-top) - 10px);
         border-radius: 14px 14px 0 0;
         animation: sheetUp .3s cubic-bezier(.4,0,.2,1);
         box-shadow: 0 -6px 24px rgba(0,0,0,.35);
@@ -1889,8 +1880,9 @@
       .modal-body { overflow-x: hidden; }
       .sheet-grip {
         display: block;
-        width: 100%;
-        padding: 9px 0 3px;
+        flex: 1;
+        align-self: stretch;
+        padding: 0;
         background: none;
         touch-action: none;
         cursor: grab;
@@ -1898,7 +1890,7 @@
       .sheet-grip::before {
         content: "";
         display: block;
-        width: 40px; height: 4px;
+        width: 92px; height: 5px;
         margin: 0 auto;
         border-radius: 3px;
         background: var(--muted-2);
@@ -2225,14 +2217,13 @@
     .extra-summary {
       list-style: none;
       cursor: pointer;
-      padding: 11px 0;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .05em;
+      padding: 14px 0 10px;
+      font-size: 15px;
+      font-weight: 650;
       color: var(--muted);
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 7px;
     }
     .extra-summary::-webkit-details-marker { display: none; }
@@ -2407,6 +2398,16 @@
     }
     .chev-ud { width: 12px; height: 18px; flex: 0 0 auto; opacity: .7; display: block; }
     /* miniature of the block as it appears on the grid */
+    .chev-r {
+      width: 8px; height: 8px;
+      border-right: 2px solid var(--muted);
+      border-bottom: 2px solid var(--muted);
+      transform: rotate(-45deg);
+      display: block;
+    }
+    .remind-row { width: 100%; background: none; text-align: left; }
+    .remind-row .ios-label { font-weight: 650; }
+
     .mini-block {
       width: 46px;
       height: 22px;
@@ -2921,10 +2922,9 @@
 
   <div class="modal-backdrop" id="modalBackdrop">
     <form class="modal" id="eventForm">
-      <button type="button" class="sheet-grip" id="sheetGrip" aria-label="Развернуть"></button>
       <div class="modal-head">
         <button type="button" class="close-btn" id="closeModal" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
-        <h2 id="modalTitle">Новое событие</h2>
+        <button type="button" class="sheet-grip" id="sheetGrip" aria-label="Развернуть"></button>
         <button type="submit" class="save-round" id="saveTop" aria-label="Сохранить"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
       <div class="modal-body">
@@ -2940,7 +2940,7 @@
 
         <div class="form-fields" id="formFields">
         <div class="ios-group">
-          <input id="eventTitle" class="ios-input" required placeholder="Название" />
+          <input id="eventTitle" class="ios-input" required placeholder="Название события" />
           <textarea id="eventDescription" class="ios-input" rows="2" placeholder="Описание"></textarea>
         </div>
 
@@ -3081,14 +3081,16 @@
           </div>
         </div>
 
-        <div class="field remind-field">
-          <label>Напоминания</label>
+        <div class="opt-card">
+          <button type="button" class="ios-row remind-row" id="addRemind">
+            <span class="ios-label" id="remindSummary">Без напоминаний</span>
+            <span class="ios-value"><span class="chev-r"></span></span>
+          </button>
           <div class="remind-list" id="remindList"></div>
-          <button type="button" class="add-remind" id="addRemind">+ добавить</button>
         </div>
 
         <details class="extra-block" id="extraBlock">
-          <summary class="extra-summary">Дополнительно</summary>
+          <summary class="extra-summary"><span>Дополнительно</span></summary>
 
         <div class="field">
           <label for="eventShort">Коротко
@@ -3174,7 +3176,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260816-1348";
+    const BUILD_ID = "20260816-1508";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -3351,7 +3353,6 @@
       searchInputMobile: document.getElementById("searchInputMobile"),
       modalBackdrop: document.getElementById("modalBackdrop"),
       eventForm: document.getElementById("eventForm"),
-      modalTitle: document.getElementById("modalTitle"),
       closeModal: document.getElementById("closeModal"),
       deleteEvent: document.getElementById("deleteEvent"),
       duplicateEvent: document.getElementById("duplicateEvent"),
@@ -3380,6 +3381,7 @@
       cpBlock: document.getElementById("cpBlock"),
       cpTitle: document.getElementById("cpTitle"),
       remindList: document.getElementById("remindList"),
+      remindSummary: document.getElementById("remindSummary"),
       optWords: document.getElementById("optWords"),
       startPanel: document.getElementById("startPanel"),
       endPanel: document.getElementById("endPanel"),
@@ -5646,7 +5648,9 @@
     function setSheet(mode) {
       if (!isMobile()) return;
       const full = mode === "full";
-      document.documentElement.style.setProperty("--sheet-h", (full ? SHEET_FULL : SHEET_HALF) + "vh");
+      const safeTop = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--safe-top")) || 0;
+      document.documentElement.style.setProperty("--sheet-h",
+        full ? `calc(${SHEET_FULL}vh - ${safeTop}px)` : SHEET_HALF + "vh");
       els.modalBackdrop.classList.toggle("sheet-half", !full);
       els.modalBackdrop.classList.toggle("sheet-full", full);
       renderDraft();
@@ -6011,10 +6015,12 @@
     /* ---------------- REMINDERS ---------------- */
     function renderRemindList() {
       const list = state._reminders || [];
-      els.remindList.innerHTML = list.length
-        ? list.map((m, i) => `<div class="remind-item">🔔 <span>${reminderLabel(m)}</span>
-             <button type="button" class="rm-x" data-rm="${i}" aria-label="Убрать">×</button></div>`).join("")
-        : `<div class="set-hint">Без напоминаний</div>`;
+      els.remindSummary.textContent = list.length
+        ? list.map(reminderLabel).join(", ")
+        : "Без напоминаний";
+      els.remindList.innerHTML = list.map((m, i) =>
+        `<div class="remind-item">🔔 <span>${reminderLabel(m)}</span>
+           <button type="button" class="rm-x" data-rm="${i}" aria-label="Убрать">×</button></div>`).join("");
     }
 
     function openRemindPicker() {
@@ -6048,7 +6054,7 @@
     function openModal(data = {}) {
       state.editingId = data.id || null;
       state.editingInstanceDate = data.id ? (data.date || null) : null;
-      els.modalTitle.textContent = data.id ? "Редактировать событие" : "Новое событие";
+      els.eventTitle.placeholder = data.isTask ? "Название задачи" : "Название события";
       els.eventTitle.value = data.title || "";
       els.eventShort.value = data.shortName || "";
       els.eventDate.value = data.date || isoDate(state.selectedDate);
@@ -6094,7 +6100,6 @@
       els.modalActions.classList.toggle("has-content", Boolean(data.id));
       // existing events open read-only; new ones go straight to the form
       if (data.id && !data._edit) {
-        els.modalTitle.textContent = "Событие";
         showViewCard(data);
       } else {
         hideViewCard();
