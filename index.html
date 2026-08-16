@@ -2305,29 +2305,61 @@
       font-size: 16px;
     }
 
-    /* tappable option rows that reveal their controls */
-    .opt-list {
+    /* Yandex pattern: plain words first; tapping one moves it into the card */
+    .opt-words {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 18px;
+      padding: 4px 2px 2px;
+    }
+    .opt-words button {
+      background: none;
+      border: 0;
+      padding: 4px 0;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 650;
+    }
+    .opt-words button:active { opacity: .6; }
+    .opt-words button[hidden] { display: none; }
+    .opt-tz { color: var(--muted); font-size: 14px; font-weight: 600; }
+
+    .opt-card {
       border-radius: 14px;
       border: 1px solid var(--line);
+      background: var(--surface-2);
       overflow: hidden;
-      margin-top: 4px;
+      margin-bottom: 10px;
     }
-    .opt-row {
+    .opt-card[hidden] { display: none; }
+    .opt-item {
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      padding: 13px 14px;
-      background: var(--surface-2);
-      color: var(--text);
-      font-size: 15px;
-      font-weight: 600;
+      gap: 12px;
+      padding: 12px 14px;
+      background: none;
       text-align: left;
+      color: var(--text);
     }
-    .opt-row + .opt-row, .opt-body + .opt-row { border-top: 1px solid var(--line); }
-    .opt-state { color: var(--muted); font-size: 14px; font-weight: 500; }
-    .opt-row[aria-expanded="true"] .opt-state { color: var(--accent); }
+    .opt-item[hidden] { display: none; }
+    .opt-item + .opt-item,
+    .opt-body + .opt-item { border-top: 1px solid var(--line); }
+    .opt-name { font-size: 16px; font-weight: 700; }
+    .opt-col { display: grid; gap: 1px; min-width: 0; }
+    .opt-cap { font-size: 12px; color: var(--muted); }
+    .opt-val { font-size: 16px; font-weight: 650; }
+    .opt-caret {
+      width: 8px; height: 8px;
+      flex: 0 0 auto;
+      border-right: 2px solid var(--muted);
+      border-bottom: 2px solid var(--muted);
+      transform: rotate(-45deg);
+      transition: transform .18s;
+    }
+    .opt-tap[aria-expanded="true"] .opt-caret { transform: rotate(45deg); }
     .opt-body {
       padding: 12px 14px;
       background: var(--surface-3);
@@ -2706,23 +2738,19 @@
           <button type="button" class="dur-chip" data-dur="120">2ч</button>
         </div>
 
-        <div class="opt-list">
-          <button type="button" class="opt-row" data-opt="allday" aria-expanded="false">
-            <span>Весь день</span><span class="opt-state" id="stateAllday">Выкл</span>
-          </button>
-          <div class="opt-body" id="optAllday" hidden>
-            <label class="mini-toggle" for="eventAllDay">
-              <input type="checkbox" id="eventAllDay" />
-              <span>Занимает весь день</span>
-            </label>
-            <label class="mini-toggle" for="eventIsTask">
-              <input type="checkbox" id="eventIsTask" />
-              <span>Это задача</span>
-            </label>
+        <div class="opt-card" id="optCard" hidden>
+          <div class="opt-item" id="itemAllday" hidden>
+            <span class="opt-name">Весь день</span>
+            <label class="switch"><input type="checkbox" id="eventAllDay" /><span></span></label>
+          </div>
+          <div class="opt-item" id="itemTask" hidden>
+            <span class="opt-name">Задача</span>
+            <label class="switch"><input type="checkbox" id="eventIsTask" /><span></span></label>
           </div>
 
-          <button type="button" class="opt-row" data-opt="repeat" aria-expanded="false">
-            <span>Повторять</span><span class="opt-state" id="stateRepeat">Не повторять</span>
+          <button type="button" class="opt-item opt-tap" id="itemRepeat" hidden aria-expanded="false">
+            <span class="opt-col"><span class="opt-cap">Повторять</span><span class="opt-val" id="stateRepeat">Не повторять</span></span>
+            <span class="opt-caret"></span>
           </button>
           <div class="opt-body" id="optRepeat" hidden>
             <select id="eventRepeat">
@@ -2775,8 +2803,9 @@
             </div>
           </div>
 
-          <button type="button" class="opt-row" data-opt="travel" aria-expanded="false">
-            <span>Время на путь</span><span class="opt-state" id="stateTravel">Нет</span>
+          <button type="button" class="opt-item opt-tap" id="itemTravel" hidden aria-expanded="false">
+            <span class="opt-col"><span class="opt-cap">Время на путь</span><span class="opt-val" id="stateTravel">Нет</span></span>
+            <span class="opt-caret"></span>
           </button>
           <div class="opt-body" id="optTravel" hidden>
             <div class="travel-chips" id="travelChips">
@@ -2801,6 +2830,14 @@
               <div class="set-hint">Маршрут считается на сервере — пока задайте время вручную.</div>
             </div>
           </div>
+        </div>
+
+        <div class="opt-words" id="optWords">
+          <button type="button" data-word="allday">Весь день</button>
+          <button type="button" data-word="task">Задача</button>
+          <button type="button" data-word="repeat">Повторять</button>
+          <button type="button" data-word="travel">Время на путь</button>
+          <span class="opt-tz">🌐 GMT+<span id="optTzValue">0</span></span>
         </div>
 
         <details class="extra-block" id="extraBlock">
@@ -2892,7 +2929,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260815-1448";
+    const BUILD_ID = "20260816-1252";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -3068,13 +3105,15 @@
       eventLocation: document.getElementById("eventLocation"),
       eventColorRow: document.getElementById("eventColorRow"),
       sheetGrip: document.getElementById("sheetGrip"),
+      optCard: document.getElementById("optCard"),
+      optWords: document.getElementById("optWords"),
+      optTzValue: document.getElementById("optTzValue"),
       startPanel: document.getElementById("startPanel"),
       endPanel: document.getElementById("endPanel"),
       startValue: document.getElementById("startValue"),
       endValue: document.getElementById("endValue"),
       whenEditStart: document.getElementById("whenEditStart"),
       whenEditEnd: document.getElementById("whenEditEnd"),
-      stateAllday: document.getElementById("stateAllday"),
       stateRepeat: document.getElementById("stateRepeat"),
       stateTravel: document.getElementById("stateTravel"),
       travelChips: document.getElementById("travelChips"),
@@ -3319,9 +3358,19 @@
         els.startPanel.setAttribute("aria-expanded", "false");
       });
 
-      // option rows
-      document.querySelectorAll(".opt-row[data-opt]").forEach(row => {
-        row.addEventListener("click", () => toggleOpt(row.dataset.opt));
+      // tapping a word promotes it into the card
+      els.optWords.addEventListener("click", (e) => {
+        const w = e.target.closest("[data-word]");
+        if (!w) return;
+        activateOpt(w.dataset.word, true);
+        if (w.dataset.word === "allday") { els.eventAllDay.checked = true; els.eventAllDay.dispatchEvent(new Event("change")); }
+        if (w.dataset.word === "task") { els.eventIsTask.checked = true; els.eventIsTask.dispatchEvent(new Event("change")); }
+        if (w.dataset.word === "repeat" || w.dataset.word === "travel") toggleOptBody(w.dataset.word, true);
+        syncWhenPanels();
+      });
+      // rows with a body expand on tap
+      ["repeat", "travel"].forEach(k => {
+        document.getElementById("item" + cap(k)).addEventListener("click", () => toggleOptBody(k));
       });
 
       // travel time
@@ -5590,22 +5639,48 @@
       const allDay = els.eventAllDay.checked;
       els.startValue.textContent = humanWhen(els.eventDate.value, els.eventStart.value, allDay);
       els.endValue.textContent = humanWhen(endDateForDisplay(), els.eventEnd.value, allDay);
-      els.stateAllday.textContent = allDay ? "Вкл" : (els.eventIsTask.checked ? "Задача" : "Выкл");
       els.stateRepeat.textContent = els.eventRepeat.value === "none"
         ? "Не повторять" : (REPEAT_LABELS[els.eventRepeat.value] || "Настроенный");
       els.stateTravel.textContent = state._travelMin ? `${state._travelMin} мин` : "Нет";
       els.durRow.style.display = allDay ? "none" : "";
       els.whenEditStart.querySelector("#eventStart").style.display = allDay ? "none" : "";
       els.whenEditEnd.querySelector("#eventEnd").style.display = allDay ? "none" : "";
+      els.optTzValue.textContent = timezoneOffsetHours();
     }
 
-    function toggleOpt(key, force) {
-      const row = document.querySelector(`.opt-row[data-opt="${key}"]`);
-      const body = document.getElementById("opt" + key.charAt(0).toUpperCase() + key.slice(1));
-      if (!row || !body) return;
+    const OPT_KEYS = ["allday", "task", "repeat", "travel"];
+    const cap = (k) => k.charAt(0).toUpperCase() + k.slice(1);
+
+    /* a word leaves the row and its control appears inside the card */
+    function activateOpt(key, on) {
+      const word = els.optWords.querySelector(`[data-word="${key}"]`);
+      const item = document.getElementById("item" + cap(key));
+      if (word) word.hidden = on;
+      if (item) item.hidden = !on;
+      const body = document.getElementById("opt" + cap(key));
+      if (body && !on) { body.hidden = true; if (item) item.setAttribute("aria-expanded", "false"); }
+      els.optCard.hidden = !OPT_KEYS.some(k => {
+        const i = document.getElementById("item" + cap(k));
+        return i && !i.hidden;
+      });
+    }
+
+    function resetOpts(ev) {
+      OPT_KEYS.forEach(k => activateOpt(k, false));
+      if (ev.allDay) activateOpt("allday", true);
+      if (ev.isTask) activateOpt("task", true);
+      if (ev.repeat && ev.repeat !== "none") activateOpt("repeat", true);
+      if (ev.travel && ev.travel.minutes) activateOpt("travel", true);
+    }
+
+    /* expand the body of a card row that has one */
+    function toggleOptBody(key, force) {
+      const item = document.getElementById("item" + cap(key));
+      const body = document.getElementById("opt" + cap(key));
+      if (!item || !body) return;
       const open = force !== undefined ? force : body.hidden;
       body.hidden = !open;
-      row.setAttribute("aria-expanded", String(open));
+      item.setAttribute("aria-expanded", String(open));
     }
 
     function syncTravelChips() {
@@ -5648,7 +5723,8 @@
       els.travelModes.querySelectorAll(".mode-chip").forEach(c =>
         c.classList.toggle("on", c.dataset.mode === state._travelMode));
       syncTravelChips();
-      ["allday", "repeat", "travel"].forEach(k => toggleOpt(k, false));
+      resetOpts({ allDay: els.eventAllDay.checked, isTask: els.eventIsTask.checked,
+                  repeat: els.eventRepeat.value, travel: { minutes: state._travelMin } });
       els.whenEditStart.hidden = els.whenEditEnd.hidden = true;
       els.startPanel.setAttribute("aria-expanded", "false");
       els.endPanel.setAttribute("aria-expanded", "false");
