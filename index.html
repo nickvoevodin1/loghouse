@@ -2385,6 +2385,7 @@
       padding: 13px 14px;
     }
     .ios-row + .ios-row { border-top: 1px solid var(--line); }
+    .ios-row[hidden] { display: none; }
     .ios-label { font-size: 16px; font-weight: 700; color: var(--text); }
     .ios-value {
       display: flex;
@@ -2507,6 +2508,8 @@
       animation: sheetUp .28s cubic-bezier(.4,0,.2,1);
     }
     .color-sheet .modal-head h2 { font-size: 18px; }
+    /* title takes the row, close button parks on the right */
+    .tool-modal .modal-head h2 { flex: 1; min-width: 0; }
     .color-sheet-body { padding: 6px 18px 12px; overflow: auto; overscroll-behavior: contain; }
     .color-sheet-foot { padding: 10px 18px calc(14px + var(--safe-bottom)); }
     .color-save {
@@ -2554,12 +2557,17 @@
     }
     .color-grid {
       display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      gap: 12px 10px;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 12px 6px;
       justify-items: center;
+      width: 100%;
     }
+    /* cells size themselves from the column, so eight of them always fit */
     .color-cell {
-      width: 38px; height: 38px;
+      width: 100%;
+      max-width: 38px;
+      aspect-ratio: 1;
+      height: auto;
       border-radius: 50%;
       border: 2px solid transparent;
       display: grid;
@@ -2569,7 +2577,8 @@
     }
     .color-cell i {
       display: block;
-      width: 30px; height: 30px;
+      width: 78%;
+      aspect-ratio: 1;
       border-radius: 50%;
     }
     .color-cell.on { border-color: currentColor; }
@@ -2799,6 +2808,309 @@
     }
     .filter-chip.on { background: var(--accent); border-color: var(--accent); color: white; }
     .filter-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+    /* ================= date popup (Yandex-style calendar window) ================= */
+    .dpop-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(8,8,16,.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 80;
+    }
+    .dpop-backdrop.open { display: flex; }
+    .dpop {
+      width: min(360px, 100%);
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+      overscroll-behavior: contain;
+      background: var(--surface-3);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 22px 60px rgba(0,0,0,.6);
+      padding: 14px 14px 12px;
+      animation: popIn .16s ease-out;
+    }
+    .dpop-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .dpop-month { font-size: 16px; font-weight: 700; }
+    .dpop-nav { display: flex; gap: 4px; }
+    .dpop-nav button {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      color: var(--text);
+      display: grid; place-items: center;
+      font-size: 17px;
+      line-height: 1;
+    }
+    .dpop-dow, .dpop-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+    .dpop-dow span {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding-bottom: 4px;
+    }
+    .dpop-cell {
+      aspect-ratio: 1;
+      width: 100%;
+      border-radius: 50%;
+      background: none;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      display: grid;
+      place-items: center;
+    }
+    .dpop-cell.dim { color: var(--muted-2); }
+    .dpop-cell.today { color: var(--accent); font-weight: 800; }
+    .dpop-cell.on { background: var(--accent); color: #fff; }
+    .dpop-sep { height: 1px; background: var(--line); margin: 12px 0 2px; }
+    .dpop-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 2px;
+      font-size: 16px;
+      font-weight: 650;
+    }
+    .dpop-row input[type="time"] {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 7px 10px;
+      font-size: 16px;
+      font-weight: 650;
+    }
+    .dpop-durs { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0 6px; }
+    .dpop-durs button {
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 650;
+    }
+    .dpop-durs button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .dpop-done {
+      width: 100%;
+      height: 48px;
+      margin-top: 8px;
+      border-radius: 14px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    /* ================= repeat setup screen (iOS "Настройка") ================= */
+    .rep-screen { display: grid; gap: 16px; }
+    .rep-card {
+      border-radius: 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+    .rep-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 16px;
+      background: none;
+      color: var(--text);
+      font-size: 17px;
+      text-align: left;
+    }
+    .rep-row + .rep-row { border-top: 1px solid var(--line); }
+    .rep-row[hidden] { display: none; }
+    .rep-row .rv { color: var(--muted); display: flex; align-items: center; gap: 7px; font-weight: 600; }
+    .rep-row.on .rv { color: var(--accent); }
+    .rep-tick { width: 18px; height: 18px; color: var(--accent); opacity: 0; }
+    .rep-row.on .rep-tick { opacity: 1; }
+    .rep-sum {
+      font-size: 15px;
+      line-height: 1.4;
+      color: var(--muted);
+      padding: 0 4px;
+    }
+    .rep-sum b { display: block; color: var(--text); font-size: 15px; margin-bottom: 3px; }
+    .rep-num {
+      width: 74px;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-3);
+      color: var(--text);
+      text-align: center;
+      font-size: 16px;
+      font-weight: 650;
+    }
+    .rep-date {
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-3);
+      color: var(--text);
+      padding: 0 8px;
+      font-size: 16px;
+    }
+    .rep-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 12px 12px 14px; }
+    .rep-day {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--surface-3);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+    }
+    .rep-day.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .rep-cap {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 4px 6px;
+    }
+
+    /* ================= "Дополнительно" menu (sketch) ================= */
+    .xtra { display: grid; gap: 14px; padding-top: 4px; }
+    .xrow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 14px;
+      background: none;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 650;
+      text-align: left;
+    }
+    .xrow + .xrow { border-top: 1px solid var(--line); }
+    .xrow[hidden] { display: none; }
+    .xrow .xl { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .xrow .xv { display: flex; align-items: center; gap: 7px; color: var(--muted); font-weight: 600; }
+    .xrow svg.xi { width: 20px; height: 20px; flex: 0 0 auto; opacity: .85; }
+    .xsec-cap {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 4px 7px;
+    }
+    .seg-chips { display: flex; gap: 8px; padding: 4px 4px 0; }
+    .seg-chips button {
+      flex: 1;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 650;
+    }
+    .seg-chips button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ================= checklist ================= */
+    .chk-add { display: flex; gap: 8px; }
+    .chk-add input {
+      flex: 1;
+      min-width: 0;
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0 10px;
+      font-size: 16px;
+    }
+    .chk-add button {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 22px;
+      line-height: 1;
+    }
+    .chk-list { display: grid; gap: 6px; }
+    .chk-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      font-size: 15px;
+    }
+    .chk-box {
+      width: 20px; height: 20px;
+      flex: 0 0 auto;
+      border-radius: 6px;
+      border: 1.6px solid var(--muted);
+      background: none;
+      display: grid;
+      place-items: center;
+      color: #fff;
+    }
+    .chk-box svg { width: 12px; height: 12px; opacity: 0; }
+    .chk-item.done .chk-box { background: var(--accent); border-color: var(--accent); }
+    .chk-item.done .chk-box svg { opacity: 1; }
+    .chk-item.done .chk-text { text-decoration: line-through; color: var(--muted); }
+    .chk-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .chk-x {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: none;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1;
+    }
+    .chk-count { font-size: 13px; color: var(--muted); }
+
+    /* checklist badge on a block in the grid + its popover */
+    .ev-list-badge {
+      position: absolute;
+      right: 3px;
+      bottom: 3px;
+      width: 22px; height: 22px;
+      border-radius: 7px;
+      background: rgba(0,0,0,.28);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 0;
+      z-index: 3;
+    }
+    .ev-list-badge svg { width: 13px; height: 13px; }
+    .list-pop { padding: 10px 12px 12px; max-width: min(320px, 84vw); }
+    .list-pop-title { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .list-pop-when { font-size: 13px; color: var(--muted); margin-bottom: 9px; }
+    .list-pop-desc { font-size: 14px; color: var(--text); margin-bottom: 10px; line-height: 1.35; }
+    .list-pop .chk-list { max-height: 46vh; overflow: auto; overscroll-behavior: contain; }
   </style>
 </head>
 <body>
@@ -2955,6 +3267,7 @@
           </button>
         </div>
 
+        <!-- the real values live here; the popup calendar writes into them -->
         <div class="when-edit" id="whenEditStart" hidden>
           <input id="eventDate" type="date" required />
           <input id="eventStart" type="time" step="60" />
@@ -3029,38 +3342,34 @@
           </div>
 
           <button type="button" class="opt-item opt-tap" id="itemTravel" hidden aria-expanded="false">
-            <span class="opt-col"><span class="opt-cap">Время на путь</span><span class="opt-val" id="stateTravel">Нет</span></span>
+            <span class="opt-col"><span class="opt-cap">Время в пути</span><span class="opt-val" id="stateTravel">Нет</span></span>
             <span class="opt-caret"></span>
           </button>
+          <!-- travel time is picked in a popup; these only carry the values -->
           <div class="opt-body" id="optTravel" hidden>
-            <div class="travel-chips" id="travelChips">
-              <button type="button" class="dur-chip" data-travel="0">Нет</button>
-              <button type="button" class="dur-chip" data-travel="15">15м</button>
-              <button type="button" class="dur-chip" data-travel="30">30м</button>
-              <button type="button" class="dur-chip" data-travel="45">45м</button>
-              <button type="button" class="dur-chip" data-travel="60">1ч</button>
+            <div class="travel-chips" id="travelChips" hidden></div>
+            <input id="travelAddress" type="hidden" />
+            <div class="travel-modes" id="travelModes" hidden></div>
+          </div>
+
+          <button type="button" class="opt-item opt-tap" id="itemChecklist" hidden aria-expanded="false">
+            <span class="opt-col"><span class="opt-cap">Список</span><span class="opt-val" id="stateChecklist">Пусто</span></span>
+            <span class="opt-caret"></span>
+          </button>
+          <div class="opt-body" id="optChecklist" hidden>
+            <div class="chk-add">
+              <input id="chkInput" placeholder="Что нужно сделать" />
+              <button type="button" id="chkAdd" aria-label="Добавить пункт">+</button>
             </div>
-            <div class="travel-custom">
-              <input id="travelOther" type="number" min="1" max="600" placeholder="Другое, мин" />
-              <button type="button" id="travelOtherApply">Задать</button>
-            </div>
-            <div class="travel-addr">
-              <input id="travelAddress" placeholder="Адрес — посчитаем дорогу" />
-              <div class="travel-modes" id="travelModes">
-                <button type="button" class="mode-chip" data-mode="walk">🚶 Пешком</button>
-                <button type="button" class="mode-chip" data-mode="drive">🚗 Авто</button>
-                <button type="button" class="mode-chip" data-mode="transit">🚌 Транспорт</button>
-              </div>
-              <button type="button" class="tool-btn" id="travelCalc">Рассчитать время в пути</button>
-              <div class="set-hint">Маршрут считается на сервере — пока задайте время вручную.</div>
-            </div>
+            <div class="chk-list" id="chkList"></div>
           </div>
         </div>
 
         <div class="opt-words" id="optWords">
           <button type="button" data-word="allday">Весь день</button>
           <button type="button" data-word="repeat">Повторять</button>
-          <button type="button" data-word="travel">Время на путь</button>
+          <button type="button" data-word="travel">Время в пути</button>
+          <button type="button" data-word="checklist">Список</button>
         </div>
 
         <div class="opt-card meta-card">
@@ -3082,31 +3391,70 @@
         </div>
 
         <div class="opt-card">
-          <button type="button" class="ios-row remind-row" id="addRemind">
+          <button type="button" class="ios-row remind-row" id="addRemind" aria-expanded="false">
             <span class="ios-label" id="remindSummary">Без напоминаний</span>
             <span class="ios-value"><span class="chev-r"></span></span>
           </button>
-          <div class="remind-list" id="remindList"></div>
+          <div class="opt-body" id="remindBody" hidden>
+            <div class="remind-list" id="remindList"></div>
+            <button type="button" class="ios-row" id="remindMore" style="padding:10px 0 2px" hidden>
+              <span class="ios-label" style="color:var(--accent);font-weight:650">Добавить ещё напоминание</span>
+            </button>
+          </div>
         </div>
 
         <details class="extra-block" id="extraBlock">
           <summary class="extra-summary"><span>Дополнительно</span></summary>
 
-        <div class="field">
-          <label for="eventShort">Коротко
-            <button type="button" class="info-dot" id="shortInfo" aria-label="Что это">i</button>
-          </label>
-          <input id="eventShort" maxlength="18" placeholder="Зал" />
-        </div>
+        <div class="xtra">
+          <div class="opt-card" style="margin:0">
+            <button type="button" class="xrow" id="xFiles">
+              <span class="xl">
+                <svg class="xi" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 11.5l-8 8a5 5 0 01-7-7l8.5-8.5a3.5 3.5 0 015 5L10 17.5a2 2 0 01-3-3l7.5-7.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Файлы</span>
+              </span>
+              <span class="xv" id="xFilesVal"><span class="chev-r"></span></span>
+            </button>
+            <button type="button" class="xrow" id="xPeople">
+              <span class="xl"><span>Участники</span></span>
+              <span class="xv"><span id="xPeopleVal">Нет</span><span class="chev-r"></span></span>
+            </button>
+          </div>
 
-        <div class="field">
-          <label for="eventLocation">Место / ссылка на встречу</label>
-          <input id="eventLocation" placeholder="Адрес или https://meet.google.com/..." />
-        </div>
+          <div>
+            <div class="xsec-cap">Статус</div>
+            <div class="seg-chips" id="xBusy">
+              <button type="button" data-busy="1" class="on">Занят(а)</button>
+              <button type="button" data-busy="0">Не занят(а)</button>
+            </div>
+          </div>
 
-        <div class="field">
-          <label for="eventAttendees">Участники</label>
-          <input id="eventAttendees" placeholder="Имена или @ник через запятую" />
+          <div>
+            <div class="xsec-cap">Участники могут</div>
+            <div class="opt-card" style="margin:0">
+              <div class="opt-item">
+                <span class="opt-name" style="font-size:15px;font-weight:600">редактировать событие</span>
+                <label class="switch"><input type="checkbox" id="permEdit" /><span></span></label>
+              </div>
+              <div class="opt-item">
+                <span class="opt-name" style="font-size:15px;font-weight:600">приглашать других</span>
+                <label class="switch"><input type="checkbox" id="permInvite" /><span></span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="opt-card" style="margin:0">
+            <div class="ios-row">
+              <span class="ios-label" style="font-weight:600">Коротко</span>
+              <input id="eventShort" maxlength="18" placeholder="Зал" style="flex:1;min-width:0;text-align:right;border:0;background:none;color:var(--text);font-size:16px;outline:none" />
+              <button type="button" class="info-dot" id="shortInfo" aria-label="Что это">i</button>
+            </div>
+            <div class="ios-row">
+              <span class="ios-label" style="font-weight:600">Место</span>
+              <input id="eventLocation" placeholder="Адрес или ссылка" style="flex:1;min-width:0;text-align:right;border:0;background:none;color:var(--text);font-size:16px;outline:none" />
+            </div>
+          </div>
+          <input id="eventAttendees" type="hidden" />
         </div>
         </details>
         </div>
@@ -3157,6 +3505,10 @@
     </div>
   </div>
 
+  <div class="dpop-backdrop" id="dpopBackdrop">
+    <div class="dpop" id="dpop"></div>
+  </div>
+
   <div class="tool-modal-backdrop" id="toolModalBackdrop">
     <div class="tool-modal">
       <div class="modal-head">
@@ -3176,7 +3528,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260816-1508";
+    const BUILD_ID = "20260818-1930";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -3392,9 +3744,20 @@
       stateRepeat: document.getElementById("stateRepeat"),
       stateTravel: document.getElementById("stateTravel"),
       travelChips: document.getElementById("travelChips"),
-      travelOther: document.getElementById("travelOther"),
       travelAddress: document.getElementById("travelAddress"),
       travelModes: document.getElementById("travelModes"),
+      dpopBackdrop: document.getElementById("dpopBackdrop"),
+      dpop: document.getElementById("dpop"),
+      remindBody: document.getElementById("remindBody"),
+      addRemind: document.getElementById("addRemind"),
+      remindMore: document.getElementById("remindMore"),
+      chkInput: document.getElementById("chkInput"),
+      chkList: document.getElementById("chkList"),
+      stateChecklist: document.getElementById("stateChecklist"),
+      xPeopleVal: document.getElementById("xPeopleVal"),
+      xBusy: document.getElementById("xBusy"),
+      permEdit: document.getElementById("permEdit"),
+      permInvite: document.getElementById("permInvite"),
       viewCard: document.getElementById("viewCard"),
       viewTitle: document.getElementById("viewTitle"),
       viewWhen: document.getElementById("viewWhen"),
@@ -3404,6 +3767,7 @@
       eventEndDate: document.getElementById("eventEndDate"),
       eventAttendees: document.getElementById("eventAttendees"),
       customRepeat: document.getElementById("customRepeat"),
+      optRepeat: document.getElementById("optRepeat"),
       rruleFreq: document.getElementById("rruleFreq"),
       rruleInterval: document.getElementById("rruleInterval"),
       rruleBydayField: document.getElementById("rruleBydayField"),
@@ -3610,20 +3974,11 @@
       els.eventAllDay.addEventListener("change", () => { syncWhenPanels(); renderDraft(); });
       els.eventIsTask.addEventListener("change", syncWhenPanels);
 
-      // start / end panels reveal their pickers
-      els.startPanel.addEventListener("click", () => {
-        const open = els.whenEditStart.hidden;
-        els.whenEditStart.hidden = !open;
-        els.whenEditEnd.hidden = true;
-        els.startPanel.setAttribute("aria-expanded", String(open));
-        els.endPanel.setAttribute("aria-expanded", "false");
-      });
-      els.endPanel.addEventListener("click", () => {
-        const open = els.whenEditEnd.hidden;
-        els.whenEditEnd.hidden = !open;
-        els.whenEditStart.hidden = true;
-        els.endPanel.setAttribute("aria-expanded", String(open));
-        els.startPanel.setAttribute("aria-expanded", "false");
+      // start / end open the Yandex-style calendar window
+      els.startPanel.addEventListener("click", () => openDatePop("start"));
+      els.endPanel.addEventListener("click", () => openDatePop("end"));
+      els.dpopBackdrop.addEventListener("click", (e) => {
+        if (e.target === els.dpopBackdrop) closeDatePop();
       });
 
       // tapping a word promotes it into the card
@@ -3633,42 +3988,41 @@
         activateOpt(w.dataset.word, true);
         if (w.dataset.word === "allday") { els.eventAllDay.checked = true; els.eventAllDay.dispatchEvent(new Event("change")); }
         if (w.dataset.word === "repeat") { activateOpt("repeat", false); pickRepeat(w); }
-        else if (w.dataset.word === "travel") toggleOptBody("travel", true);
+        else if (w.dataset.word === "travel") { activateOpt("travel", false); openTravelPop(w); }
+        else if (w.dataset.word === "checklist") toggleOptBody("checklist", true);
         syncWhenPanels();
       });
       // rows with a body expand on tap
       document.getElementById("itemRepeat").addEventListener("click", (e) => pickRepeat(e.currentTarget));
-      document.getElementById("itemTravel").addEventListener("click", () => toggleOptBody("travel"));
+      document.getElementById("itemTravel").addEventListener("click", (e) => openTravelPop(e.currentTarget));
+      document.getElementById("itemChecklist").addEventListener("click", () => toggleOptBody("checklist"));
 
-      // travel time
-      els.travelChips.addEventListener("click", (e) => {
-        const chip = e.target.closest("[data-travel]");
-        if (!chip) return;
-        state._travelMin = Number(chip.dataset.travel) || 0;
-        syncTravelChips();
-        syncWhenPanels();
+      // checklist editor
+      document.getElementById("chkAdd").addEventListener("click", addChecklistItem);
+      els.chkInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); addChecklistItem(); }
       });
-      document.getElementById("travelOtherApply").addEventListener("click", () => {
-        const n = Number(els.travelOther.value);
-        if (!n || n < 1) { showToast("Укажи минуты"); return; }
-        state._travelMin = n;
-        els.travelOther.value = "";
-        syncTravelChips();
-        syncWhenPanels();
+      els.chkList.addEventListener("click", (e) => {
+        const x = e.target.closest("[data-chk-x]");
+        if (x) { state._checklist.splice(Number(x.dataset.chkX), 1); renderChecklist(); return; }
+        const b = e.target.closest("[data-chk-t]");
+        if (b) {
+          const i = Number(b.dataset.chkT);
+          state._checklist[i].done = !state._checklist[i].done;
+          renderChecklist();
+        }
       });
-      els.travelModes.addEventListener("click", (e) => {
-        const chip = e.target.closest("[data-mode]");
-        if (!chip) return;
-        const on = chip.classList.contains("on");
-        els.travelModes.querySelectorAll(".mode-chip").forEach(c => c.classList.remove("on"));
-        if (!on) chip.classList.add("on");
-        state._travelMode = on ? null : chip.dataset.mode;
+
+      // "Дополнительно" menu
+      els.xBusy.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-busy]");
+        if (!b) return;
+        state._busy = b.dataset.busy === "1";
+        syncBusyChips();
       });
-      document.getElementById("travelCalc").addEventListener("click", () => {
-        if (!els.travelAddress.value.trim()) { showToast("Введите адрес"); return; }
-        if (!state._travelMode) { showToast("Выберите транспорт"); return; }
-        showToast("Расчёт маршрута появится вместе с сервером — пока задайте время вручную");
-      });
+      document.getElementById("xFiles").addEventListener("click", () =>
+        showToast("Файлы появятся вместе с сервером"));
+      document.getElementById("xPeople").addEventListener("click", openPeoplePop);
 
       // colour picker toggles the palette open
       els.calBtn.addEventListener("click", pickCalendar);
@@ -3695,8 +4049,14 @@
         renderDraft();
       });
 
-      // reminders list
-      document.getElementById("addRemind").addEventListener("click", () => openRemindPicker());
+      // reminders: the row folds its list away, the menu adds one at a time
+      document.getElementById("addRemind").addEventListener("click", (e) => {
+        if ((state._reminders || []).length === 0) { openRemindPop(e.currentTarget); return; }
+        const open = els.remindBody.hidden;
+        els.remindBody.hidden = !open;
+        e.currentTarget.setAttribute("aria-expanded", String(open));
+      });
+      els.remindMore.addEventListener("click", (e) => openRemindPop(e.currentTarget));
       els.remindList.addEventListener("click", (e) => {
         const x = e.target.closest("[data-rm]");
         if (!x) return;
@@ -4360,6 +4720,7 @@
     }
 
     const CHECK_SVG = '<svg viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const LIST_SVG = '<svg viewBox="0 0 20 20" fill="none"><path d="M3 5.5h3M3 10h3M3 14.5h3M8.5 5.5H17M8.5 10H17M8.5 14.5H17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 
     function eventMarkup(ev, col = 0, total = 1, span = 1, opts = {}) {
       const cal = getCalendar(ev.calendarId);
@@ -4390,6 +4751,11 @@
         : "";
       const repeatBadge = (ev.repeat && ev.repeat !== "none") ? `<span class="event-repeat-badge">⟳</span>` : "";
       const locationLine = (ev.location && height > 56) ? `<div class="event-location">📍 ${escapeHtml(ev.location)}</div>` : "";
+      // a corner tag on anything that carries a checklist or a description
+      const hasList = (ev.checklist && ev.checklist.length) || ev.description;
+      const listBadge = (hasList && !ev._holiday && height >= 30)
+        ? `<button class="ev-list-badge" data-list="${ev.id}" data-date="${ev.date}" title="Список">${LIST_SVG}</button>`
+        : "";
       return `
         <div class="${classes}" draggable="${draggable}" data-event-id="${ev.id}" data-date="${ev.date}"
              style="top:${top}px;height:${height}px;background:${tint(color, 0.26)};border-left-color:${barColor};${leftStyle}${zStyle}">
@@ -4402,6 +4768,7 @@
               ${locationLine}
             </div>
           </div>
+          ${listBadge}
           ${(ev._holiday || overnight || height < 38) ? "" : `<div class="event-resize" data-resize="${ev.id}" data-date="${ev.date}"></div>`}
         </div>
       `;
@@ -4702,6 +5069,14 @@
 
       els.calendarShell.querySelectorAll("[data-resize]").forEach(bindResize);
 
+      // the corner tag unfolds the description and the checklist in place
+      els.calendarShell.querySelectorAll("[data-list]").forEach(el => {
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openListPop(el, el.dataset.list, el.dataset.date);
+        });
+      });
+
       // a merged block asks which of its events you meant
       els.calendarShell.querySelectorAll(".event.merged").forEach(el => {
         el.addEventListener("click", () => {
@@ -4711,7 +5086,7 @@
 
       els.calendarShell.querySelectorAll(".event[data-event-id], .allday-chip[data-event-id]").forEach(el => {
         el.addEventListener("click", (e) => {
-          if (e.target.closest("[data-toggle-done], [data-resize]")) return;
+          if (e.target.closest("[data-toggle-done], [data-resize], [data-list]")) return;
           if (Date.now() < suppressClickUntil) return;   // just finished a drag-move
           e.stopPropagation();
           openByElement(el);
@@ -4727,7 +5102,7 @@
     function bindEventMove(el) {
       el.addEventListener("pointerdown", (e) => {
         if (!isMobile() || e.pointerType === "mouse") return;
-        if (e.target.closest("[data-resize], .event-check")) return;
+        if (e.target.closest("[data-resize], .event-check, .ev-list-badge")) return;
         const col0 = el.closest(".day-col");
         const base = state.events.find(x => x.id === el.dataset.eventId);
         if (!col0 || !base || base._holiday) return;
@@ -5076,7 +5451,9 @@
     const PRESET_REMINDERS = [0, 10, 30, 60, 1440];
 
     function reminderLabel(min) {
-      if (min === 0) return "В момент";
+      const known = REMIND_OPTS.find(o => o[0] === min);
+      if (known) return known[1];
+      if (min === 0) return "В момент события";
       if (min % 1440 === 0) return `За ${min / 1440} дн.`;
       if (min % 60 === 0) return `За ${min / 60} ч`;
       return `За ${min} мин`;
@@ -5635,11 +6012,10 @@
 
     /* show/hide the custom-recurrence sub-fields based on the current choices */
     function syncRepeatUI() {
-      const custom = els.eventRepeat.value === "custom";
-      els.customRepeat.style.display = custom ? "block" : "none";
-      els.rruleBydayField.style.display = (custom && els.rruleFreq.value === "weekly") ? "grid" : "none";
-      els.rruleUntilField.style.display = (custom && els.rruleEndType.value === "until") ? "grid" : "none";
-      els.rruleCountField.style.display = (custom && els.rruleEndType.value === "count") ? "grid" : "none";
+      // the recurrence fields are edited on the "Настройка" screen now — these
+      // inputs stay in the DOM purely as the value store
+      els.customRepeat.style.display = "none";
+      els.optRepeat.hidden = true;
     }
 
     /* ---------------- BOTTOM SHEET ---------------- */
@@ -5867,14 +6243,16 @@
       const allDay = els.eventAllDay.checked;
       els.startValue.textContent = humanWhen(els.eventDate.value, els.eventStart.value, allDay);
       els.endValue.textContent = humanWhen(endDateForDisplay(), els.eventEnd.value, allDay);
-      els.stateRepeat.textContent = els.eventRepeat.value === "none"
-        ? "Не повторять" : (REPEAT_LABELS[els.eventRepeat.value] || "Настроенный");
+      els.stateRepeat.textContent = els.eventRepeat.value === "custom"
+        ? repeatSummary()
+        : (els.eventRepeat.value === "none" ? "Не повторять" : REPEAT_LABELS[els.eventRepeat.value]);
       els.stateTravel.textContent = state._travelMin ? `${state._travelMin} мин` : "Нет";
-      els.whenEditStart.querySelector("#eventStart").style.display = allDay ? "none" : "";
-      els.whenEditEnd.querySelector("#eventEnd").style.display = allDay ? "none" : "";
+      const done = (state._checklist || []).filter(i => i.done).length;
+      els.stateChecklist.textContent = (state._checklist || []).length
+        ? `${done} из ${state._checklist.length}` : "Пусто";
     }
 
-    const OPT_KEYS = ["allday", "repeat", "travel"];
+    const OPT_KEYS = ["allday", "repeat", "travel", "checklist"];
     const cap = (k) => k.charAt(0).toUpperCase() + k.slice(1);
 
     /* a word leaves the row and its control appears inside the card */
@@ -5896,6 +6274,7 @@
       if (ev.allDay) activateOpt("allday", true);
       if (ev.repeat && ev.repeat !== "none") activateOpt("repeat", true);
       if (ev.travel && ev.travel.minutes) activateOpt("travel", true);
+      if ((state._checklist || []).length) activateOpt("checklist", true);
     }
 
     /* expand the body of a card row that has one */
@@ -5908,9 +6287,34 @@
       item.setAttribute("aria-expanded", String(open));
     }
 
-    function syncTravelChips() {
-      els.travelChips.querySelectorAll("[data-travel]").forEach(c =>
-        c.classList.toggle("active", Number(c.dataset.travel) === (state._travelMin || 0)));
+    function syncTravelChips() { /* the chips now live in the popup */ }
+
+    function syncBusyChips() {
+      els.xBusy.querySelectorAll("[data-busy]").forEach(b =>
+        b.classList.toggle("on", (b.dataset.busy === "1") === (state._busy !== false)));
+    }
+
+    /* ---------------- CHECKLIST ---------------- */
+    const CHK_TICK = '<svg viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    function addChecklistItem() {
+      const text = els.chkInput.value.trim();
+      if (!text) { showToast("Напиши пункт"); return; }
+      state._checklist = [...(state._checklist || []), { text, done: false }];
+      els.chkInput.value = "";
+      renderChecklist();
+    }
+
+    function renderChecklist() {
+      const list = state._checklist || [];
+      els.chkList.innerHTML = list.map((it, i) =>
+        `<div class="chk-item${it.done ? " done" : ""}">
+           <button type="button" class="chk-box" data-chk-t="${i}" aria-label="Выполнено">${CHK_TICK}</button>
+           <span class="chk-text">${escapeHtml(it.text)}</span>
+           <button type="button" class="chk-x" data-chk-x="${i}" aria-label="Убрать">&times;</button>
+         </div>`).join("");
+      syncWhenPanels();
+      if (list.length) activateOpt("checklist", true);
     }
 
     /* ---------------- FLOATING MENU ---------------- */
@@ -5922,19 +6326,11 @@
             ${POP_TICK}${it.color ? `<span class="pop-dot" style="background:${it.color}"></span>` : ""}
             <span class="pop-label">${escapeHtml(it.label)}</span>
           </button>`).join("");
+      els.popMenu.classList.remove("list-pop");
       els.popBackdrop.hidden = false;
+      placePop(anchor);
 
-      // place it under the trigger, nudged inside the viewport
-      const r = anchor.getBoundingClientRect();
       const m = els.popMenu;
-      m.style.top = "0px"; m.style.left = "0px";
-      const mr = m.getBoundingClientRect();
-      let left = Math.min(Math.max(8, r.right - mr.width), window.innerWidth - mr.width - 8);
-      let top = r.bottom + 6;
-      if (top + mr.height > window.innerHeight - 8) top = Math.max(8, r.top - mr.height - 6);
-      m.style.left = left + "px";
-      m.style.top = top + "px";
-
       m.querySelectorAll("[data-i]").forEach(btn => {
         btn.addEventListener("click", () => {
           closePopMenu();
@@ -5942,7 +6338,51 @@
         });
       });
     }
-    function closePopMenu() { els.popBackdrop.hidden = true; }
+    function closePopMenu() { els.popBackdrop.hidden = true; els.popMenu.classList.remove("list-pop"); }
+
+    /* park the floating panel under its trigger, nudged inside the viewport */
+    function placePop(anchor) {
+      const r = anchor.getBoundingClientRect();
+      const m = els.popMenu;
+      m.style.top = "0px"; m.style.left = "0px";
+      const mr = m.getBoundingClientRect();
+      const left = Math.min(Math.max(8, r.right - mr.width), window.innerWidth - mr.width - 8);
+      let top = r.bottom + 6;
+      if (top + mr.height > window.innerHeight - 8) top = Math.max(8, r.top - mr.height - 6);
+      m.style.left = left + "px";
+      m.style.top = top + "px";
+    }
+
+    /* the description and the to-do list of one event, right on the grid */
+    function openListPop(anchor, id, date) {
+      const ev = state.events.find(x => x.id === id);
+      if (!ev) return;
+      const draw = () => {
+        const items = ev.checklist || [];
+        const done = items.filter(i => i.done).length;
+        els.popMenu.className = "pop-menu list-pop";
+        els.popMenu.innerHTML = `
+          <div class="list-pop-title">${escapeHtml(ev.title)}</div>
+          <div class="list-pop-when">${ev.allDay ? "Весь день" : `${formatTime(ev.start)} — ${formatTime(ev.end)}`}${
+            items.length ? ` · ${done} из ${items.length}` : ""}</div>
+          ${ev.description ? `<div class="list-pop-desc">${escapeHtml(ev.description)}</div>` : ""}
+          <div class="chk-list">${items.map((it, i) =>
+            `<div class="chk-item${it.done ? " done" : ""}">
+               <button type="button" class="chk-box" data-lt="${i}" aria-label="Выполнено">${CHK_TICK}</button>
+               <span class="chk-text">${escapeHtml(it.text)}</span>
+             </div>`).join("") || `<div class="chk-count">Пунктов пока нет</div>`}</div>`;
+        els.popMenu.querySelectorAll("[data-lt]").forEach(b => b.addEventListener("click", () => {
+          const i = Number(b.dataset.lt);
+          ev.checklist[i].done = !ev.checklist[i].done;
+          saveEvents();
+          draw();
+          renderAll();
+        }));
+        placePop(anchor);
+      };
+      els.popBackdrop.hidden = false;
+      draw();
+    }
 
     /* ---------------- CALENDAR + COLOUR LABEL ---------------- */
     const TICK = '<svg class="cal-tick" viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -5968,23 +6408,354 @@
     const REPEAT_OPTS = [
       ["none", "Не повторять"], ["daily", "Каждый день"], ["weekly", "Каждую неделю"],
       ["biweekly", "Каждые 2 недели"], ["monthly", "Каждый месяц"], ["yearly", "Каждый год"],
-      ["custom", "Настроить…"]
+      ["custom", "Другой вариант"]
     ];
 
     function pickRepeat(anchor) {
       const cur = els.eventRepeat.value;
       const items = REPEAT_OPTS.map(([v, t]) => ({ label: t, value: v, on: v === cur }));
       openPopMenu(anchor, items, (it) => {
+        if (it.value === "custom") { activateOpt("repeat", true); openRepeatSetup(); return; }
         els.eventRepeat.value = it.value;
         syncRepeatUI();
         syncWhenPanels();
-        if (it.value === "none") {
-          activateOpt("repeat", false);          // back to being just a word
-        } else {
-          activateOpt("repeat", true);
-          toggleOptBody("repeat", it.value === "custom");
-        }
+        if (it.value === "none") activateOpt("repeat", false);   // back to being just a word
+        else activateOpt("repeat", true);
       }, "Повтор");
+    }
+
+    /* ---------------- CUSTOM REPEAT: iOS "Настройка" on its own screen ---------------- */
+    const FREQ_OPTS = [["daily", "По дням"], ["weekly", "По неделям"], ["monthly", "По месяцам"], ["yearly", "По годам"]];
+    const FREQ_UNIT = { daily: ["день", "дня", "дней"], weekly: ["неделю", "недели", "недель"],
+                        monthly: ["месяц", "месяца", "месяцев"], yearly: ["год", "года", "лет"] };
+    const END_OPTS = [["never", "Никогда"], ["until", "До даты"], ["count", "После N раз"]];
+    /* indexed by getDay(): 0 is Sunday, in the accusative for "в …" */
+    const DOW_FULL = ["воскресенье", "понедельник", "вторник", "среду", "четверг", "пятницу", "субботу"];
+
+    function plural(n, forms) {
+      const a = Math.abs(n) % 100, b = a % 10;
+      if (a > 10 && a < 20) return forms[2];
+      if (b > 1 && b < 5) return forms[1];
+      if (b === 1) return forms[0];
+      return forms[2];
+    }
+
+    /* the Yandex one-liner: "Повторять в воскресенье" */
+    function repeatSummary() {
+      const freq = els.rruleFreq.value;
+      const n = Math.max(1, Number(els.rruleInterval.value) || 1);
+      const days = getBydaySelection();
+      let out;
+      if (freq === "weekly") {
+        const every = n === 1 ? "" : `каждые ${n} ${plural(n, FREQ_UNIT.weekly)} `;
+        out = days.length
+          ? `Повторять ${every}в ${days.slice().sort((a, b) => a - b).map(d => DOW_FULL[d]).join(", ")}`
+          : `Повторять ${every || "каждую неделю"}`.trim();
+      } else {
+        out = n === 1
+          ? { daily: "Повторять каждый день", monthly: "Повторять каждый месяц", yearly: "Повторять каждый год" }[freq]
+          : `Повторять каждые ${n} ${plural(n, FREQ_UNIT[freq])}`;
+      }
+      const endType = els.rruleEndType.value;
+      if (endType === "until" && els.rruleUntil.value) {
+        const d = parseDate(els.rruleUntil.value);
+        out += `, до ${d.getDate()} ${MONTHS_TITLE[d.getMonth()]} ${d.getFullYear()}`;
+      } else if (endType === "count") {
+        const c = Math.max(1, Number(els.rruleCount.value) || 1);
+        out += `, ${c} ${plural(c, ["раз", "раза", "раз"])}`;
+      }
+      return out;
+    }
+
+    function openRepeatSetup() {
+      els.eventRepeat.value = "custom";
+      const draw = () => {
+        const freq = els.rruleFreq.value;
+        const n = Math.max(1, Number(els.rruleInterval.value) || 1);
+        const endType = els.rruleEndType.value;
+        const order = Array.from({ length: 7 }, (_, i) => (uiPrefs.weekStart + i) % 7);
+        const sel = state._rsDays || [];
+        openToolModal("Настройка", `
+          <div class="rep-screen">
+            <div class="rep-card">
+              <button type="button" class="rep-row" id="rsFreq">
+                <span>Настроить</span>
+                <span class="rv">${(FREQ_OPTS.find(f => f[0] === freq) || FREQ_OPTS[1])[1]}
+                  <svg class="chev-ud" viewBox="0 0 12 18" fill="none"><path d="M3 7l3-3.5L9 7M3 11l3 3.5L9 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </button>
+              <div class="rep-row">
+                <span>Каждые</span>
+                <span class="rv"><input class="rep-num" id="rsEvery" type="number" min="1" max="99" value="${n}" />
+                  ${plural(n, FREQ_UNIT[freq])}</span>
+              </div>
+            </div>
+
+            ${freq === "weekly" ? `<div>
+              <div class="rep-cap">По дням недели</div>
+              <div class="rep-card"><div class="rep-days" id="rsDays">
+                ${order.map(d => `<button type="button" class="rep-day${sel.includes(d) ? " on" : ""}" data-dow="${d}">${DOW[(d + 6) % 7]}</button>`).join("")}
+              </div></div>
+            </div>` : ""}
+
+            <div>
+              <div class="rep-cap">Окончание</div>
+              <div class="rep-card">
+                ${END_OPTS.map(([v, t]) => `<button type="button" class="rep-row${endType === v ? " on" : ""}" data-end="${v}">
+                    <span>${t}</span><span class="rv">${TICK.replace("cal-tick", "rep-tick")}</span></button>`).join("")}
+                ${endType === "until" ? `<div class="rep-row"><span>До</span>
+                    <span class="rv"><input class="rep-date" id="rsUntil" type="date" value="${els.rruleUntil.value || ""}" /></span></div>` : ""}
+                ${endType === "count" ? `<div class="rep-row"><span>Повторов</span>
+                    <span class="rv"><input class="rep-num" id="rsCount" type="number" min="1" max="365" value="${els.rruleCount.value || 10}" /></span></div>` : ""}
+              </div>
+            </div>
+
+            <div class="rep-card" style="padding:13px 15px">
+              <div class="rep-sum"><b>Что получилось</b>${escapeHtml(repeatSummary())}</div>
+            </div>
+
+            <button type="button" class="dpop-done" id="rsDone">Готово</button>
+          </div>`, { full: true });
+
+        document.getElementById("rsFreq").addEventListener("click", (e) => {
+          openPopMenu(e.currentTarget, FREQ_OPTS.map(([v, t]) => ({ label: t, value: v, on: v === freq })), (it) => {
+            els.rruleFreq.value = it.value;
+            draw();
+          }, "Частота");
+        });
+        const every = document.getElementById("rsEvery");
+        every.addEventListener("change", () => { els.rruleInterval.value = every.value; draw(); });
+        const daysEl = document.getElementById("rsDays");
+        if (daysEl) daysEl.addEventListener("click", (e) => {
+          const b = e.target.closest("[data-dow]");
+          if (!b) return;
+          const d = Number(b.dataset.dow);
+          state._rsDays = sel.includes(d) ? sel.filter(x => x !== d) : [...sel, d];
+          renderBydayChips(state._rsDays);
+          draw();
+        });
+        els.toolModalBody.querySelectorAll("[data-end]").forEach(b =>
+          b.addEventListener("click", () => { els.rruleEndType.value = b.dataset.end; draw(); }));
+        const until = document.getElementById("rsUntil");
+        if (until) until.addEventListener("change", () => { els.rruleUntil.value = until.value; draw(); });
+        const count = document.getElementById("rsCount");
+        if (count) count.addEventListener("change", () => { els.rruleCount.value = count.value; draw(); });
+        document.getElementById("rsDone").addEventListener("click", () => {
+          renderBydayChips(state._rsDays || []);
+          syncRepeatUI();
+          syncWhenPanels();
+          closeToolModal();
+        });
+      };
+      state._rsDays = getBydaySelection();
+      draw();
+    }
+
+    /* ---------------- DATE + TIME POPUP (Yandex calendar window) ---------------- */
+    const DUR_PRESETS = [[10, "10 мин"], [30, "30 мин"], [60, "1 час"], [90, "1.5 часа"]];
+
+    function openDatePop(which) {
+      state._dpWhich = which;
+      const iso = which === "start" ? els.eventDate.value : endDateForDisplay();
+      const d = parseDate(iso || isoDate(state.selectedDate));
+      state._dpMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+      renderDatePop();
+      els.dpopBackdrop.classList.add("open");
+    }
+    function closeDatePop() { els.dpopBackdrop.classList.remove("open"); }
+
+    function renderDatePop() {
+      const which = state._dpWhich;
+      const allDay = els.eventAllDay.checked;
+      const curIso = which === "start" ? els.eventDate.value : endDateForDisplay();
+      const m = state._dpMonth;
+      const first = new Date(m.getFullYear(), m.getMonth(), 1);
+      const shift = (first.getDay() - uiPrefs.weekStart + 7) % 7;
+      const start = addDays(first, -shift);
+      const todayIso = isoDate(new Date());
+      const order = Array.from({ length: 7 }, (_, i) => (uiPrefs.weekStart + i) % 7);
+      let cells = "";
+      for (let i = 0; i < 42; i++) {
+        const day = addDays(start, i);
+        const iso = isoDate(day);
+        const cls = ["dpop-cell",
+          day.getMonth() === m.getMonth() ? "" : "dim",
+          iso === todayIso ? "today" : "",
+          iso === curIso ? "on" : ""].filter(Boolean).join(" ");
+        cells += `<button type="button" class="${cls}" data-d="${iso}">${day.getDate()}</button>`;
+      }
+      const timeVal = which === "start" ? (els.eventStart.value || "10:00") : (els.eventEnd.value || "11:00");
+      const dur = durationMinutes();
+      els.dpop.innerHTML = `
+        <div class="dpop-head">
+          <span class="dpop-month">${capitalize(MONTHS[m.getMonth()])} ${m.getFullYear()}</span>
+          <span class="dpop-nav">
+            <button type="button" data-mv="-1" aria-label="Предыдущий месяц">‹</button>
+            <button type="button" data-mv="1" aria-label="Следующий месяц">›</button>
+          </span>
+        </div>
+        <div class="dpop-dow">${order.map(d => `<span>${DOW[(d + 6) % 7]}</span>`).join("")}</div>
+        <div class="dpop-grid" id="dpopGrid">${cells}</div>
+        ${allDay ? "" : `
+          <div class="dpop-sep"></div>
+          <div class="dpop-row"><span>Время</span>
+            <input type="time" step="60" id="dpopTime" value="${timeVal}" /></div>
+          ${which === "start" ? `<div class="dpop-durs" id="dpopDurs">
+            ${DUR_PRESETS.map(([v, t]) => `<button type="button" data-dur="${v}"${v === dur ? ' class="on"' : ""}>${t}</button>`).join("")}
+          </div>` : ""}`}
+        <button type="button" class="dpop-done" id="dpopDone">Готово</button>`;
+
+      els.dpop.querySelectorAll("[data-mv]").forEach(b => b.addEventListener("click", () => {
+        state._dpMonth = new Date(m.getFullYear(), m.getMonth() + Number(b.dataset.mv), 1);
+        renderDatePop();
+      }));
+      document.getElementById("dpopGrid").addEventListener("click", (e) => {
+        const c = e.target.closest("[data-d]");
+        if (!c) return;
+        setWhenDate(which, c.dataset.d);
+        renderDatePop();
+        syncWhenPanels();
+        renderDraft();
+      });
+      const t = document.getElementById("dpopTime");
+      if (t) t.addEventListener("change", () => {
+        if (which === "start") {
+          const keep = durationMinutes();
+          els.eventStart.value = t.value;
+          applyDuration(keep);          // dragging the start keeps the length
+        } else {
+          els.eventEnd.value = t.value;
+        }
+        renderDatePop();
+        syncWhenPanels();
+        renderDraft();
+      });
+      const durs = document.getElementById("dpopDurs");
+      if (durs) durs.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-dur]");
+        if (!b) return;
+        applyDuration(Number(b.dataset.dur));
+        renderDatePop();
+        syncWhenPanels();
+        renderDraft();
+      });
+      document.getElementById("dpopDone").addEventListener("click", closeDatePop);
+    }
+
+    /* how long the event currently runs, in minutes */
+    function durationMinutes() {
+      const s = timeToMinutes(els.eventStart.value || "0:0");
+      const e = timeToMinutes(els.eventEnd.value || "0:0");
+      return e > s ? e - s : (24 * 60 - s) + e;
+    }
+
+    function setWhenDate(which, iso) {
+      if (which === "start") {
+        els.eventDate.value = iso;
+        if (els.eventEndDate.value && els.eventEndDate.value < iso) els.eventEndDate.value = iso;
+      } else if (els.eventAllDay.checked) {
+        els.eventEndDate.value = iso < els.eventDate.value ? els.eventDate.value : iso;
+      } else {
+        // a timed event ends the same day, or the next one when it runs past midnight
+        els.eventDate.value = iso;
+      }
+    }
+
+    /* ---------------- TRAVEL TIME (one popup, one step at a time) ---------------- */
+    const TRAVEL_OPTS = [[0, "Нет"], [5, "5 минут"], [15, "15 минут"], [30, "30 минут"],
+                         [60, "1 час"], [90, "1 час 30 минут"], [120, "2 часа"]];
+    const TRAVEL_MODES = [["drive", "На машине"], ["transit", "На транспорте"], ["walk", "Пешком"]];
+
+    function openTravelPop(anchor) {
+      state._travelAnchor = anchor;
+      travelStep("list");
+    }
+
+    function travelStep(step) {
+      const anchor = state._travelAnchor;
+      if (step === "list") {
+        const items = TRAVEL_OPTS.map(([v, t]) => ({ label: t, value: v, on: v === (state._travelMin || 0) }));
+        items.splice(1, 0, { label: "До адреса", value: "addr" });
+        openPopMenu(anchor, items, (it) => {
+          if (it.value === "addr") { travelStep("addr"); return; }
+          state._travelMin = it.value;
+          state._travelMode = null;
+          els.travelAddress.value = "";
+          if (!it.value) activateOpt("travel", false);
+          else activateOpt("travel", true);
+          syncWhenPanels();
+        }, "Время в пути");
+        return;
+      }
+      if (step === "addr") {
+        // step two replaces step one — nothing is left stacked behind it
+        openToolModal("Маршрут", `
+          <div class="xtra">
+            <div class="opt-card" style="margin:0">
+              <div class="ios-row">
+                <span class="ios-label" style="font-weight:600">Откуда</span>
+                <input id="tvFrom" placeholder="Моё местоположение" value="${escapeHtml(state._travelFrom || "")}"
+                  style="flex:1;min-width:0;text-align:right;border:0;background:none;color:var(--text);font-size:16px;outline:none" />
+              </div>
+              <div class="ios-row">
+                <span class="ios-label" style="font-weight:600">Куда</span>
+                <input id="tvTo" placeholder="Адрес" value="${escapeHtml(els.travelAddress.value || "")}"
+                  style="flex:1;min-width:0;text-align:right;border:0;background:none;color:var(--text);font-size:16px;outline:none" />
+              </div>
+            </div>
+            <div class="tv-map" style="height:170px;border-radius:14px;border:1px solid var(--line);background:
+              repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 12px, var(--surface-3) 12px, var(--surface-3) 24px);
+              display:grid;place-items:center;color:var(--muted);font-size:14px">Карта появится вместе с сервером</div>
+            <button type="button" class="dpop-done" id="tvNext">Далее</button>
+          </div>`, { full: false });
+        document.getElementById("tvNext").addEventListener("click", () => {
+          const to = document.getElementById("tvTo").value.trim();
+          if (!to) { showToast("Укажи, куда ехать"); return; }
+          state._travelFrom = document.getElementById("tvFrom").value.trim();
+          els.travelAddress.value = to;
+          travelStep("mode");
+        });
+        return;
+      }
+      if (step === "mode") {
+        openToolModal("Способ передвижения", `
+          <div class="opt-card" style="margin:0">
+            ${TRAVEL_MODES.map(([v, t]) => `<button type="button" class="rep-row${state._travelMode === v ? " on" : ""}" data-mode="${v}">
+                <span>${t}</span><span class="rv">${TICK.replace("cal-tick", "rep-tick")}</span></button>`).join("")}
+          </div>`);
+        els.toolModalBody.querySelectorAll("[data-mode]").forEach(b =>
+          b.addEventListener("click", () => {
+            state._travelMode = b.dataset.mode;
+            // the bot will ask Yandex Maps for the leg and pad it by 15 minutes
+            const base = { drive: 13, transit: 26, walk: 41 }[b.dataset.mode];
+            state._travelMin = base + 15;
+            activateOpt("travel", true);
+            syncWhenPanels();
+            closeToolModal();
+            showToast(`Время в пути — ${state._travelMin} мин`);
+          }));
+      }
+    }
+
+    /* ---------------- PEOPLE (sketch) ---------------- */
+    function openPeoplePop() {
+      openToolModal("Участники", `
+        <div class="opt-card" style="margin:0">
+          <div class="ios-row">
+            <input id="peopleInput" placeholder="Имена или @ник через запятую"
+              value="${escapeHtml(els.eventAttendees.value || "")}"
+              style="flex:1;min-width:0;border:0;background:none;color:var(--text);font-size:16px;outline:none" />
+          </div>
+        </div>
+        <button type="button" class="dpop-done" id="peopleDone" style="margin-top:14px">Готово</button>`);
+      document.getElementById("peopleDone").addEventListener("click", () => {
+        els.eventAttendees.value = document.getElementById("peopleInput").value;
+        syncPeopleRow();
+        closeToolModal();
+      });
+    }
+    function syncPeopleRow() {
+      const n = els.eventAttendees.value.split(",").map(x => x.trim()).filter(Boolean).length;
+      els.xPeopleVal.textContent = n ? String(n) : "Нет";
     }
 
     function syncColorRow() {
@@ -6013,6 +6784,14 @@
     }
 
     /* ---------------- REMINDERS ---------------- */
+    const MAX_REMINDERS = 3;
+    /* the iOS set, minute offsets before the start */
+    const REMIND_OPTS = [
+      [0, "В момент события"], [5, "За 5 минут"], [10, "За 10 минут"], [15, "За 15 минут"],
+      [30, "За 30 минут"], [60, "За 1 час"], [120, "За 2 часа"],
+      [1440, "За 1 день"], [2880, "За 2 дня"], [10080, "За 1 неделю"]
+    ];
+
     function renderRemindList() {
       const list = state._reminders || [];
       els.remindSummary.textContent = list.length
@@ -6021,34 +6800,29 @@
       els.remindList.innerHTML = list.map((m, i) =>
         `<div class="remind-item">🔔 <span>${reminderLabel(m)}</span>
            <button type="button" class="rm-x" data-rm="${i}" aria-label="Убрать">×</button></div>`).join("");
+      // the extra reminder is only ever added on purpose, never automatically
+      els.remindMore.hidden = list.length === 0 || list.length >= MAX_REMINDERS;
+      if (!list.length) {
+        els.remindBody.hidden = true;
+        els.addRemind.setAttribute("aria-expanded", "false");
+      }
     }
 
-    function openRemindPicker() {
-      const opts = [0, 5, 10, 15, 30, 60, 120, 1440];
-      const rows = opts.map(m => `<button type="button" class="slot-item" data-rmadd="${m}" style="width:100%;cursor:pointer">
-          <span>${reminderLabel(m)}</span></button>`).join("");
-      openToolModal("Напоминание", rows + `
-        <div class="custom-remind" style="margin-top:10px">
-          <input id="rmOtherVal" type="number" min="1" max="999" placeholder="15" />
-          <select id="rmOtherUnit">
-            <option value="1">минут</option>
-            <option value="60">часов</option>
-            <option value="1440">дней</option>
-          </select>
-          <button type="button" id="rmOtherAdd">Добавить</button>
-        </div>`);
-      const add = (m) => {
-        state._reminders = [...new Set([...(state._reminders || []), m])].sort((a, b) => a - b);
+    /* same floating menu as "Повторять" — no separate screen */
+    function openRemindPop(anchor) {
+      const cur = state._reminders || [];
+      if (cur.length >= MAX_REMINDERS) { showToast(`Не больше ${MAX_REMINDERS} напоминаний`); return; }
+      const items = REMIND_OPTS
+        .filter(([m]) => !cur.includes(m))
+        .map(([m, t]) => ({ label: t, value: m }));
+      if (cur.length) items.unshift({ label: "Без напоминаний", value: -1 });
+      openPopMenu(anchor, items, (it) => {
+        if (it.value === -1) { state._reminders = []; renderRemindList(); return; }
+        state._reminders = [...new Set([...cur, it.value])].sort((a, b) => a - b);
         renderRemindList();
-        closeToolModal();
-      };
-      els.toolModalBody.querySelectorAll("[data-rmadd]").forEach(b =>
-        b.addEventListener("click", () => add(Number(b.dataset.rmadd))));
-      document.getElementById("rmOtherAdd").addEventListener("click", () => {
-        const n = Number(document.getElementById("rmOtherVal").value);
-        if (!n || n < 1) { showToast("Укажи число"); return; }
-        add(n * Number(document.getElementById("rmOtherUnit").value));
-      });
+        els.remindBody.hidden = false;
+        els.addRemind.setAttribute("aria-expanded", "true");
+      }, "Напоминание");
     }
 
     function openModal(data = {}) {
@@ -6084,15 +6858,23 @@
       renderCalList();
       state._travelMin = (data.travel && data.travel.minutes) || 0;
       state._travelMode = (data.travel && data.travel.mode) || null;
+      state._travelFrom = (data.travel && data.travel.from) || "";
       els.travelAddress.value = (data.travel && data.travel.address) || "";
-      els.travelModes.querySelectorAll(".mode-chip").forEach(c =>
-        c.classList.toggle("on", c.dataset.mode === state._travelMode));
-      syncTravelChips();
+      state._checklist = (Array.isArray(data.checklist) ? data.checklist : []).map(i => ({ ...i }));
+      renderChecklist();
+      els.chkInput.value = "";
+      state._busy = data.busy !== false;
+      syncBusyChips();
+      els.permEdit.checked = Boolean(data.permEdit);
+      els.permInvite.checked = Boolean(data.permInvite);
+      syncPeopleRow();
       resetOpts({ allDay: els.eventAllDay.checked, isTask: els.eventIsTask.checked,
                   repeat: els.eventRepeat.value, travel: { minutes: state._travelMin } });
       els.whenEditStart.hidden = els.whenEditEnd.hidden = true;
       els.startPanel.setAttribute("aria-expanded", "false");
       els.endPanel.setAttribute("aria-expanded", "false");
+      closeDatePop();
+      closePopMenu();
       syncDurationChips();
       syncWhenPanels();
       els.deleteEvent.classList.toggle("visible", Boolean(data.id));
@@ -6178,8 +6960,13 @@
         color: evColor || null,
         calendarId: state._calendarId || null,
         travel: state._travelMin
-          ? { minutes: state._travelMin, address: els.travelAddress.value.trim(), mode: state._travelMode }
-          : null
+          ? { minutes: state._travelMin, address: els.travelAddress.value.trim(),
+              from: state._travelFrom || "", mode: state._travelMode }
+          : null,
+        checklist: (state._checklist || []).filter(i => i.text),
+        busy: state._busy !== false,
+        permEdit: els.permEdit.checked,
+        permInvite: els.permInvite.checked
       };
 
       if (!payload.title) { showToast("Добавь название события"); return; }
@@ -6344,7 +7131,7 @@
 
     /* ---------------- STORAGE ---------------- */
     function normalizeEvent(ev) {
-      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], shortName: "", location: "", color: null, travel: null, attendees: [], meetingLink: "", endDate: null, calendarId: null, ...ev };
+      const out = { allDay: false, repeat: "none", rrule: null, isTask: false, done: false, exceptions: [], reminders: [], shortName: "", location: "", color: null, travel: null, attendees: [], meetingLink: "", endDate: null, calendarId: null, checklist: [], busy: true, permEdit: false, permInvite: false, ...ev };
       // migrate legacy single `reminder` -> reminders[]
       if (!Array.isArray(out.reminders)) out.reminders = [];
       if (ev.reminder !== undefined && ev.reminder !== "" && ev.reminder !== null) {
@@ -6354,6 +7141,8 @@
       delete out.reminder;
       if (!Array.isArray(out.exceptions)) out.exceptions = [];
       if (!Array.isArray(out.attendees)) out.attendees = [];
+      if (!Array.isArray(out.checklist)) out.checklist = [];
+      out.checklist = out.checklist.filter(i => i && i.text).map(i => ({ text: String(i.text), done: Boolean(i.done) }));
       if (!out.endDate) out.endDate = out.date;
       return out;
     }
