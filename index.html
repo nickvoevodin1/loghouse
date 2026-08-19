@@ -1698,24 +1698,28 @@
         /* one soft halo around the whole bar rather than a glow per button */
         box-shadow: 0 -4px 26px -8px rgba(124, 109, 242, .45);
       }
-      /* a halo under each button rather than one in the middle of the bar */
-      .mobile-views .bb-btn { position: relative; }
-      .mobile-views .bb-btn::after {
+      /* light spilling out of the two bottom corners, behind the buttons */
+      .mobile-views::before,
+      .mobile-views::after {
         content: "";
         position: absolute;
-        left: 50%;
-        bottom: -15px;
-        transform: translateX(-50%);
-        width: 150%;
-        height: 30px;
+        /* the bright core sits in the corner itself, mostly off-screen, so
+           what is left on screen is the light leaking out of it */
+        bottom: -62px;
+        width: 250px;
+        height: 130px;
         border-radius: 50%;
-        background: radial-gradient(ellipse at center, rgba(124,109,242,.5), rgba(124,109,242,0) 70%);
-        filter: blur(8px);
+        background: radial-gradient(closest-side, rgba(124,109,242,.62), rgba(124,109,242,.2) 42%, rgba(124,109,242,0) 68%);
+        filter: blur(18px);
         pointer-events: none;
+        z-index: 0;
       }
-      .mobile-views .bb-add::after { width: 210%; }
+      .mobile-views::before { left: -86px; }
+      .mobile-views::after { right: -86px; }
       /* left: current view (opens a list upward). right: create */
       .mobile-views .bb-btn {
+        position: relative;
+        z-index: 1;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1744,6 +1748,7 @@
       /* popups slide up out of the bar */
       .bb-pop {
         position: absolute;
+        z-index: 2;
         bottom: calc(100% + 8px);
         left: 10px;
         display: grid;
@@ -3531,7 +3536,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260819-1215";
+    const BUILD_ID = "20260819-1610";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
