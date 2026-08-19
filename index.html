@@ -3042,6 +3042,33 @@
     }
     .seg-chips button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+    /* the checklist gets a row of its own, so it reads as a feature and
+       not as one more word in the option line */
+    .list-card { margin-bottom: 10px; }
+    .list-row { width: 100%; background: none; text-align: left; }
+    .list-l { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .list-ico {
+      width: 32px; height: 32px;
+      flex: 0 0 auto;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      background: rgba(124,109,242,.16);
+      color: var(--accent);
+    }
+    .list-ico svg { width: 18px; height: 18px; }
+    .list-t { display: grid; gap: 1px; min-width: 0; }
+    .list-sub {
+      font-size: 12px;
+      color: var(--muted);
+      max-width: 46vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .list-row[aria-expanded="true"] .chev-r { transform: rotate(45deg); }
+    .list-card #listCount { font-weight: 650; }
+
     /* ================= checklist ================= */
     .chk-add { display: flex; gap: 8px; }
     .chk-add input {
@@ -3360,24 +3387,32 @@
             <div class="travel-modes" id="travelModes" hidden></div>
           </div>
 
-          <button type="button" class="opt-item opt-tap" id="itemChecklist" hidden aria-expanded="false">
-            <span class="opt-col"><span class="opt-cap">Список</span><span class="opt-val" id="stateChecklist">Пусто</span></span>
-            <span class="opt-caret"></span>
-          </button>
-          <div class="opt-body" id="optChecklist" hidden>
-            <div class="chk-add">
-              <input id="chkInput" placeholder="Что нужно сделать" />
-              <button type="button" id="chkAdd" aria-label="Добавить пункт">+</button>
-            </div>
-            <div class="chk-list" id="chkList"></div>
-          </div>
         </div>
 
         <div class="opt-words" id="optWords">
           <button type="button" data-word="allday">Весь день</button>
           <button type="button" data-word="repeat">Повторять</button>
           <button type="button" data-word="travel">Время в пути</button>
-          <button type="button" data-word="checklist">Список</button>
+        </div>
+
+        <div class="opt-card list-card">
+          <button type="button" class="ios-row list-row" id="listRow" aria-expanded="false">
+            <span class="list-l">
+              <span class="list-ico"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5l1.6 1.6L8.4 5.3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 13l1.6 1.6L8.4 11.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.5 7h8.5M11.5 13.5h8.5M11.5 20h8.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M4 19.5l1.6 1.6 2.8-2.8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="list-t">
+                <span class="ios-label">Список дел</span>
+                <span class="list-sub" id="listSub">Пункты, которые нужно сделать</span>
+              </span>
+            </span>
+            <span class="ios-value"><span id="listCount"></span><span class="chev-r"></span></span>
+          </button>
+          <div class="opt-body" id="listBody" hidden>
+            <div class="chk-add">
+              <input id="chkInput" placeholder="Что нужно сделать" />
+              <button type="button" id="chkAdd" aria-label="Добавить пункт">+</button>
+            </div>
+            <div class="chk-list" id="chkList"></div>
+          </div>
         </div>
 
         <div class="opt-card meta-card">
@@ -3536,7 +3571,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260819-1610";
+    const BUILD_ID = "20260819-1845";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -3760,8 +3795,11 @@
       addRemind: document.getElementById("addRemind"),
       remindMore: document.getElementById("remindMore"),
       chkInput: document.getElementById("chkInput"),
+      listRow: document.getElementById("listRow"),
+      listBody: document.getElementById("listBody"),
+      listSub: document.getElementById("listSub"),
+      listCount: document.getElementById("listCount"),
       chkList: document.getElementById("chkList"),
-      stateChecklist: document.getElementById("stateChecklist"),
       xPeopleVal: document.getElementById("xPeopleVal"),
       xBusy: document.getElementById("xBusy"),
       permEdit: document.getElementById("permEdit"),
@@ -3997,13 +4035,17 @@
         if (w.dataset.word === "allday") { els.eventAllDay.checked = true; els.eventAllDay.dispatchEvent(new Event("change")); }
         if (w.dataset.word === "repeat") { activateOpt("repeat", false); pickRepeat(w); }
         else if (w.dataset.word === "travel") { activateOpt("travel", false); openTravelPop(w); }
-        else if (w.dataset.word === "checklist") toggleOptBody("checklist", true);
         syncWhenPanels();
       });
       // rows with a body expand on tap
       document.getElementById("itemRepeat").addEventListener("click", (e) => pickRepeat(e.currentTarget));
       document.getElementById("itemTravel").addEventListener("click", (e) => openTravelPop(e.currentTarget));
-      document.getElementById("itemChecklist").addEventListener("click", () => toggleOptBody("checklist"));
+      els.listRow.addEventListener("click", () => {
+        const open = els.listBody.hidden;
+        els.listBody.hidden = !open;
+        els.listRow.setAttribute("aria-expanded", String(open));
+        if (open) els.chkInput.focus();
+      });
 
       // checklist editor
       document.getElementById("chkAdd").addEventListener("click", addChecklistItem);
@@ -6294,12 +6336,9 @@
         ? repeatSummary()
         : (els.eventRepeat.value === "none" ? "Не повторять" : REPEAT_LABELS[els.eventRepeat.value]);
       els.stateTravel.textContent = state._travelMin ? `${state._travelMin} мин` : "Нет";
-      const done = (state._checklist || []).filter(i => i.done).length;
-      els.stateChecklist.textContent = (state._checklist || []).length
-        ? `${done} из ${state._checklist.length}` : "Пусто";
     }
 
-    const OPT_KEYS = ["allday", "repeat", "travel", "checklist"];
+    const OPT_KEYS = ["allday", "repeat", "travel"];
     const cap = (k) => k.charAt(0).toUpperCase() + k.slice(1);
 
     /* a word leaves the row and its control appears inside the card */
@@ -6321,7 +6360,6 @@
       if (ev.allDay) activateOpt("allday", true);
       if (ev.repeat && ev.repeat !== "none") activateOpt("repeat", true);
       if (ev.travel && ev.travel.minutes) activateOpt("travel", true);
-      if ((state._checklist || []).length) activateOpt("checklist", true);
     }
 
     /* expand the body of a card row that has one */
@@ -6360,8 +6398,12 @@
            <span class="chk-text">${escapeHtml(it.text)}</span>
            <button type="button" class="chk-x" data-chk-x="${i}" aria-label="Убрать">&times;</button>
          </div>`).join("");
+      const done = list.filter(i => i.done).length;
+      els.listCount.textContent = list.length ? `${done} из ${list.length}` : "";
+      els.listSub.textContent = list.length
+        ? list.map(i => i.text).join(", ")
+        : "Пункты, которые нужно сделать";
       syncWhenPanels();
-      if (list.length) activateOpt("checklist", true);
     }
 
     /* ---------------- FLOATING MENU ---------------- */
@@ -6912,6 +6954,8 @@
       state._checklist = (Array.isArray(data.checklist) ? data.checklist : []).map(i => ({ ...i }));
       renderChecklist();
       els.chkInput.value = "";
+      els.listBody.hidden = state._checklist.length === 0;
+      els.listRow.setAttribute("aria-expanded", String(state._checklist.length > 0));
       state._busy = data.busy !== false;
       syncBusyChips();
       els.permEdit.checked = Boolean(data.permEdit);
