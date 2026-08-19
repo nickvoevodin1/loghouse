@@ -1698,19 +1698,22 @@
         /* one soft halo around the whole bar rather than a glow per button */
         box-shadow: 0 -4px 26px -8px rgba(124, 109, 242, .45);
       }
-      .mobile-views::before {
+      /* a halo under each button rather than one in the middle of the bar */
+      .mobile-views .bb-btn { position: relative; }
+      .mobile-views .bb-btn::after {
         content: "";
         position: absolute;
         left: 50%;
-        bottom: -18px;
+        bottom: -15px;
         transform: translateX(-50%);
-        width: 76%;
-        height: 46px;
+        width: 150%;
+        height: 30px;
         border-radius: 50%;
-        background: radial-gradient(ellipse at center, rgba(124,109,242,.42), rgba(124,109,242,0) 70%);
-        filter: blur(9px);
+        background: radial-gradient(ellipse at center, rgba(124,109,242,.5), rgba(124,109,242,0) 70%);
+        filter: blur(8px);
         pointer-events: none;
       }
+      .mobile-views .bb-add::after { width: 210%; }
       /* left: current view (opens a list upward). right: create */
       .mobile-views .bb-btn {
         display: flex;
@@ -3492,7 +3495,7 @@
       <div class="color-sheet-body">
         <div class="color-preview">
           <div class="cp-time">18:00</div>
-          <div class="cp-block" id="cpBlock"><span id="cpTitle">Без названия</span></div>
+          <div class="cp-block" id="cpBlock"><span id="cpTitle"></span></div>
           <div class="cp-time cp-time-2">19:00</div>
         </div>
         <div class="color-name" id="colorName">Синяя метка</div>
@@ -3528,7 +3531,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260818-1930";
+    const BUILD_ID = "20260819-1215";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -6198,15 +6201,37 @@
       if (ev.description) parts.push(row("Описание", ev.description));
       if (ev.location) parts.push(row("Место", ev.location));
       if ((ev.attendees || []).length) parts.push(row("Участники", ev.attendees.join(", ")));
-      if (ev.repeat && ev.repeat !== "none") parts.push(row("Повтор", REPEAT_LABELS[ev.repeat] || "Настроенный"));
+      if (ev.repeat && ev.repeat !== "none") parts.push(row("Повтор", repeatText(ev)));
       if ((ev.reminders || []).length) parts.push(row("Напоминания", ev.reminders.map(reminderLabel).join(", ")));
       if (ev.travel && ev.travel.minutes) {
         const modes = { walk: "пешком", drive: "на авто", transit: "на транспорте" };
         const extra = [ev.travel.address, modes[ev.travel.mode]].filter(Boolean).join(", ");
-        parts.push(row("Время на путь", `${ev.travel.minutes} мин${extra ? " — " + extra : ""}`));
+        parts.push(row("Время в пути", `${ev.travel.minutes} мин${extra ? " — " + extra : ""}`));
       }
       if (ev.isTask) parts.push(row("Тип", "Задача"));
+      if ((ev.checklist || []).length) {
+        const done = ev.checklist.filter(i => i.done).length;
+        parts.push(`<div class="view-row"><span class="k">Список</span><span class="v">
+          <span class="chk-count">${done} из ${ev.checklist.length}</span>
+          <div class="chk-list" style="margin-top:6px">${ev.checklist.map((it, i) =>
+            `<div class="chk-item${it.done ? " done" : ""}">
+               <button type="button" class="chk-box" data-vchk="${i}" aria-label="Выполнено">${CHK_TICK}</button>
+               <span class="chk-text">${escapeHtml(it.text)}</span>
+             </div>`).join("")}</div></span></div>`);
+      }
       els.viewRows.innerHTML = parts.join("") || `<div class="view-row"><span class="v" style="color:var(--muted)">Без описания</span></div>`;
+
+      els.viewRows.querySelectorAll("[data-vchk]").forEach(btn => btn.addEventListener("click", () => {
+        const base = state.events.find(x => x.id === ev.id);
+        if (!base || !base.checklist) return;
+        const i = Number(btn.dataset.vchk);
+        base.checklist[i].done = !base.checklist[i].done;
+        state._checklist = base.checklist.map(x => ({ ...x }));
+        saveEvents();
+        renderChecklist();
+        showViewCard(base);
+        renderAll();
+      }));
 
       els.viewCard.hidden = false;
       els.eventForm.classList.add("viewing");
@@ -6215,6 +6240,23 @@
     function hideViewCard() {
       els.viewCard.hidden = true;
       els.eventForm.classList.remove("viewing");
+    }
+
+    /* one wording for a repeat, wherever it is shown */
+    function repeatText(ev) {
+      if (!ev.repeat || ev.repeat === "none") return "Не повторять";
+      if (ev.repeat !== "custom") return REPEAT_LABELS[ev.repeat];
+      const rr = ev.rrule || {};
+      const n = Math.max(1, rr.interval || 1);
+      const days = Array.isArray(rr.byday) ? rr.byday : [];
+      if (rr.freq === "weekly" && days.length) {
+        const every = n === 1 ? "" : `каждые ${n} ${plural(n, FREQ_UNIT.weekly)} `;
+        return `Повторять ${every}в ${days.slice().sort((a, b) => a - b).map(d => DOW_FULL[d]).join(", ")}`;
+      }
+      return n === 1
+        ? ({ daily: "Повторять каждый день", weekly: "Повторять каждую неделю",
+             monthly: "Повторять каждый месяц", yearly: "Повторять каждый год" }[rr.freq] || "Другой вариант")
+        : `Повторять каждые ${n} ${plural(n, FREQ_UNIT[rr.freq] || FREQ_UNIT.weekly)}`;
     }
 
     const REPEAT_LABELS = {
@@ -6655,8 +6697,10 @@
       } else if (els.eventAllDay.checked) {
         els.eventEndDate.value = iso < els.eventDate.value ? els.eventDate.value : iso;
       } else {
-        // a timed event ends the same day, or the next one when it runs past midnight
-        els.eventDate.value = iso;
+        // a timed event lives on one day: picking its end date moves the whole
+        // event, and an overnight one is shown ending on the following day
+        const back = timeToMinutes(els.eventEnd.value || "0:0") <= timeToMinutes(els.eventStart.value || "0:0") ? -1 : 0;
+        els.eventDate.value = isoDate(addDays(parseDate(iso), back));
       }
     }
 
@@ -6780,7 +6824,7 @@
       els.cpBlock.style.background = tint(cur, 0.26);
       els.cpBlock.style.setProperty("--cp-bar",
         (calendars.find(c => c.id === state._calendarId) || {}).color || cur);
-      els.cpTitle.textContent = els.eventTitle.value.trim() || "Без названия";
+      els.cpTitle.textContent = els.eventTitle.value.trim();
     }
 
     /* ---------------- REMINDERS ---------------- */
