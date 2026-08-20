@@ -2312,18 +2312,22 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px 18px;
-      padding: 4px 2px 2px;
+      gap: 7px;
+      padding: 2px 0 4px;
     }
+    /* each option is a pill, so it reads as something you can tap */
     .opt-words button {
-      background: none;
-      border: 0;
-      padding: 4px 0;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 9px 13px;
       color: var(--text);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 650;
+      line-height: 1;
+      white-space: nowrap;
     }
-    .opt-words button:active { opacity: .6; }
+    .opt-words button:active { background: var(--hover); transform: scale(.97); }
     .opt-words button[hidden] { display: none; }
     .opt-tz { color: var(--muted); font-size: 14px; font-weight: 600; }
 
@@ -3466,9 +3470,11 @@
 
           <div>
             <div class="xsec-cap">Статус</div>
-            <div class="seg-chips" id="xBusy">
-              <button type="button" data-busy="1" class="on">Занят(а)</button>
-              <button type="button" data-busy="0">Не занят(а)</button>
+            <div class="opt-card" style="margin:0">
+              <div class="opt-item">
+                <span class="opt-name" style="font-size:15px;font-weight:600" id="busyLabel">Занят(а)</span>
+                <label class="switch"><input type="checkbox" id="eventBusy" checked /><span></span></label>
+              </div>
             </div>
           </div>
 
@@ -3486,17 +3492,10 @@
             </div>
           </div>
 
-          <div class="opt-card" style="margin:0">
-            <div class="ios-row">
-              <span class="ios-label" style="font-weight:600">Коротко</span>
-              <input id="eventShort" maxlength="18" placeholder="Зал" style="flex:1;min-width:0;text-align:right;border:0;background:none;color:var(--text);font-size:16px;outline:none" />
-              <button type="button" class="info-dot" id="shortInfo" aria-label="Что это">i</button>
-            </div>
-            <div class="ios-row">
-              <span class="ios-label" style="font-weight:600">Место</span>
-              <input id="eventLocation" placeholder="Адрес или ссылка" style="flex:1;min-width:0;text-align:right;border:0;background:none;color:var(--text);font-size:16px;outline:none" />
-            </div>
-          </div>
+          <!-- the short name comes from the title and the place from the route,
+               so neither needs a field of its own any more -->
+          <input id="eventShort" type="hidden" />
+          <input id="eventLocation" type="hidden" />
           <input id="eventAttendees" type="hidden" />
         </div>
         </details>
@@ -3571,7 +3570,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260819-1845";
+    const BUILD_ID = "20260820-1130";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -3801,7 +3800,8 @@
       listCount: document.getElementById("listCount"),
       chkList: document.getElementById("chkList"),
       xPeopleVal: document.getElementById("xPeopleVal"),
-      xBusy: document.getElementById("xBusy"),
+      eventBusy: document.getElementById("eventBusy"),
+      busyLabel: document.getElementById("busyLabel"),
       permEdit: document.getElementById("permEdit"),
       permInvite: document.getElementById("permInvite"),
       viewCard: document.getElementById("viewCard"),
@@ -4064,10 +4064,8 @@
       });
 
       // "Дополнительно" menu
-      els.xBusy.addEventListener("click", (e) => {
-        const b = e.target.closest("[data-busy]");
-        if (!b) return;
-        state._busy = b.dataset.busy === "1";
+      els.eventBusy.addEventListener("change", () => {
+        state._busy = els.eventBusy.checked;
         syncBusyChips();
       });
       document.getElementById("xFiles").addEventListener("click", () =>
@@ -4119,16 +4117,8 @@
       els.eventDate.addEventListener("change", () => { syncWhenPanels(); renderDraft(); });
       els.eventEndDate.addEventListener("change", syncWhenPanels);
       els.eventTitle.addEventListener("input", () => {
-        // auto-fill the short name from the first word until it is touched by hand
-        if (!els.eventShort.dataset.touched) els.eventShort.value = firstWord(els.eventTitle.value);
-        renderDraft();
-      });
-      document.getElementById("shortInfo").addEventListener("click", () => {
-        showToast("Это короткое имя показывается в сетке календаря");
-      });
-
-      els.eventShort.addEventListener("input", () => {
-        els.eventShort.dataset.touched = "1";
+        // the grid label is the first word of the title
+        els.eventShort.value = firstWord(els.eventTitle.value);
         renderDraft();
       });
       els.eventAllDay.addEventListener("change", renderDraft);
@@ -6375,8 +6365,9 @@
     function syncTravelChips() { /* the chips now live in the popup */ }
 
     function syncBusyChips() {
-      els.xBusy.querySelectorAll("[data-busy]").forEach(b =>
-        b.classList.toggle("on", (b.dataset.busy === "1") === (state._busy !== false)));
+      const busy = state._busy !== false;
+      els.eventBusy.checked = busy;
+      els.busyLabel.textContent = busy ? "Занят(а)" : "Не занят(а)";
     }
 
     /* ---------------- CHECKLIST ---------------- */
@@ -6921,7 +6912,7 @@
       state.editingInstanceDate = data.id ? (data.date || null) : null;
       els.eventTitle.placeholder = data.isTask ? "Название задачи" : "Название события";
       els.eventTitle.value = data.title || "";
-      els.eventShort.value = data.shortName || "";
+      els.eventShort.value = data.shortName || firstWord(data.title || "");
       els.eventDate.value = data.date || isoDate(state.selectedDate);
       els.eventEndDate.value = data.endDate && data.endDate !== (data.date || isoDate(state.selectedDate)) ? data.endDate : "";
       els.eventStart.value = data.start || "10:00";
@@ -6994,7 +6985,6 @@
       state.editingId = null;
       state.editingInstanceDate = null;
       els.eventForm.reset();
-      delete els.eventShort.dataset.touched;
       setReminderChips([]);
     }
 
@@ -7048,7 +7038,7 @@
         rrule,
         reminders: getReminderChips(),
         description: els.eventDescription.value.trim(),
-        location: els.eventLocation.value.trim(),
+        location: els.travelAddress.value.trim() || els.eventLocation.value.trim(),
         attendees,
         color: evColor || null,
         calendarId: state._calendarId || null,
