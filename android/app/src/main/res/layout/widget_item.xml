@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/itemRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/row_bg"
+    android:layout_marginBottom="6dp"
+    android:paddingTop="9dp"
+    android:paddingBottom="9dp"
+    android:paddingStart="0dp"
+    android:paddingEnd="10dp">
+
+    <View
+        android:id="@+id/itemBar"
+        android:layout_width="4dp"
+        android:layout_height="34dp"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="9dp"
+        android:background="@drawable/bar_shape" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/itemTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/text"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:text="Событие" />
+
+        <TextView
+            android:id="@+id/itemTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textColor="@color/muted"
+            android:textSize="12sp"
+            android:text="10:00 — 11:00" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/itemCheck"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:padding="4dp"
+        android:src="@drawable/check_off"
+        android:contentDescription="Выполнено" />
+</LinearLayout>
