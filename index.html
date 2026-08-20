@@ -3570,7 +3570,7 @@
     const HOURS = END_HOUR - START_HOUR;
     const HOUR_HEIGHT = 48;
     /* bump on every deploy — shown in Settings so you can tell which build is live */
-    const BUILD_ID = "20260820-1130";
+    const BUILD_ID = "20260820-1740";
     /* dragging and resizing land on quarter-hours */
     const SNAP_MIN = 15;
     const snapMin = (m) => Math.round(m / SNAP_MIN) * SNAP_MIN;
@@ -7258,7 +7258,68 @@
     }
     function saveEvents() {
       try { localStorage.setItem("focusCalendar.events", JSON.stringify(state.events)); } catch {}
+      pushToWidget();
     }
+
+    /* ---------------- ANDROID HOME-SCREEN WIDGET ---------------- */
+    /* the native shell exposes LogHouseWidget; in a browser this is all inert */
+    const onAndroid = () => typeof window.LogHouseWidget !== "undefined";
+
+    function widgetPayload() {
+      const today = isoDate(new Date());
+      return getOccurrences(today, today)
+        .filter(ev => !ev._holiday)
+        .sort((a, b) => (a.allDay ? -1 : 0) - (b.allDay ? -1 : 0) ||
+                        timeToMinutes(a.start) - timeToMinutes(b.start))
+        .map(ev => ({
+          id: ev.id,
+          title: ev.title || "Без названия",
+          start: formatTime(ev.start),
+          end: formatTime(ev.end),
+          color: ev.color || getCalendar(ev.calendarId).color,
+          allDay: !!ev.allDay,
+          isTask: !!ev.isTask,
+          done: !!ev.done
+        }));
+    }
+
+    function pushToWidget() {
+      if (!onAndroid()) return;
+      try {
+        const d = new Date();
+        window.LogHouseWidget.setEvents(JSON.stringify(widgetPayload()));
+        window.LogHouseWidget.setDay(DOW[(d.getDay() + 6) % 7],
+          `${d.getDate()} ${MONTHS_TITLE[d.getMonth()]}`);
+      } catch {}
+    }
+    window.__widgetPush = pushToWidget;
+
+    /* the widget hands back the taps it could not serve itself */
+    window.__widgetRoute = function (value) {
+      const [route, id] = String(value).split("=");
+      if (route === "create") { openModal({ _full: true }); return; }
+      if (route === "day") {
+        state.selectedDate = new Date();
+        state.view = "day";
+        saveView();
+        syncViewButtons();
+        renderAll();
+        return;
+      }
+      if (route === "event" && id) {
+        const ev = state.events.find(x => x.id === id);
+        if (ev) openModal({ ...ev, date: isoDate(new Date()) });
+      }
+    };
+
+    /* a task ticked on the home screen, applied when the app next opens */
+    window.__widgetToggle = function (id) {
+      const ev = state.events.find(x => x.id === id);
+      if (!ev) return;
+      ev.done = !ev.done;
+      saveEvents();
+      renderAll();
+    };
     function loadView() {
       try {
         const v = localStorage.getItem("focusCalendar.view");
